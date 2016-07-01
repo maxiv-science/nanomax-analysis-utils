@@ -14,16 +14,16 @@ plt.ion()
 
 PLOT = True
 N = 1000000
-beamStopSize = 0#4
-shrinkWrapN = 20
-shrinkWrapSigmaTight = 10
-shrinkWrapSigmaLoose = 10#7
+beamStopSize = 4#4
+shrinkWrapN = 100
+shrinkWrapSigmaTight = 20
+shrinkWrapSigmaLoose = 5#7
 shrinkWrapThreshold = .2#2#.15
-startHIO = 200
+startHIO = 0
 keepSupportTogether = True
 allowSupportHoles = False # not implemented
 enforceRealness = False # this messes up shrink wrap. suspicious. is there something fishy with shrink wrap?
-beta = 0.9
+beta = 0.5
 photons = 0 #0 means don't apply noise
 outputN = 10
 

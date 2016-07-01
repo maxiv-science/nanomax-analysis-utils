@@ -5,40 +5,42 @@ import statprof
 import helpers
 import random
 import scipy.misc
+import time
 statprof.start()
 plt.ion()
 
-#wieno7Shoop7
+
+pause = False
+def onclick(event):
+    global pause
+    if event.button == 3:
+        pause = not pause
 
 PLOT = True
 N = 10000
 beamStopSize = 0
-retrieveProbeAfter = 0
+retrieveProbeAfter = -1
 alpha = 1.
-beta = 0.
+beta = 1.
 photons = 0 #0 means don't apply noise
-outputN = 10
-maxProbeSize = 100
+maxProbeSize = 80
 linearOverlap = 2.5
-randomOrder = False
-randomDisplacement = 0
+randomOrder = True
+randomDisplacement = 2
 
 #%%% Define the true sample and probe
 
 sample = np.mean(scipy.misc.face(), axis=2)
-sample = helpers.binPixels(sample, 3)
-#sample = plt.imread('Photon-noise.jpg')
-#sample = plt.imread('canoe_SEM_ed.png')
-#sample = plt.imread('NanoMax_Text_width_1um_ed.png')
-#sample = np.pad(sample, maxProbeSize/2, mode='constant')
-probe = helpers.circle(maxProbeSize, dtype='complex128')
-#probe = np.ones((maxProbeSize, maxProbeSize))
+sample = helpers.binPixels(sample, 4) / 255 * 0.8 + 0.2
+sampleLevel = sample.mean()
+probe = helpers.circle(maxProbeSize, radius = maxProbeSize/2-2, dtype='complex128')
+probeLevel = np.abs(probe).mean()
 
 #%%% Define the scanning positions
 nPositions = [int(round(sample.shape[0] / maxProbeSize * linearOverlap)), int(round(sample.shape[1] / maxProbeSize * linearOverlap))]
 positions = []
-vGrid = np.arange(maxProbeSize/2 + randomDisplacement, sample.shape[0], (sample.shape[0]-maxProbeSize)/(nPositions[0]-1))
-hGrid = np.arange(maxProbeSize/2 + randomDisplacement, sample.shape[1], (sample.shape[1]-maxProbeSize)/(nPositions[1]-1))
+vGrid = np.arange(maxProbeSize/2 + randomDisplacement, sample.shape[0], (sample.shape[0] - (maxProbeSize + 2 * randomDisplacement))/(nPositions[0]-1))
+hGrid = np.arange(maxProbeSize/2 + randomDisplacement, sample.shape[1], (sample.shape[1] - (maxProbeSize + 2 * randomDisplacement))/(nPositions[1]-1))
 for i in range(nPositions[0]):
     for j in range(nPositions[1]):
         positions.append(np.array([vGrid[i] + random.randint(-randomDisplacement, randomDisplacement), hGrid[j] + random.randint(-randomDisplacement, randomDisplacement) ]))
@@ -66,6 +68,7 @@ for i in range(len(positions)):
     
 if PLOT:
     fig = plt.figure(figsize=(14,10))
+    fig.canvas.mpl_connect('button_press_event', onclick)
     gs = gridspec.GridSpec(2, 3)
     ax = []
     ax += [fig.add_subplot(gs[0, 0], title='original image')]
@@ -80,6 +83,9 @@ if PLOT:
     ax[0].set_title('original image')
     for i in range(len(positions)):
         ax[0].plot(positions[i][1], positions[i][0], '.r')
+    ax[5].axhline(probeLevel, linestyle='--', color='k')
+    ax[5].axhline(sampleLevel, linestyle='--', color='r')
+    ax[5].axhline(sampleLevel*probeLevel, linestyle='--', color='g')
     plt.pause(.01)
 
 #for i in range(len(positions)):
@@ -90,9 +96,10 @@ if PLOT:
 #%%% Iteratively retrieve the phases
 
 # starting guesses
-sample = np.zeros(sample.shape, dtype='complex128')
+sample = np.ones(sample.shape, dtype='complex128') * .5
+#sample = sample * np.exp(0j)
 #probe = np.ones((maxProbeSize,maxProbeSize), dtype='complex128')
-#probe = helpers.pseudoCircle(maxProbeSize, radius=None, exponent=2.5, dtype='complex128')
+probe = helpers.circle(maxProbeSize, dtype=np.complex128)
 
 order = range(len(positions))
 for i in range(N):
@@ -106,24 +113,30 @@ for i in range(N):
         image = invBeamStop * imageAmplitudes[order[j]] * np.exp(1j * np.angle(image)) + beamStop * image
         exitWave_ = helpers.ifft(image)
         shiftedProbe = helpers.embedMatrix(probe, sample.shape, position_, mode='center')
+        cutSample = sample[position_[0] - maxProbeSize/2 : position_[0] + maxProbeSize/2, position_[1] - maxProbeSize/2 : position_[1] + maxProbeSize/2]
         sample += alpha * np.conj(shiftedProbe) / np.max(np.abs(shiftedProbe))**2 * helpers.embedMatrix((exitWave_ - exitWave), sample.shape, position_, mode='center')
         if i > retrieveProbeAfter:
-            cutSample = sample[position_[0] - maxProbeSize/2 : position_[0] + maxProbeSize/2, position_[1] - maxProbeSize/2 : position_[1] + maxProbeSize/2]
-            probe  +=  beta * np.conj(cutSample) / np.max(np.abs(cutSample))**2 * (exitWave_ - exitWave)
+            probe  +=  beta * np.conj(cutSample) / np.max(np.abs(cutSample))**2 * (exitWave_ - exitWave)        
         if PLOT:
+            while pause:
+                time.sleep(.1)
+                fig.canvas.get_tk_widget().update() # process events
             ax[1].clear()
-            ax[1].imshow(np.abs(sample), cmap='gray') 
-            ax[1].imshow(np.abs(shiftedProbe), cmap=helpers.alpha2redTransparent)
+            ax[1].imshow(np.abs(sample), **opts)
+            ax[1].imshow(np.abs(shiftedProbe), cmap=helpers.alpha2redTransparent, interpolation='none')
             ax[2].clear()
-            ax[2].imshow(np.abs(probe), cmap='gray', vmin=0, vmax=1.5)
+            ax[2].imshow(np.abs(probe), **opts)#, vmin=0, vmax=1.5)
             ax[3].clear()
             ax[3].imshow(np.log10(imageAmplitudes[order[j]]**2), interpolation='none')
+            #ax[3].imshow(np.angle(probe))
             ax[4].clear()
-            #ax[4].imshow(np.abs(helpers.embedMatrix((exitWave-exitWave_), sample.shape, position_, mode='center')), cmap='gray')
-            ax[4].imshow(np.log10(np.abs(image)**2), interpolation='none')
+            #ax[4].imshow(np.log10(np.abs(image)**2), interpolation='none')
+            ax[4].imshow(np.abs(cutSample), **opts)
             #ax[5].clear()
-            ax[5].plot(j + len(positions) * i, np.log10(np.sum(np.abs(probe))), '.k')
-            ax[5].plot(j + len(positions) * i, np.log10(np.sum(np.abs(sample))), '.r')
+            ax[5].plot(j + len(positions) * i, (np.mean(np.abs(probe))), '.k')
+            ax[5].plot(j + len(positions) * i, (np.mean(np.abs(sample))), '.r')
+            ax[5].plot(j + len(positions) * i, np.mean(np.abs(sample)) * np.mean(np.abs(probe)), '.g')
             #ax[5].imshow(np.abs(cutSample), cmap='gray')
             plt.draw()
             plt.pause(.01)
+

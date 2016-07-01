@@ -130,6 +130,7 @@ def shiftAndMultiply(block, wall, position, mode='center'):
         if mode == 'center':
             return block * wall[position[0]-block.shape[0]/2 : position[0]-block.shape[0]/2 + block.shape[0], position[1]-block.shape[1]/2 : position[1]-block.shape[1]/2 + block.shape[1]]
     except ValueError:
+        print block.shape, wall.shape, position
         raise ValueError('Shifting out of bounds.')
         
 def binPixels(image, n=2):
