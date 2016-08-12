@@ -1,2 +1,2 @@
-from Scan import Scan
+from Scan import *
 

@@ -15,6 +15,7 @@ class Scan():
         """ Positions and data are added later. """
         self.nDataSets = 0
         self.nPositions = None
+        self.nDimensions = None # scan dimensions
         
     def _readPositions(self, fileName):
         """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an array of coordinates Nx(image size). """
@@ -35,6 +36,8 @@ class Scan():
             # initialize data dict and read positions
             self.data = {}
             self.positions = self._readPositions(fileName)
+            self.nPositions = self.positions.shape[0]
+            self.nDimensions = self.positions.shape[1]
         else:
             # verify that the data isn't already loaded
             if name in self.data.keys():
@@ -66,6 +69,10 @@ class Scan():
             else:
                 raise ValueError("There is more than one dataset to choose from. Please specify!")
         return np.mean(self.data[name], axis=0)
+
+
+####
+# Here follow special subclasses which describe how to load from specific data sources.
 
 class nanomaxScan(Scan):
     def _readPositions(self, fileName):
@@ -104,16 +111,12 @@ class i13Scan(Scan):
             data = np.array(data)
         return data
 
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    #s = nanomaxScan()
-    #s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
-    s = i13Scan()
-    s.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
-    opts = {'interpolation':'none', 'cmap':'gray'}
-    plt.figure()
-    plt.plot(s.positions[:,0], s.positions[:,1], 'o-')
-    plt.figure()    
-    plt.imshow(np.log10(s.data['data0'][10]), **opts)
-    plt.figure()
-    plt.imshow(np.log10(s.meanData('data0')), **opts)
+#if __name__ == '__main__':
+#    import matplotlib.pyplot as plt
+#    s = nanomaxScan()
+#    s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
+#    #s = i13Scan()
+#    #s.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
+#    plt.plot(s.positions[:,0], s.positions[:,1], '.-')
+#    plt.figure(); plt.imshow(np.log10(s.data['data0'][10]))
+#    #plt.imshow(np.log10(s.meanData('data0')), **opts)
