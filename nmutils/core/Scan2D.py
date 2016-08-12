@@ -1,4 +1,4 @@
-""" Implements the Scan2D class, a container for 2D sample scans holding arbitrary data at each position. This data can typically be one or more 2D detector images, 1D fluorescence spectra, transmissions, etc."""
+""" Implements the Scan2D class, a container for 2D sample scans holding arbitrary data at each position. This data can typically be, for each scan position, one or more 2D detector images, 1D fluorescence spectra, transmissions, etc. """
 
     #######################################################################################
     # next up: write a GUI which uses this class to map out ROI intensities, for example. #
@@ -18,8 +18,20 @@ class Scan2D():
         self.positions = [np.array(range(scanDimensions[0])), np.array(range(scanDimensions[1]))]
         self.nDataSets = 0
         
+    def _readData(self, fileName, name):
+        """ Private method which interfaces with the actual hdf5 file and returns an MxNx(image size) array. The name kwarg should say what type of data we're reading (for example 'pilatus', 'transmission', ...), so data from different sources can be handled by this method. Subclass this! """
+        
+        if name == 'pilatus':
+            # Add pilatus data from MxN scan, ad hoc for now
+            with h5py.File(fileName,'r') as hf:
+                data = hf.get('entry/detector/data')
+                imshape = data.shape[-2:]
+                print data.shape
+                data = np.array(data).reshape(self.scanDimensions + imshape)
+            return data
+        
     def addData(self, fileName, name=None):
-        """ Ad hoc for now. This method adds positions the first time data is loaded. Then, subsequent data additions should check for consistency and complain if datasets are not compatible. """
+        """ This method adds positions the first time data is loaded. Then, subsequent data additions should check for consistency and complain if datasets are not compatible. """
         
         if not name:
             name = 'data%u' % self.nDataSets
@@ -30,13 +42,10 @@ class Scan2D():
         else:
             if name in self.data.keys():
                 raise ValueError("Dataset '%s' already exists!"%name)
-            
-        # Add new 2D data from a M x N scan, ad hoc for now
-        with h5py.File(fileName,'r') as hf:
-            data = hf.get('entry/detector/data')
-            imshape = data.shape[-2:]
-            data = np.array(data).reshape(self.scanDimensions + imshape)
-            self.data[name] = data
+        
+        # The actual reading is done by _readData() which knows about the details of the hdf5 file
+        data = self._readData(fileName, name)
+        self.data[name] = data
         self.nDataSets += 1
         
     def removeData(self, name):
