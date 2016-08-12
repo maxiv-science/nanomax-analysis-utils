@@ -8,9 +8,12 @@ from matplotlib import gridspec
 import numpy as np
 import time
 import statprof
-import helpers
+from nmutils import helpers
 statprof.start()
 plt.ion()
+
+import os
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 PLOT = True
 N = 1000000
@@ -29,7 +32,7 @@ outputN = 10
 
 #%%% Define the sample
 
-sample = plt.imread('canoe_SEM_ed.png');
+sample = plt.imread(PATH + '/../resources/canoe_SEM_ed.png');
 sample = sample / sample.max()
 
 # pad the image to make a square matrix

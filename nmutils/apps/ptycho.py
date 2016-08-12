@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
 import statprof
-import helpers
+from nmutils import helpers
 import random
 import scipy.misc
 import time
