@@ -16,7 +16,7 @@ class Scan():
         self.nDataSets = 0
         self.nPositions = None
         
-    def _readPositions(self, filename):
+    def _readPositions(self, fileName):
         """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an array of coordinates Nx(image size). """
         pass
         
@@ -68,9 +68,9 @@ class Scan():
         return np.mean(self.data[name], axis=0)
 
 class nanomaxScan(Scan):
-    def _readPositions(self, filename):
+    def _readPositions(self, fileName):
         """ Override the method which reads scan positions. This is based on a very early hdf5 format. """
-        with h5py.File(filename,'r') as hf:
+        with h5py.File(fileName,'r') as hf:
             data = hf.get('entry/detector/data')
             data = np.array(data)
             self.nPositions = data.shape[0]
@@ -82,19 +82,38 @@ class nanomaxScan(Scan):
         
     def _readData(self, fileName, name):
         """ Override the method which reads actual data. This is based on a very early hdf5 format. """
+        # Add pilatus data from MxN scan, ad hoc for now
+        with h5py.File(fileName,'r') as hf:
+            data = hf.get('entry/detector/data')
+            data = np.array(data)
+        return data
+            
+class i13Scan(Scan):
+    def _readPositions(self, fileName):
+        """ Override position reading. Based on Aaron Parson's I13 data. """
+        with h5py.File(fileName,'r') as hf:
+            x = np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
+            y = np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
+        positions = np.vstack((x, y)).T
+        return positions
         
-        if name == 'pilatus':
-            # Add pilatus data from MxN scan, ad hoc for now
-            with h5py.File(fileName,'r') as hf:
-                data = hf.get('entry/detector/data')
-                data = np.array(data)
-            return data
+    def _readData(self, fileName, name):
+        """ Override data reading. Based on Aaron Parson's I13 data. """
+        with h5py.File(fileName,'r') as hf:
+            data = hf.get('entry1/merlin_sw_hdf/data')
+            data = np.array(data)
+        return data
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    s = nanomaxScan()
-    s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5', 'pilatus')
+    #s = nanomaxScan()
+    #s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
+    s = i13Scan()
+    s.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
     opts = {'interpolation':'none', 'cmap':'gray'}
-    plt.imshow(np.log10(s.data['pilatus'][10]), **opts)
     plt.figure()
-    plt.imshow(np.log10(s.meanData('pilatus')), **opts)
+    plt.plot(s.positions[:,0], s.positions[:,1], 'o-')
+    plt.figure()    
+    plt.imshow(np.log10(s.data['data0'][10]), **opts)
+    plt.figure()
+    plt.imshow(np.log10(s.meanData('data0')), **opts)
