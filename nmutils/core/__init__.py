@@ -1,2 +1,2 @@
-from Scan2D import Scan2D
+from Scan import Scan
 
