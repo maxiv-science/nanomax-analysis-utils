@@ -2,6 +2,9 @@ from scipy.interpolate import griddata
 import nmutils
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+#import matplotlib as mpl
+#mpl.rcParams['backend'] = 'Qt4Agg'
 
 def fn(x):
     return np.log10(x)
@@ -35,6 +38,7 @@ class Plotter():
         xlim, ylim = self.ax[0].get_xlim(), self.ax[0].get_ylim()
         self.ax[0].clear()
         self.ax[0].imshow(fn(subScan.meanData()))
+        plt.draw()
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
         
@@ -46,6 +50,7 @@ class Plotter():
         xlim, ylim = self.ax[1].get_xlim(), self.ax[1].get_ylim()
         self.ax[1].clear()
         self.ax[1].imshow(fn(z), extent=[x.min(), x.max(), y.min(), y.max()], interpolation='none')
+        plt.draw()
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
 
@@ -103,18 +108,26 @@ def interpolate(roi, scan, oversampling):
     stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
     
     x, y = np.mgrid[xMin:xMax:stepsize, yMin:yMax:stepsize]
-    print x
     z = griddata(scan.positions, integral, (x, y), method='nearest')
     return x, y, z.T # z is indexed (x, y) but we want it indexed (y, x) like an image
 
-## load a scan
-#scan = nmutils.core.nanomaxScan()
-#scan.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
-scan = nmutils.core.i13Scan()
-scan.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
-scan = scan.subset(np.array([[1440, -710], [6000, 0]]))
+# parse arguments
+if len(sys.argv) < 3:
+    print "\nUsage: roiMapping.py <Scan subclass> <data file> \n"
+    print "Found these subclasses:"
+    for subclass in nmutils.core.Scan.__subclasses__():
+        print "       %s"%(subclass.__name__)
+    print "\n"
+    exit()
+subclass = sys.argv[1]
+fileName = sys.argv[2]
 
-## start the gui
+# create a Scan object and load data
+scan = None
+exec "scan = nmutils.core.%s()"%subclass
+scan.addData(fileName)
+
+# start the gui
 plotter = Plotter(scan)
 a = GuiListener(plotter)
 plt.show()
