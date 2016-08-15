@@ -1,15 +1,12 @@
 """ Implements the Scan class, a container for N-dimensional sample scans holding arbitrary data at each position. This data can typically be, for each scan position, one or more 2D detector images, 1D fluorescence spectra, transmissions, etc. """
 
-    #######################################################################################
-    # next up: write a GUI which uses this class to map out ROI intensities, for example. #
-    #######################################################################################
-
 import numpy as np
 import h5py
+import copy as cp
 
 __docformat__ = 'restructuredtext' # This is what we're using! Learn about it.
 
-class Scan():
+class Scan(object):
     
     def __init__(self):
         """ Positions and data are added later. """
@@ -18,11 +15,11 @@ class Scan():
         self.nDimensions = None # scan dimensions
         
     def _readPositions(self, fileName):
-        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an array of coordinates Nx(image size). """
+        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an array of coordinates N-by-(number of scan dimensions). """
         pass
         
     def _readData(self, fileName, name):
-        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an Nx(image size) array. The name kwarg should say what type of data we're reading (for example 'pilatus', 'transmission', ...), so data from different sources can be handled by this method. """
+        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an N-by-(image size) array. The name kwarg should hint at what type of data we're reading (for example 'pilatus', 'transmission', ...), so data from different sources can be handled by this method. """
         pass
         
     def addData(self, fileName, name=None):
@@ -69,7 +66,71 @@ class Scan():
             else:
                 raise ValueError("There is more than one dataset to choose from. Please specify!")
         return np.mean(self.data[name], axis=0)
+        
+    def copy(self, data=True):
+        """ Returns a copy of the Scan instance. The kwarg data can be set to False to ignore data and positions, which is useful for creating Scan instances with only a subset of the data. This method also copies all attributes and does not need to be updated. """
+        
+        # copy all
+        if data:
+            return cp.deepcopy(self)        
 
+        # otherwise, construct a new objects and copy all the attributes
+        # create a new object of the right subclass:
+        new = None # just tricking the editor
+        exec("new = %s()"%type(self).__name__)
+        
+        # copy all the non-data attributes
+        for key in self.__dict__.keys():
+            if key not in ['data', 'positions', 'nPositions']:
+                exec("new.%s = cp.deepcopy(self.%s)" % (key, key))
+        new.data = {}
+        new.nPositions = 0
+        new.positions = None
+        new.nDatasets = 0
+        for dataset in self.data.keys():
+            new.data[dataset] = None
+            new.nDatasets += 1
+        
+        return new        
+        
+    def subset(self, posRange, closest=False):
+        """ Returns a Scan instance containing only the scan positions which are within a specified range, array([[xmin, ymin, ...], [xmax, ymax, ...]]). If the kwarg closest is True, and the specified range contains no positions, then the returned instance contains only the single closest position. """
+        new = self.copy(data = False)
+        
+        # lists of data and positions to fill in
+        new.positions = []
+        for dataset in self.data.keys():
+            new.data[dataset] = []
+        
+        # go through all positions and only include the ones which are within range
+        for i in range(self.nPositions):
+            ok = True
+            for dim in range(self.nDimensions):
+                pos = self.positions[i, dim]
+                if pos < posRange[0, dim] or pos > posRange[1, dim]:
+                    ok = False
+                    break
+            if ok:
+                for dataset in self.data.keys():
+                    new.data[dataset].append(self.data[dataset][i])
+                new.positions.append(self.positions[i])
+                
+        # get the closest positions if requested
+        if (len(new.positions) == 0) and closest:
+            rangeCenter = np.mean(posRange, axis=0)
+            index = np.argmin(np.linalg.norm(self.positions - rangeCenter, axis=1))
+            for dataset in self.data.keys():
+                new.data[dataset].append(self.data[dataset][index])
+            new.positions.append(self.positions[index])
+        
+        # convert lists to arrays
+        for dataset in self.data.keys():
+            new.data[dataset] = np.array(new.data[dataset])
+        new.positions = np.array(new.positions)
+        new.nPositions = new.positions.shape[0]
+                    
+        return new
+        
 
 ####
 # Here follow special subclasses which describe how to load from specific data sources.
@@ -113,10 +174,14 @@ class i13Scan(Scan):
 
 #if __name__ == '__main__':
 #    import matplotlib.pyplot as plt
-#    s = nanomaxScan()
-#    s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
-#    #s = i13Scan()
-#    #s.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
+#    #s = nanomaxScan()
+#    #s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
+#    s = i13Scan()
+#    s.addData('/home/alex/data/aaronsSiemensStar/68862.nxs')
 #    plt.plot(s.positions[:,0], s.positions[:,1], '.-')
+#    plt.figure(); plt.imshow(np.log10(s.data['data0'][10]))
+#    roi = np.array([[1438, -697], [1443, -695]])
+#    s = s.roi(roi)
+#    plt.figure(); plt.plot(s.positions[:,0], s.positions[:,1], '.-')
 #    plt.figure(); plt.imshow(np.log10(s.data['data0'][10]))
 #    #plt.imshow(np.log10(s.meanData('data0')), **opts)
