@@ -145,7 +145,7 @@ class nanomaxScan(Scan):
         positions = []
         for i in range(int(np.sqrt(self.nPositions))):
             for j in range(int(np.sqrt(self.nPositions))):
-                positions.append([i, j])
+                positions.append([j, i])
         return np.array(positions)
         
     def _readData(self, fileName, name):

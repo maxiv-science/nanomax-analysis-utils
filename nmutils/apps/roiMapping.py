@@ -2,12 +2,8 @@ from scipy.interpolate import griddata
 import nmutils
 import numpy as np
 import matplotlib.pyplot as plt
+#plt.ion()
 import sys
-#import matplotlib as mpl
-#mpl.rcParams['backend'] = 'Qt4Agg'
-
-def fn(x):
-    return np.log10(x)
 
 class Plotter():
     """ Class which creates a figure, visualizes a scan as a map and a diffraction pattern, and provides methods for updating the two plots. """
@@ -21,14 +17,22 @@ class Plotter():
     def reset(self):
         # diffraction pattern
         imshape = scan.meanData().shape
-        self.ax[0].imshow(fn(scan.meanData()), interpolation='none')
+        self.ax[0].imshow(np.log10(scan.meanData()), interpolation='none')
         self.ax[0].set_xlim(0, imshape[1])
         self.ax[0].set_ylim(0, imshape[0])
         # map
         x, y, z = interpolate([0, imshape[0], 0, imshape[1]], scan, 5)
-        self.ax[1].imshow(fn(z), extent=[x.min(), x.max(), y.min(), y.max()], interpolation='none')
-        self.ax[1].set_xlim([x.min(), x.max()])
-        self.ax[1].set_ylim([y.min(), y.max()])
+        self._drawMap(x, y, z)
+
+    def _drawMap(self, x, y, z):
+        """ This has its own helper function because it's a nightmare to get imshow to work with proper x/y limits without confusing the indices etc. """
+        # contourf() provides the right way, because x, y, and z values are always correctly connected.
+        #self.ax[1].contourf(x, y, z)
+        # now get imshow to produce the same result: 
+        # np.flipud(z.T) produces an image where x/y run right/up from a bottom-left origin.
+        self.ax[1].clear()
+        self.ax[1].imshow(np.flipud(z.T), extent=[x.min(), x.max(), y.min(), y.max()], interpolation='none')
+        plt.draw()
         
     def updateImage(self, rect):
         xmin, xmax = min(rect[0], rect[2]), max(rect[0], rect[2])
@@ -37,7 +41,7 @@ class Plotter():
         subScan = self.scan.subset(rect, closest=True)
         xlim, ylim = self.ax[0].get_xlim(), self.ax[0].get_ylim()
         self.ax[0].clear()
-        self.ax[0].imshow(fn(subScan.meanData()))
+        self.ax[0].imshow(np.log10(subScan.meanData()))
         plt.draw()
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
@@ -48,9 +52,7 @@ class Plotter():
         rect = np.array([ymin, ymax, xmin, xmax], dtype=int) # here we convert from the event's xy coordinates to the detector image's row-column order.
         x, y, z = interpolate(rect, scan, 5)
         xlim, ylim = self.ax[1].get_xlim(), self.ax[1].get_ylim()
-        self.ax[1].clear()
-        self.ax[1].imshow(fn(z), extent=[x.min(), x.max(), y.min(), y.max()], interpolation='none')
-        plt.draw()
+        self._drawMap(x, y, z)
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
 
@@ -109,7 +111,8 @@ def interpolate(roi, scan, oversampling):
     
     x, y = np.mgrid[xMin:xMax:stepsize, yMin:yMax:stepsize]
     z = griddata(scan.positions, integral, (x, y), method='nearest')
-    return x, y, z.T # z is indexed (x, y) but we want it indexed (y, x) like an image
+    #import ipdb; ipdb.set_trace()
+    return x, y, z # this is now returned with x-y indexing, not suitable for imshow!
 
 # parse arguments
 if len(sys.argv) < 3:
@@ -118,7 +121,11 @@ if len(sys.argv) < 3:
     for subclass in nmutils.core.Scan.__subclasses__():
         print "       %s"%(subclass.__name__)
     print "\n"
-    exit()
+    try:
+        __IPYTHON__
+        raise Exception("too few input arguments")
+    except NameError:
+        sys.exit(0)
 subclass = sys.argv[1]
 fileName = sys.argv[2]
 
