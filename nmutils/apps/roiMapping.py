@@ -13,6 +13,10 @@ class Plotter():
         self.reset()
         plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
         plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
+        plt.setp(self.ax[0], title='diffraction')
+        plt.setp(self.ax[1], xlabel='x', ylabel='y', title='scan map')
+        self.ax[1].yaxis.tick_right()
+        self.ax[1].yaxis.set_label_position('right')
         
     def reset(self):
         # diffraction pattern
