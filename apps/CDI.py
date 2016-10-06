@@ -8,7 +8,7 @@ from matplotlib import gridspec
 import numpy as np
 import time
 import statprof
-from nmutils import helpers
+from nmutils import utils
 statprof.start()
 plt.ion()
 
@@ -32,7 +32,7 @@ outputN = 10
 
 #%%% Define the sample
 
-sample = plt.imread(PATH + '/../resources/canoe_SEM_ed.png');
+sample = plt.imread(PATH + '/../nmutils/resources/canoe_SEM_ed.png');
 sample = sample / sample.max()
 
 # pad the image to make a square matrix
@@ -55,7 +55,7 @@ support[supportBox[0][0]:supportBox[0][1], supportBox[1][0]:supportBox[1][1]] = 
 
 #%%% Transform the sample to get the image
 
-image = helpers.fft(sample)
+image = utils.fft(sample)
 
 # fake a beamstop
 a, b = image.shape
@@ -69,7 +69,7 @@ image *= invBeamStop
 
 imageIntensity = np.abs(image)**2
 if photons:
-    imageIntensity = helpers.noisyImage(imageIntensity, photons)
+    imageIntensity = utils.noisyImage(imageIntensity, photons)
 imageAmplitude = np.sqrt(imageIntensity)
 print imageIntensity.min(), imageIntensity.max()
 
@@ -100,7 +100,7 @@ for i in range(N):
     t0 = time.time()
     # transform to real space
     t0 = time.time() * 1000
-    sample = helpers.ifft(image)
+    sample = utils.ifft(image)
     tmp.append(time.time()*1000 - t0)
         
     # enforce real space constraints
@@ -120,16 +120,16 @@ for i in range(N):
     if (i % shrinkWrapN == 0) and (i > 0):
         #sigma = {False: shrinkWrapSigmaLoose, True: shrinkWrapSigmaTight}[i > 300]
         sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
-        blurredSample = helpers.smoothImage(sample, sigma)
+        blurredSample = utils.smoothImage(sample, sigma)
         # working with amplitudes here, numpy.ndarray.max() only looks at real part.
         support = ( np.abs(blurredSample) >= shrinkWrapThreshold * np.max(np.abs(blurredSample)) )
         medians = [np.median(np.where(support)[0]), np.median(np.where(support)[1])]
         centers = np.array(support.shape) / 2
         shifts = centers - medians
-        support = helpers.shift(support, shifts)
+        support = utils.shift(support, shifts)
         if keepSupportTogether:
-            support = helpers.biggestBlob(support)
-        sample = helpers.shift(sample, shifts)
+            support = utils.biggestBlob(support)
+        sample = utils.shift(sample, shifts)
 
     oldSample = sample #
 
@@ -148,14 +148,14 @@ for i in range(N):
         ax[4].clear()
         ax[4].imshow(np.log10(imageIntensity), **opts)
         ax[4].hold(True)
-        ax[4].imshow(beamStop, cmap=helpers.alpha2red, interpolation='none')
+        ax[4].imshow(beamStop, cmap=utils.alpha2red, interpolation='none')
         #ax[4].imshow(np.angle(sample)+np.pi)
         #ax[4].set_title('reconstructed phase')
         plt.draw()
         plt.pause(.001)
         
     # transform to q space
-    image = helpers.fft(sample)
+    image = utils.fft(sample)
     
     if (i % outputN == 0) and PLOT:
         ax[5].clear()
