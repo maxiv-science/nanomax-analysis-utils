@@ -9,22 +9,22 @@ import time
 statprof.start()
 plt.ion()
 
-
 pause = False
 def onclick(event):
     global pause
     if event.button == 3:
         pause = not pause
 
+algorithm = 'ePIE'
 PLOT = True
-N = 10000
+N = 500
 beamStopSize = 0
 retrieveProbeAfter = -1
 alpha = 1.
 beta = 1.
 photons = 0 #0 means don't apply noise
 maxProbeSize = 80
-linearOverlap = 2.5
+linearOverlap = 4
 randomOrder = True
 randomDisplacement = 2
 
@@ -33,7 +33,7 @@ randomDisplacement = 2
 sample = np.mean(scipy.misc.face(), axis=2)
 sample = helpers.binPixels(sample, 4) / 255 * 0.8 + 0.2
 sampleLevel = sample.mean()
-probe = helpers.circle(maxProbeSize, radius = maxProbeSize/2-2, dtype='complex128')
+probe = helpers.circle(maxProbeSize, radius = maxProbeSize/2-3, dtype='complex128')
 probeLevel = np.abs(probe).mean()
 
 #%%% Define the scanning positions
@@ -104,39 +104,90 @@ probe = helpers.circle(maxProbeSize, dtype=np.complex128)
 order = range(len(positions))
 for i in range(N):
     print i
-    if randomOrder:
-        random.shuffle(order)
-    for j in range(len(positions)):
-        position_ = positions[order[j]]
-        exitWave = helpers.shiftAndMultiply(probe, sample, position_, mode='center')
-        image = helpers.fft(exitWave)
-        image = invBeamStop * imageAmplitudes[order[j]] * np.exp(1j * np.angle(image)) + beamStop * image
-        exitWave_ = helpers.ifft(image)
-        shiftedProbe = helpers.embedMatrix(probe, sample.shape, position_, mode='center')
-        cutSample = sample[position_[0] - maxProbeSize/2 : position_[0] + maxProbeSize/2, position_[1] - maxProbeSize/2 : position_[1] + maxProbeSize/2]
-        sample += alpha * np.conj(shiftedProbe) / np.max(np.abs(shiftedProbe))**2 * helpers.embedMatrix((exitWave_ - exitWave), sample.shape, position_, mode='center')
-        if i > retrieveProbeAfter:
-            probe  +=  beta * np.conj(cutSample) / np.max(np.abs(cutSample))**2 * (exitWave_ - exitWave)        
+    if algorithm == 'ePIE':
+        if randomOrder:
+            random.shuffle(order)
+        for j in range(len(positions)):
+            position_ = positions[order[j]]
+            exitWave = helpers.shiftAndMultiply(probe, sample, position_, mode='center')
+            image = helpers.fft(exitWave)
+            image = invBeamStop * imageAmplitudes[order[j]] * np.exp(1j * np.angle(image)) + beamStop * image
+            exitWave_ = helpers.ifft(image)
+            shiftedProbe = helpers.embedMatrix(probe, sample.shape, position_, mode='center')
+            cutSample = sample[position_[0] - maxProbeSize/2 : position_[0] + maxProbeSize/2, position_[1] - maxProbeSize/2 : position_[1] + maxProbeSize/2]
+            sample += alpha * np.conj(shiftedProbe) / np.max(np.abs(shiftedProbe))**2 * helpers.embedMatrix((exitWave_ - exitWave), sample.shape, position_, mode='center')
+            if i > retrieveProbeAfter:
+                probe  +=  beta * np.conj(cutSample) / np.max(np.abs(cutSample))**2 * (exitWave_ - exitWave)
+            if PLOT and j == 0:
+                while pause:
+                    time.sleep(.1)
+                    fig.canvas.get_tk_widget().update() # process events
+                ax[1].clear()
+                ax[1].imshow(np.abs(sample), **opts)
+                ax[1].imshow(np.abs(shiftedProbe), cmap=helpers.alpha2redTransparent, interpolation='none')
+                ax[2].clear()
+                ax[2].imshow(np.abs(probe), vmin=0, vmax=1.2, **opts)#, vmin=0, vmax=1.5)
+                print np.abs(probe).max()
+                ax[4].clear()
+                ax[4].imshow(np.abs(cutSample), **opts)
+                ax[5].plot(j + len(positions) * i, (np.mean(np.abs(probe))), '.k')
+                ax[5].plot(j + len(positions) * i, (np.mean(np.abs(sample))), '.r')
+                ax[5].plot(j + len(positions) * i, np.mean(np.abs(sample)) * np.mean(np.abs(probe)), '.g')
+                plt.draw()
+                plt.pause(.01)
+    
+    elif algorithm == 'DM':
+        # create list of initial exit waves
+        if i == 0:
+            errors = []
+            exitWaves = []
+            for j in range(len(positions)):
+                position_ = positions[j]
+                exitWaves.append(helpers.shiftAndMultiply(probe, sample, position_, mode='center'))
+        # Fourier update
+        err = 0.0
+        images = []
+        for j in range(len(positions)):
+            position_ = positions[j]
+            ps = helpers.shiftAndMultiply(probe, sample, position_, mode='center')
+            image = helpers.fft((1 + alpha) * ps - alpha * exitWaves[j])
+            images.append(np.copy(image))
+            err += np.sum(image - imageAmplitudes[j])
+            image = invBeamStop * imageAmplitudes[j] * np.exp(1j * np.angle(image)) + beamStop * image
+            exitWave_ = helpers.ifft(image)
+            exitWaves[j] += exitWave_ - ps
+        errors.append(err)
+        # Overlap update
+        for iteration in range(5):
+            # sample update
+            sample = np.zeros(sample.shape, dtype='complex128')
+            norm = np.zeros(sample.shape)
+            for j in range(len(positions)):
+                position_ = positions[j]
+                shiftedProbe = helpers.embedMatrix(probe, sample.shape, position_, mode='center')
+                shiftedExitWave = helpers.embedMatrix(exitWaves[j], sample.shape, position_, mode='center')
+                sample += np.conj(shiftedProbe) * shiftedExitWave
+                norm += np.abs(shiftedProbe)**2
+            sample /= (norm + 1)
+            # probe update
+            probe = np.zeros(probe.shape, dtype='complex128')
+            norm = np.zeros(probe.shape)
+            for j in range(len(positions)):
+                position_ = positions[j]
+                cutSample = sample[position_[0] - maxProbeSize/2 : position_[0] + maxProbeSize/2, position_[1] - maxProbeSize/2 : position_[1] + maxProbeSize/2]
+                probe += np.conj(cutSample) * exitWaves[j]
+                norm += np.abs(cutSample)**2
+            probe /= (norm + 1)
+
         if PLOT:
             while pause:
                 time.sleep(.1)
                 fig.canvas.get_tk_widget().update() # process events
             ax[1].clear()
             ax[1].imshow(np.abs(sample), **opts)
-            ax[1].imshow(np.abs(shiftedProbe), cmap=helpers.alpha2redTransparent, interpolation='none')
             ax[2].clear()
-            ax[2].imshow(np.abs(probe), **opts)#, vmin=0, vmax=1.5)
-            ax[3].clear()
-            ax[3].imshow(np.log10(imageAmplitudes[order[j]]**2), interpolation='none')
-            #ax[3].imshow(np.angle(probe))
-            ax[4].clear()
-            #ax[4].imshow(np.log10(np.abs(image)**2), interpolation='none')
-            ax[4].imshow(np.abs(cutSample), **opts)
-            #ax[5].clear()
-            ax[5].plot(j + len(positions) * i, (np.mean(np.abs(probe))), '.k')
-            ax[5].plot(j + len(positions) * i, (np.mean(np.abs(sample))), '.r')
-            ax[5].plot(j + len(positions) * i, np.mean(np.abs(sample)) * np.mean(np.abs(probe)), '.g')
-            #ax[5].imshow(np.abs(cutSample), cmap='gray')
+            ax[2].imshow(np.abs(probe), **opts)
+            ax[5].clear()
+            ax[5].plot(errors)
             plt.draw()
             plt.pause(.01)
-
