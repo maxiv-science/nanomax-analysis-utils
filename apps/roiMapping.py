@@ -20,12 +20,12 @@ class Plotter():
         
     def reset(self):
         # diffraction pattern
-        imshape = scan.meanData().shape
-        self.ax[0].imshow(np.log10(scan.meanData()), interpolation='none')
+        imshape = self.scan.meanData().shape
+        self.ax[0].imshow(np.log10(self.scan.meanData()), interpolation='none')
         self.ax[0].set_xlim(0, imshape[1])
         self.ax[0].set_ylim(0, imshape[0])
         # map
-        x, y, z = interpolate([0, imshape[0], 0, imshape[1]], scan, 5)
+        x, y, z = interpolate([0, imshape[0], 0, imshape[1]], self.scan, 5)
         self._drawMap(x, y, z)
 
     def _drawMap(self, x, y, z):
