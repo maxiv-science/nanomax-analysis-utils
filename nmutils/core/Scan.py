@@ -1,33 +1,61 @@
-""" Implements the Scan class, a container for N-dimensional sample scans holding arbitrary data at each position. This data can typically be, for each scan position, one or more 2D detector images, 1D fluorescence spectra, transmissions, etc. """
+"""  
+Implements the Scan class, a container for N-dimensional sample scans
+holding arbitrary data at each position. This data can typically be, for
+each scan position, one or more 2D detector images, 1D fluorescence
+spectra, transmissions, etc.
+"""
 
 import numpy as np
 import h5py
 import copy as cp
 
-__docformat__ = 'restructuredtext' # This is what we're using! Learn about it.
+__docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
+
 
 class Scan(object):
-    
+
     def __init__(self):
-        """ Positions and data are added later. """
+        """ 
+        Only initializes counters. Positions and data are added later. 
+        """
         self.nDataSets = 0
         self.nPositions = None
-        self.nDimensions = None # scan dimensions
-        
+        self.nDimensions = None  # scan dimensions
+
     def _readPositions(self, fileName):
-        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an array of coordinates N-by-(number of scan dimensions). """
+        """ 
+        Placeholder method to be subclassed. Private method which
+        interfaces with the actual hdf5 file and returns an array of
+        coordinates N-by-(number of scan dimensions).
+
+        The positions are defined as [x, y], where columns x and y are
+        the beam positions on the sample, in right-handed lab
+        coordinates but relative to the sample frame (which means that
+        moving a motor positive moves the position on the sample
+        negative).
+        """
         pass
-        
+
     def _readData(self, fileName, name):
-        """ Placeholder method to be subclassed. Private method which interfaces with the actual hdf5 file and returns an N-by-(image size) array. The name kwarg should hint at what type of data we're reading (for example 'pilatus', 'transmission', ...), so data from different sources can be handled by this method. """
+        """ 
+        Placeholder method to be subclassed. Private method which
+        interfaces with the actual hdf5 file and returns an N-by-(image
+        size) array. The name kwarg should hint at what type of data
+        we're reading (for example 'pilatus', 'transmission', ...), so
+        data from different sources can be handled by this method.
+        """
         pass
-        
+
     def addData(self, fileName, name=None):
-        """ This method adds positions the first time data is loaded. Then, subsequent data additions should check for consistency and complain if datasets are not compatible. """
-        
+        """ 
+        This method adds positions the first time data is loaded. Then,
+        subsequent data additions should check for consistency and
+        complain if datasets are not compatible.
+        """
+
         if not name:
             name = 'data%u' % self.nDataSets
-        
+
         # Check if any data exists.
         if not hasattr(self, 'data'):
             # initialize data dict and read positions
@@ -38,47 +66,56 @@ class Scan(object):
         else:
             # verify that the data isn't already loaded
             if name in self.data.keys():
-                raise ValueError("Dataset '%s' already exists!"%name)
+                raise ValueError("Dataset '%s' already exists!" % name)
             # verify that positions are are consistent
             if not (self.positions.shape == self._readPositions(fileName)):
-                raise ValueError("Positions of new dataset are inconsistent with previously loaded positions!")
-        
-        # The actual reading is done by _readData() which knows about the details of the hdf5 file
+                raise ValueError(
+                    "Positions of new dataset are inconsistent with previously loaded positions!")
+
+        # The actual reading is done by _readData() which knows about the
+        # details of the hdf5 file
         data = self._readData(fileName, name)
         self.data[name] = data
         self.nDataSets += 1
-        
+
     def removeData(self, name):
         if name in self.data.keys():
             self.data.pop(name, None)
         else:
-            raise ValueError("Dataset '%s' doesn't exist!"%name)
+            raise ValueError("Dataset '%s' doesn't exist!" % name)
         self.nDataSets -= 1
-        
+
     def listData(self):
         return self.data.keys()
-        
+
     def meanData(self, name=None):
         """ Returns the scan-average of the specified data set. """
-        if not name: 
+        if not name:
             if self.nDataSets == 1:
                 name = self.listData()[0]
             else:
-                raise ValueError("There is more than one dataset to choose from. Please specify!")
+                raise ValueError(
+                    "There is more than one dataset to choose from. Please specify!")
         return np.mean(self.data[name], axis=0)
-        
+
     def copy(self, data=True):
-        """ Returns a copy of the Scan instance. The kwarg data can be set to False to ignore data and positions, which is useful for creating Scan instances with only a subset of the data. This method also copies all attributes and does not need to be updated. """
-        
+        """ 
+        Returns a copy of the Scan instance. The kwarg data can be set
+        to False to ignore data and positions, which is useful for
+        creating Scan instances with only a subset of the data. This
+        method also copies all attributes and does not need to be
+        updated.
+        """
+
         # copy all
         if data:
-            return cp.deepcopy(self)        
+            return cp.deepcopy(self)
 
         # otherwise, construct a new objects and copy all the attributes
         # create a new object of the right subclass:
-        new = None # just tricking the editor
-        exec("new = %s()"%type(self).__name__)
-        
+        new = None  # just tricking the editor
+        exec("new = %s()" % type(self).__name__)
+
         # copy all the non-data attributes
         for key in self.__dict__.keys():
             if key not in ['data', 'positions', 'nPositions']:
@@ -90,19 +127,26 @@ class Scan(object):
         for dataset in self.data.keys():
             new.data[dataset] = None
             new.nDatasets += 1
-        
-        return new        
-        
+
+        return new
+
     def subset(self, posRange, closest=False):
-        """ Returns a Scan instance containing only the scan positions which are within a specified range, array([[xmin, ymin, ...], [xmax, ymax, ...]]). If the kwarg closest is True, and the specified range contains no positions, then the returned instance contains only the single closest position. """
-        new = self.copy(data = False)
-        
+        """ 
+        Returns a Scan instance containing only the scan positions which
+        are within a specified range, array([[xmin, ymin, ...], [xmax,
+        ymax, ...]]). If the kwarg closest is True, and the specified
+        range contains no positions, then the returned instance contains
+        only the single closest position.
+        """
+        new = self.copy(data=False)
+
         # lists of data and positions to fill in
         new.positions = []
         for dataset in self.data.keys():
             new.data[dataset] = []
-        
-        # go through all positions and only include the ones which are within range
+
+        # go through all positions and only include the ones which are
+        # within range
         for i in range(self.nPositions):
             ok = True
             for dim in range(self.nDimensions):
@@ -114,31 +158,37 @@ class Scan(object):
                 for dataset in self.data.keys():
                     new.data[dataset].append(self.data[dataset][i])
                 new.positions.append(self.positions[i])
-                
+
         # get the closest positions if requested
         if (len(new.positions) == 0) and closest:
             rangeCenter = np.mean(posRange, axis=0)
-            index = np.argmin(np.linalg.norm(self.positions - rangeCenter, axis=1))
+            index = np.argmin(np.linalg.norm(
+                self.positions - rangeCenter, axis=1))
             for dataset in self.data.keys():
                 new.data[dataset].append(self.data[dataset][index])
             new.positions.append(self.positions[index])
-        
+
         # convert lists to arrays
         for dataset in self.data.keys():
             new.data[dataset] = np.array(new.data[dataset])
         new.positions = np.array(new.positions)
         new.nPositions = new.positions.shape[0]
-                    
+
         return new
-        
+
 
 ####
-# Here follow special subclasses which describe how to load from specific data sources.
+# Here follow special subclasses which describe how to load from
+# specific data sources.
 
 class nanomaxScan(Scan):
+
     def _readPositions(self, fileName):
-        """ Override the method which reads scan positions. This is based on a very early hdf5 format. """
-        with h5py.File(fileName,'r') as hf:
+        """ 
+        Override the method which reads scan positions. This is based on
+        a very early hdf5 format.
+        """
+        with h5py.File(fileName, 'r') as hf:
             data = hf.get('entry/detector/data')
             data = np.array(data)
             self.nPositions = data.shape[0]
@@ -147,32 +197,41 @@ class nanomaxScan(Scan):
             for j in range(int(np.sqrt(self.nPositions))):
                 positions.append([j, i])
         return np.array(positions)
-        
+
     def _readData(self, fileName, name):
-        """ Override the method which reads actual data. This is based on a very early hdf5 format. """
+        """ 
+        Override the method which reads actual data. This is based on a
+        very early hdf5 format.
+        """
         # Add pilatus data from MxN scan, ad hoc for now
-        with h5py.File(fileName,'r') as hf:
+        with h5py.File(fileName, 'r') as hf:
             data = hf.get('entry/detector/data')
             data = np.array(data)
         return data
-            
+
+
 class i13Scan(Scan):
+
     def _readPositions(self, fileName):
-        """ Override position reading. Based on Aaron Parson's I13 data. """
-        with h5py.File(fileName,'r') as hf:
+        """ 
+        Override position reading. Based on Aaron Parson's I13 data. 
+        """
+        with h5py.File(fileName, 'r') as hf:
             x = np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
             y = np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
         positions = np.vstack((x, y)).T
         return positions
-        
+
     def _readData(self, fileName, name):
-        """ Override data reading. Based on Aaron Parson's I13 data. """
-        with h5py.File(fileName,'r') as hf:
+        """ 
+        Override data reading. Based on Aaron Parson's I13 data. 
+        """
+        with h5py.File(fileName, 'r') as hf:
             data = hf.get('entry1/merlin_sw_hdf/data')
             data = np.array(data)
         return data
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    import matplotlib.pyplot as plt
 #    #s = nanomaxScan()
 #    #s.addData('/home/alex/data/zoneplatescan-s3-m4.hdf5')
