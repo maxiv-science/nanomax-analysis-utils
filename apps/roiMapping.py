@@ -11,32 +11,32 @@ class Plotter():
         self.fig, self.ax = plt.subplots(ncols=2)
         self.scan = scan
         self.reset()
-        plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
-        plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
-        plt.setp(self.ax[0], title='diffraction')
-        plt.setp(self.ax[1], xlabel='x', ylabel='y', title='scan map')
-        self.ax[1].yaxis.tick_right()
-        self.ax[1].yaxis.set_label_position('right')
-        
+
     def reset(self):
         # diffraction pattern
         imshape = self.scan.meanData().shape
         self.ax[0].imshow(np.log10(self.scan.meanData()), interpolation='none')
         self.ax[0].set_xlim(0, imshape[1])
-        self.ax[0].set_ylim(0, imshape[0])
+        self.ax[0].set_ylim(imshape[0], 0)
         # map
         x, y, z = interpolate([0, imshape[0], 0, imshape[1]], self.scan, 5)
-        self._drawMap(x, y, z)
-
-    def _drawMap(self, x, y, z):
-        """ This has its own helper function because it's a nightmare to get imshow to work with proper x/y limits without confusing the indices etc. """
-        # contourf() provides the right way, because x, y, and z values are always correctly connected.
-        #self.ax[1].contourf(x, y, z)
-        # now get imshow to produce the same result: 
-        # np.flipud(z.T) produces an image where x/y run right/up from a bottom-left origin.
         self.ax[1].clear()
-        self.ax[1].imshow(np.flipud(z.T), extent=[x.min(), x.max(), y.min(), y.max()], interpolation='none')
+        self.ax[1].imshow(z, 
+            extent = [x.max(), x.min(), y.min(), y.max()],
+            interpolation='none')
+        self.format_axes()
         plt.draw()
+
+    def format_axes(self):
+        plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
+        plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
+        self.ax[0].text(.5 * np.diff(self.ax[0].get_xlim()), -.15 * np.diff(self.ax[0].get_xlim()), 'Diffraction', ha='center', fontsize=14)
+        self.ax[1].text(-.5 * np.diff(self.ax[1].get_xlim()), -.15 * np.diff(self.ax[1].get_xlim()), 'Scan Map', ha='center', fontsize=14)
+        plt.setp(self.ax[1], xlabel='laboratory x', ylabel='laboratory y')
+        self.ax[1].yaxis.tick_right()
+        self.ax[1].yaxis.set_label_position('right')
+        self.ax[0].xaxis.tick_top()
+        self.ax[0].xaxis.set_label_position('top') 
         
     def updateImage(self, rect):
         xmin, xmax = min(rect[0], rect[2]), max(rect[0], rect[2])
@@ -49,16 +49,24 @@ class Plotter():
         plt.draw()
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
+        self.format_axes()
         
     def updateMap(self, rect):
         xmin, xmax = min(rect[0], rect[2]), max(rect[0], rect[2])
         ymin, ymax = min(rect[1], rect[3]), max(rect[1], rect[3])
-        rect = np.array([ymin, ymax, xmin, xmax], dtype=int) # here we convert from the event's xy coordinates to the detector image's row-column order.
+        #import ipdb; ipdb.set_trace()
+        # convert the event's xy coordinates into image row-column:
+        rect = np.array([ymin, ymax, xmin, xmax], dtype=int) 
         x, y, z = interpolate(rect, scan, 5)
         xlim, ylim = self.ax[1].get_xlim(), self.ax[1].get_ylim()
-        self._drawMap(x, y, z)
+        self.ax[1].clear()
+        self.ax[1].imshow(z, 
+            extent = [x.max(), x.min(), y.min(), y.max()],
+            interpolation='none')
+        plt.draw()
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
+        self.format_axes()
 
 class GuiListener(object):
     """ Class which keeps track of matplotlib events and requests a Plotter instance to update according to user input. It ignores normal zoom/pan interactions. """
@@ -103,20 +111,23 @@ class GuiListener(object):
             self.plotter.updateImage(rect)
 
 def interpolate(roi, scan, oversampling):
-    """ Helper function which provides a regular and interpolated xy map of a scan, integrated over a roi. """
+    """ 
+    Helper function which provides a regular and interpolated xy map of
+    a scan, integrated over a roi. The map is in the coordinates defined
+    in the Scan class, that is, right-handed lab coordinates in the 
+    sample frame, with x horizontal and y vertical, and the origin in 
+    the bottom right of the sample map array.
+    """
     if roi[0] == roi[1]: roi[1] += 1
     if roi[2] == roi[3]: roi[3] += 1
     integral = np.mean(scan.data['data0'][:, roi[0]:roi[1], roi[2]:roi[3]], axis=(1,2))
 
-    oversampling = 3.0
     xMin, xMax = np.min(scan.positions[:,0]), np.max(scan.positions[:,0])
     yMin, yMax = np.min(scan.positions[:,1]), np.max(scan.positions[:,1])
     stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
-    
-    x, y = np.mgrid[xMin:xMax:stepsize, yMin:yMax:stepsize]
+    y, x = np.mgrid[yMax:yMin:-stepsize, xMax:xMin:-stepsize]
     z = griddata(scan.positions, integral, (x, y), method='nearest')
-    #import ipdb; ipdb.set_trace()
-    return x, y, z # this is now returned with x-y indexing, not suitable for imshow!
+    return x, y, z
 
 # parse arguments
 if len(sys.argv) < 3:

@@ -14,13 +14,15 @@ __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 
 class Scan(object):
 
-    def __init__(self):
+    def __init__(self, options=None):
         """ 
-        Only initializes counters. Positions and data are added later. 
+        Only initializes counters and options. Positions and data are
+        added later.
         """
         self.nDataSets = 0
         self.nPositions = None
         self.nDimensions = None  # scan dimensions
+        self.options = None
 
     def _readPositions(self, fileName):
         """ 
@@ -32,7 +34,8 @@ class Scan(object):
         the beam positions on the sample, in right-handed lab
         coordinates but relative to the sample frame (which means that
         moving a motor positive moves the position on the sample
-        negative).
+        negative). The coordinate system is the same as NEXUS:
+        http://download.nexusformat.org/doc/html/design.html#nexus-coordinate-systems
         """
         pass
 
@@ -181,7 +184,7 @@ class Scan(object):
 # Here follow special subclasses which describe how to load from
 # specific data sources.
 
-class nanomaxScan(Scan):
+class nanomaxScan_june2016(Scan):
 
     def _readPositions(self, fileName):
         """ 
@@ -193,10 +196,18 @@ class nanomaxScan(Scan):
             data = np.array(data)
             self.nPositions = data.shape[0]
         positions = []
-        for i in range(int(np.sqrt(self.nPositions))):
-            for j in range(int(np.sqrt(self.nPositions))):
-                positions.append([j, i])
-        return np.array(positions)
+        if self.options:
+            Nx, Ny = self.options['scanshape']
+            stepsize = self.options['stepsize']
+        else:
+            # assume square scan, 160 nm steps
+            Nx, Ny = [int(np.sqrt(self.nPositions)),] * 2
+            stepsize = 160e-9
+        for i in range(Ny):
+            for j in range(Nx):
+                # by the convention noted in the base class:
+                positions.append([j, -i])
+        return np.array(positions) * stepsize
 
     def _readData(self, fileName, name):
         """ 
@@ -217,8 +228,10 @@ class i13Scan(Scan):
         Override position reading. Based on Aaron Parson's I13 data. 
         """
         with h5py.File(fileName, 'r') as hf:
-            x = np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
-            y = np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
+            # assuming the xy positions are motor positions, we want the
+            # negative of those for the sample frame.
+            x = -np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
+            y = -np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
         positions = np.vstack((x, y)).T
         return positions
 
