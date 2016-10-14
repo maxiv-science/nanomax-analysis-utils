@@ -244,6 +244,28 @@ class i13Scan(Scan):
             data = np.array(data)
         return data
 
+class alsScan(Scan):
+
+    def _readPositions(self, fileName):
+        """ 
+        Override position reading. Based on Joerg's ALS data. 
+        """
+        with h5py.File(fileName, 'r') as hf:
+            translation = np.array(hf.get('entry_1/data_1/translation'))
+        print translation
+        positions = translation[:, :2]
+        return positions
+
+    def _readData(self, fileName, name):
+        """ 
+        Override data reading. Based on Aaron Parson's I13 data. 
+        """
+        with h5py.File(fileName, 'r') as hf:
+            data = hf.get('entry_1/data_1/data')
+            data = np.array(data)
+        return data
+
+
 # if __name__ == '__main__':
 #    import matplotlib.pyplot as plt
 #    #s = nanomaxScan()
