@@ -221,3 +221,15 @@ alpha2redTransparent = LinearSegmentedColormap('alpha2red',
          'alpha': ((0.0, 0.0, 0.0),
                    (1.0, 0.5, 0.5)) 
                    })
+
+alpha2black = LinearSegmentedColormap('alpha2black', 
+                                    {
+          'red':   ((0.0, 0.0, 0.0),
+                   (1.0, 0.0, 1.0)) ,
+         'green': ((0.0, 0.0, 0.0),
+                   (1.0, 0.0, 0.0)),
+         'blue': ((0.0, 0.0, 0.0),
+                   (1.0, 0.0, 0.0)),
+         'alpha': ((0.0, 0.0, 0.0),
+                   (1.0, 1.0, 1.0))
+                   })
