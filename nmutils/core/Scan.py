@@ -281,6 +281,7 @@ class nanomaxScan_nov2016(Scan):
                 entry = opts[0]
             else:
                 entry = hf.keys()[0]
+                print "\nWARNING! Arbitrarily using the first entry ('%s') of the hdf5 file. Better specify it.\n"%entry
             xdataset = hf.get(entry + '/measurement/pi727_x')
             ydataset = hf.get(entry + '/measurement/pi727_y')
             if (xdataset is None) and (ydataset is None):
