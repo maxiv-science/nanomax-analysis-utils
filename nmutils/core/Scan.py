@@ -258,7 +258,7 @@ class alsScan(Scan):
 
     def _readData(self, fileName, name):
         """ 
-        Override data reading. Based on Aaron Parson's I13 data. 
+        Override data reading. Based on Joerg's ALS data. 
         """
         with h5py.File(fileName, 'r') as hf:
             data = hf.get('entry_1/data_1/data')
