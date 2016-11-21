@@ -124,8 +124,17 @@ def interpolate(roi, scan, oversampling):
 
     xMin, xMax = np.min(scan.positions[:,0]), np.max(scan.positions[:,0])
     yMin, yMax = np.min(scan.positions[:,1]), np.max(scan.positions[:,1])
-    stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
-    y, x = np.mgrid[yMax:yMin:-stepsize, xMax:xMin:-stepsize]
+
+    # here we need special cases for 1d scans (where x or y doesn't vary)
+    if np.abs(yMax - yMin) < 1e-12:
+        stepsize = (xMax - xMin) / float(scan.nPositions) / oversampling
+        y, x = np.mgrid[yMin:yMin+(stepsize*oversampling*5):stepsize, xMax:xMin:-stepsize]
+    elif np.abs(xMax - xMin) < 1e-12:
+        stepsize = (yMax - yMin) / float(scan.nPositions) / oversampling
+        y, x = np.mgrid[yMax:yMin:-stepsize, xMin:xMin+(stepsize*oversampling*5):stepsize]
+    else:
+        stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
+        y, x = np.mgrid[yMax:yMin:-stepsize, xMax:xMin:-stepsize]
     z = griddata(scan.positions, integral, (x, y), method='nearest')
     return x, y, z
 
