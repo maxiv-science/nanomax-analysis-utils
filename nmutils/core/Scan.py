@@ -24,7 +24,7 @@ class Scan(object):
         self.nDimensions = None  # scan dimensions
         self.options = None
 
-    def _readPositions(self, fileName):
+    def _readPositions(self, fileName, opts=None):
         """ 
         Placeholder method to be subclassed. Private method which
         interfaces with the actual hdf5 file and returns an array of
@@ -39,7 +39,7 @@ class Scan(object):
         """
         pass
 
-    def _readData(self, fileName, name):
+    def _readData(self, fileName, opts=None):
         """ 
         Placeholder method to be subclassed. Private method which
         interfaces with the actual hdf5 file and returns an N-by-(image
@@ -49,7 +49,7 @@ class Scan(object):
         """
         pass
 
-    def addData(self, fileName, name=None):
+    def addData(self, fileName, name=None, opts=None):
         """ 
         This method adds positions the first time data is loaded. Then,
         subsequent data additions should check for consistency and
@@ -63,7 +63,7 @@ class Scan(object):
         if not hasattr(self, 'data'):
             # initialize data dict and read positions
             self.data = {}
-            self.positions = self._readPositions(fileName)
+            self.positions = self._readPositions(fileName, opts)
             self.nPositions = self.positions.shape[0]
             self.nDimensions = self.positions.shape[1]
         else:
@@ -77,7 +77,7 @@ class Scan(object):
 
         # The actual reading is done by _readData() which knows about the
         # details of the hdf5 file
-        data = self._readData(fileName, name)
+        data = self._readData(fileName, opts)
         self.data[name] = data
         self.nDataSets += 1
 
@@ -186,7 +186,7 @@ class Scan(object):
 
 class nanomaxScan_june2016(Scan):
 
-    def _readPositions(self, fileName):
+    def _readPositions(self, fileName, opts=None):
         """ 
         Override the method which reads scan positions. This is based on
         a very early hdf5 format.
@@ -209,7 +209,7 @@ class nanomaxScan_june2016(Scan):
                 positions.append([j, -i])
         return np.array(positions) * stepsize
 
-    def _readData(self, fileName, name):
+    def _readData(self, fileName, opts=None):
         """ 
         Override the method which reads actual data. This is based on a
         very early hdf5 format.
@@ -223,7 +223,7 @@ class nanomaxScan_june2016(Scan):
 
 class i13Scan(Scan):
 
-    def _readPositions(self, fileName):
+    def _readPositions(self, fileName, opts=None):
         """ 
         Override position reading. Based on Aaron Parson's I13 data. 
         """
@@ -235,7 +235,7 @@ class i13Scan(Scan):
         positions = np.vstack((x, y)).T
         return positions
 
-    def _readData(self, fileName, name):
+    def _readData(self, fileName, opts=None):
         """ 
         Override data reading. Based on Aaron Parson's I13 data. 
         """
@@ -246,7 +246,7 @@ class i13Scan(Scan):
 
 class alsScan(Scan):
 
-    def _readPositions(self, fileName):
+    def _readPositions(self, fileName, opts=None):
         """ 
         Override position reading. Based on Joerg's ALS data. 
         """
@@ -256,7 +256,7 @@ class alsScan(Scan):
         positions = translation[:, :2]
         return positions
 
-    def _readData(self, fileName, name):
+    def _readData(self, fileName, opts=None):
         """ 
         Override data reading. Based on Joerg's ALS data. 
         """

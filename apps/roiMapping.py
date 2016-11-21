@@ -140,7 +140,7 @@ def interpolate(roi, scan, oversampling):
 
 # parse arguments
 if len(sys.argv) < 3:
-    print "\nUsage: roiMapping.py <Scan subclass> <data file> \n"
+    print "\nUsage: roiMapping.py <Scan subclass> <data file> <subclass options> \n"
     print "Found these subclasses:"
     for subclass in nmutils.core.Scan.__subclasses__():
         print "       %s"%(subclass.__name__)
@@ -152,11 +152,12 @@ if len(sys.argv) < 3:
         sys.exit(0)
 subclass = sys.argv[1]
 fileName = sys.argv[2]
+opts = sys.argv[3:]
 
 # create a Scan object and load data
 scan = None
 exec "scan = nmutils.core.%s()"%subclass
-scan.addData(fileName)
+scan.addData(fileName, opts=opts)
 
 # start the gui
 plotter = Plotter(scan)
