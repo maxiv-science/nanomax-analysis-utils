@@ -1,7 +1,10 @@
 """ This file contains isolated helper functions. """
 
 import numpy as np
-import pyfftw
+try:
+    import pyfftw
+except:
+    pass
 import scipy.signal
 import math
 

@@ -165,8 +165,10 @@ class Scan(object):
         # get the closest positions if requested
         if (len(new.positions) == 0) and closest:
             rangeCenter = np.mean(posRange, axis=0)
-            index = np.argmin(np.linalg.norm(
-                self.positions - rangeCenter, axis=1))
+            print("\nWARNING: applying fix for old numpy: check this!!!\n")
+            index = np.argmin(np.sum((self.positions - rangeCenter)**2, axis=1))
+            #index = np.argmin(np.linalg.norm(
+            #    self.positions - rangeCenter, axis=1))
             for dataset in self.data.keys():
                 new.data[dataset].append(self.data[dataset][index])
             new.positions.append(self.positions[index])
