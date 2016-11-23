@@ -49,9 +49,9 @@ class Plotter():
         xlim, ylim = self.ax[0].get_xlim(), self.ax[0].get_ylim()
         self.ax[0].clear()
         self.ax[0].imshow(np.log10(subScan.meanData()), interpolation='none')
-        plt.draw()
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
+        plt.draw()
         self.format_axes()
         
     def updateMap(self, rect):
@@ -67,9 +67,9 @@ class Plotter():
             extent = [x.max(), x.min(), y.min(), y.max()],
             interpolation='none')
         self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
-        plt.draw()
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
+        plt.draw()
         self.format_axes()
 
 class GuiListener(object):
