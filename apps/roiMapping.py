@@ -128,10 +128,10 @@ def interpolate(roi, scan, oversampling):
     # here we need special cases for 1d scans (where x or y doesn't vary)
     if np.abs(yMax - yMin) < 1e-12:
         stepsize = (xMax - xMin) / float(scan.nPositions) / oversampling
-        y, x = np.mgrid[yMin:yMin+(stepsize*oversampling*5):stepsize, xMax:xMin:-stepsize]
+        y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax:xMin:-stepsize]
     elif np.abs(xMax - xMin) < 1e-12:
         stepsize = (yMax - yMin) / float(scan.nPositions) / oversampling
-        y, x = np.mgrid[yMax:yMin:-stepsize, xMin:xMin+(stepsize*oversampling*5):stepsize]
+        y, x = np.mgrid[yMax:yMin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
     else:
         stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
         y, x = np.mgrid[yMax:yMin:-stepsize, xMax:xMin:-stepsize]
