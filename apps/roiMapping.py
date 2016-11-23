@@ -25,7 +25,7 @@ class Plotter():
             extent = [x.max(), x.min(), y.min(), y.max()],
             interpolation='none')
         self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
-        self.ax[1].set_xlim((x.min(), x.max()))
+        self.ax[1].set_xlim((x.max(), x.min()))
         self.ax[1].set_ylim((y.min(), y.max()))
         self.format_axes()
         plt.draw()
