@@ -165,10 +165,9 @@ class Scan(object):
         # get the closest positions if requested
         if (len(new.positions) == 0) and closest:
             rangeCenter = np.mean(posRange, axis=0)
-            print("\nWARNING: applying fix for old numpy: check this!!!\n")
-            index = np.argmin(np.sum((self.positions - rangeCenter)**2, axis=1))
-            #index = np.argmin(np.linalg.norm(
-            #    self.positions - rangeCenter, axis=1))
+            # using sum instead of linalg.norm here, for old numpy at beamline:
+            index = np.argmin(
+                np.sum((self.positions - rangeCenter)**2, axis=1))
             for dataset in self.data.keys():
                 new.data[dataset].append(self.data[dataset][index])
             new.positions.append(self.positions[index])
@@ -203,7 +202,7 @@ class nanomaxScan_june2016(Scan):
             stepsize = self.options['stepsize']
         else:
             # assume square scan, 160 nm steps
-            Nx, Ny = [int(np.sqrt(self.nPositions)),] * 2
+            Nx, Ny = [int(np.sqrt(self.nPositions)), ] * 2
             stepsize = 160e-9
         for i in range(Ny):
             for j in range(Nx):
@@ -246,6 +245,7 @@ class i13Scan(Scan):
             data = np.array(data)
         return data
 
+
 class alsScan(Scan):
 
     def _readPositions(self, fileName, opts=None):
@@ -267,6 +267,7 @@ class alsScan(Scan):
             data = np.array(data)
         return data
 
+
 class nanomaxScan_nov2016(Scan):
     # This class optionally uses the opts entry to addData(), where the
     # first element specifies the first-level hdf5 group.
@@ -278,12 +279,13 @@ class nanomaxScan_nov2016(Scan):
         """
         x, y = None, None
         with h5py.File(fileName, 'r') as hf:
-            # check if the entry has been specified, otherwise use the first one
+            # check if the entry has been specified, otherwise use the first
+            # one
             if opts:
                 entry = opts[0]
             else:
                 entry = hf.keys()[0]
-                print "\nWARNING! Arbitrarily using the first entry ('%s') of the hdf5 file. Better specify it.\n"%entry
+                print "\nWARNING! Arbitrarily using the first entry ('%s') of the hdf5 file. Better specify it.\n" % entry
             xdataset = hf.get(entry + '/measurement/pi727_x')
             ydataset = hf.get(entry + '/measurement/pi727_y')
             if (xdataset is None) and (ydataset is None):
@@ -303,7 +305,8 @@ class nanomaxScan_nov2016(Scan):
         Override data reading. Based on a preliminary hdf5 format.
         """
         with h5py.File(fileName, 'r') as hf:
-            # check if the entry has been specified, otherwise use the first one
+            # check if the entry has been specified, otherwise use the first
+            # one
             if opts:
                 entry = opts[0]
             else:
@@ -311,7 +314,6 @@ class nanomaxScan_nov2016(Scan):
             data = hf.get(entry + '/measurement/pilatus1m')
             data = np.array(data)
         return data
-
 
 
 # if __name__ == '__main__':
