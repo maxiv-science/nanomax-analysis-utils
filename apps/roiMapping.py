@@ -24,6 +24,9 @@ class Plotter():
         self.ax[1].imshow(z, 
             extent = [x.max(), x.min(), y.min(), y.max()],
             interpolation='none')
+        self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
+        self.ax[1].set_xlim((x.min(), x.max()))
+        self.ax[1].set_ylim((y.min(), y.max()))
         self.format_axes()
         plt.draw()
 
@@ -45,7 +48,7 @@ class Plotter():
         subScan = self.scan.subset(rect, closest=True)
         xlim, ylim = self.ax[0].get_xlim(), self.ax[0].get_ylim()
         self.ax[0].clear()
-        self.ax[0].imshow(np.log10(subScan.meanData()))
+        self.ax[0].imshow(np.log10(subScan.meanData()), interpolation='none')
         plt.draw()
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
@@ -63,6 +66,7 @@ class Plotter():
         self.ax[1].imshow(z, 
             extent = [x.max(), x.min(), y.min(), y.max()],
             interpolation='none')
+        self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
         plt.draw()
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
@@ -128,13 +132,16 @@ def interpolate(roi, scan, oversampling):
     # here we need special cases for 1d scans (where x or y doesn't vary)
     if np.abs(yMax - yMin) < 1e-12:
         stepsize = (xMax - xMin) / float(scan.nPositions) / oversampling
-        y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax:xMin:-stepsize]
+        margin = oversampling * stepsize / 2
+        y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax+margin:xMin-margin:-stepsize]
     elif np.abs(xMax - xMin) < 1e-12:
         stepsize = (yMax - yMin) / float(scan.nPositions) / oversampling
-        y, x = np.mgrid[yMax:yMin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
+        margin = oversampling * stepsize / 2
+        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
     else:
         stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
-        y, x = np.mgrid[yMax:yMin:-stepsize, xMax:xMin:-stepsize]
+        margin = oversampling * stepsize / 2
+        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
     z = griddata(scan.positions, integral, (x, y), method='nearest')
     return x, y, z
 
