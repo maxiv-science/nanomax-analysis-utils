@@ -71,7 +71,7 @@ class Scan(object):
             if name in self.data.keys():
                 raise ValueError("Dataset '%s' already exists!" % name)
             # verify that positions are are consistent
-            if not (self.positions.shape == self._readPositions(fileName)):
+            if not (self.positions.shape == self._readPositions(fileName, opts)):
                 raise ValueError(
                     "Positions of new dataset are inconsistent with previously loaded positions!")
 
@@ -313,6 +313,71 @@ class nanomaxScan_nov2016(Scan):
                 entry = hf.keys()[0]
             data = hf.get(entry + '/measurement/pilatus1m')
             data = np.array(data)
+        return data
+
+class nanomaxScan_flyscan_week48(Scan):
+    # Class representing late November 2016, when fly-scanning was set
+    # up in a very temporary way. Uses the addData opts list both for
+    # the scan number and for the path to Pilatus data files:
+    #
+    # opts = [scannr, pilatus-path]
+
+    def _readPositions(self, fileName, opts=None):
+        """ 
+        Override position reading.
+        """
+        if not (len(opts) == 2):
+            raise Exception('This Scan subclass requires two options: [entry, pilatus-path]')
+
+        entry = 'entry%d' % int(opts[0])
+
+        x, y = None, None
+        with h5py.File(fileName, 'r') as hf:
+            # get fast x positions
+            xdataset = hf.get(entry + '/measurement/AdLinkAI')
+            xall = np.array(xdataset)
+            # manually find shape by looking for zeros
+            Ny = xall.shape[0]
+            for i in range(xall.shape[1]):
+                if xall[0,i] == 0:
+                    Nx = i
+                    break
+            x = xall[:, :Nx].flatten()
+
+            # get slow y positions
+            ydataset = hf.get(entry + '/measurement/samy')
+            yall = np.array(ydataset)
+            if not (len(yall) == Ny): raise Exception('Something''s wrong with the positions')
+            y = np.repeat(yall, Nx)
+
+        return -np.vstack((x, y)).T
+
+    def _readData(self, fileName, opts=None):
+        """ 
+        Override data reading.
+        """
+        if not (len(opts) == 2):
+            raise Exception('This Scan subclass requires two options: [entry, pilatus-path]')
+
+        scannr = int(opts[0])
+        path = opts[1]
+        if not (path[-1] == '/'): path += '/'
+        filepattern = 'scan_%d_line_%04d.h5'
+
+        done = False
+        line = 0
+        data = []
+        while not done:
+            try:
+                with h5py.File(path + filepattern%(scannr, line), 'r') as hf:
+                    print 'loading data: ' + filepattern%(scannr, line)
+                    dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                    data.append(np.array(dataset))
+                line += 1
+            except IOError:
+                done = True
+        print "loaded %d lines of Pilatus data"%len(data)
+        data = np.concatenate(data, axis=0)
         return data
 
 
