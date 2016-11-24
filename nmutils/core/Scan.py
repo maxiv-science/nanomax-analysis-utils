@@ -362,7 +362,7 @@ class nanomaxScan_flyscan_week48(Scan):
         scannr = int(opts[0])
         path = opts[1]
         if not (path[-1] == '/'): path += '/'
-        filepattern = 'scan_%d_line_%04d.h5'
+        filepattern = 'scan_%d_line_%04d.hdf5'
 
         done = False
         line = 0
