@@ -31,8 +31,6 @@ class Plotter():
         plt.draw()
 
     def format_axes(self):
-        plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
-        plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
         aspect = np.abs(np.diff(self.ax[0].get_ylim())) / np.abs(np.diff(self.ax[0].get_xlim()))
         self.ax[0].set_title('Diffraction', y=1.2 + (1-aspect)/2)
         self.ax[1].set_title('Scan map', y=1.1)
@@ -41,6 +39,8 @@ class Plotter():
         self.ax[1].yaxis.set_label_position('right')
         self.ax[0].xaxis.tick_top()
         self.ax[0].xaxis.set_label_position('top') 
+        plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
+        plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
         
     def updateImage(self, rect):
         xmin, xmax = min(rect[0], rect[2]), max(rect[0], rect[2])
@@ -52,8 +52,8 @@ class Plotter():
         self.ax[0].imshow(np.log10(subScan.meanData()), interpolation='none')
         self.ax[0].set_xlim(xlim)
         self.ax[0].set_ylim(ylim)
-        plt.draw()
         self.format_axes()
+        plt.draw()
         
     def updateMap(self, rect):
         xmin, xmax = min(rect[0], rect[2]), max(rect[0], rect[2])
@@ -70,8 +70,8 @@ class Plotter():
         self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
         self.ax[1].set_xlim(xlim)
         self.ax[1].set_ylim(ylim)
-        plt.draw()
         self.format_axes()
+        plt.draw()
 
 class GuiListener(object):
     """ Class which keeps track of matplotlib events and requests a Plotter instance to update according to user input. It ignores normal zoom/pan interactions. """
