@@ -33,8 +33,9 @@ class Plotter():
     def format_axes(self):
         plt.setp(self.ax[0].xaxis.get_majorticklabels(), rotation=70)
         plt.setp(self.ax[1].xaxis.get_majorticklabels(), rotation=70)
-        self.ax[0].text(.5 * np.diff(self.ax[0].get_xlim()), -.15 * np.diff(self.ax[0].get_xlim()), 'Diffraction', ha='center', fontsize=14)
-        self.ax[1].text(-.5 * np.diff(self.ax[1].get_xlim()), -.15 * np.diff(self.ax[1].get_xlim()), 'Scan Map', ha='center', fontsize=14)
+        aspect = np.abs(np.diff(self.ax[0].get_ylim())) / np.abs(np.diff(self.ax[0].get_xlim()))
+        self.ax[0].set_title('Diffraction', y=1.2 + (1-aspect)/2)
+        self.ax[1].set_title('Scan map', y=1.1)
         plt.setp(self.ax[1], xlabel='laboratory x', ylabel='laboratory y')
         self.ax[1].yaxis.tick_right()
         self.ax[1].yaxis.set_label_position('right')
