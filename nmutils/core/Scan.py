@@ -327,7 +327,7 @@ class nanomaxScan_flyscan_week48(Scan):
         Override position reading.
         """
         if not (len(opts) == 2):
-            raise Exception('This Scan subclass requires two options: [entry, pilatus-path]')
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
 
         entry = 'entry%d' % int(opts[0])
 
@@ -357,7 +357,7 @@ class nanomaxScan_flyscan_week48(Scan):
         Override data reading.
         """
         if not (len(opts) == 2):
-            raise Exception('This Scan subclass requires two options: [entry, pilatus-path]')
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
 
         scannr = int(opts[0])
         path = opts[1]
