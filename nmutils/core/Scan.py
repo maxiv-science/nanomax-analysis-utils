@@ -333,7 +333,7 @@ class nanomaxScan_flyscan_week48(Scan):
         if len(opts) == 3:
             skipX = int(opts[2])
         else:
-            skipX = 0
+            skipX = 1
 
         entry = 'entry%d' % int(opts[0])
 
