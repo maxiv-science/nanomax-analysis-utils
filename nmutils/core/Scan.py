@@ -8,6 +8,7 @@ spectra, transmissions, etc.
 import numpy as np
 import h5py
 import copy as cp
+import os.path
 
 __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 
@@ -369,7 +370,16 @@ class nanomaxScan_flyscan_week48(Scan):
         scannr = int(opts[0])
         path = opts[1]
         if not (path[-1] == '/'): path += '/'
-        filepattern = 'pilatus_scan_%d_%04d.hdf5'
+        
+        # check which detector was used
+        if os.path.isfile('pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+            filepattern = 'pilatus_scan_%d_%04d.hdf5'
+            print "This is a Pilatus 100k scan"
+        elif os.path.isfile('pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+            filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
+            print "This is a Pilatus 1M scan"
+        else:
+            print "No 1M or 100k data found."
 
         done = False
         line = 0
@@ -420,7 +430,16 @@ class nanomaxScan_stepscan_week48(Scan):
         scannr = int(opts[0])
         path = opts[1]
         if not (path[-1] == '/'): path += '/'
-        filepattern = 'pilatus_scan_%d_%04d.hdf5'
+
+        # check which detector was used
+        if os.path.isfile('pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+            filepattern = 'pilatus_scan_%d_%04d.hdf5'
+            print "This is a Pilatus 100k scan"
+        elif os.path.isfile('pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+            filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
+            print "This is a Pilatus 1M scan"
+        else:
+            print "No 1M or 100k data found."
 
         data = []
         for im in range(self.positions.shape[0]):
