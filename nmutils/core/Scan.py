@@ -326,8 +326,13 @@ class nanomaxScan_flyscan_week48(Scan):
         """ 
         Override position reading.
         """
-        if not (len(opts) == 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+        if not (len(opts) >= 2):
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (skip-x-positions)]')
+
+        if len(opts) == 3:
+            skipX = int(opts[2])
+        else:
+            skipX = 0
 
         entry = 'entry%d' % int(opts[0])
 
@@ -338,8 +343,10 @@ class nanomaxScan_flyscan_week48(Scan):
             xall = np.array(xdataset)
             # manually find shape by looking for zeros
             Ny = xall.shape[0]
+            if skipX > 0:
+                print "Skipping %d position(s) at the end of each line"%skipX
             for i in range(xall.shape[1]):
-                if xall[0,i] == 0:
+                if xall[0,i+skipX] == 0:
                     Nx = i
                     break
             x = xall[:, :Nx].flatten()
@@ -356,13 +363,13 @@ class nanomaxScan_flyscan_week48(Scan):
         """ 
         Override data reading.
         """
-        if not (len(opts) == 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+        if not (len(opts) >= 2):
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (skip-x-positions)]')
 
         scannr = int(opts[0])
         path = opts[1]
         if not (path[-1] == '/'): path += '/'
-        filepattern = 'scan_%d_line_%04d.hdf5'
+        filepattern = 'pilatus_scan_%d_%04d.hdf5'
 
         done = False
         line = 0
