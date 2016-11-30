@@ -388,6 +388,50 @@ class nanomaxScan_flyscan_week48(Scan):
         return data
 
 
+class nanomaxScan_stepscan_week48(Scan):
+    # Class representing late November 2016, when step-scanning was set
+    # up in a very temporary way. Uses the addData opts list both for
+    # the scan number and for the path to Pilatus data files:
+    #
+    # opts = [scannr, pilatus-path]
+
+    def _readPositions(self, fileName, opts=None):
+        """ 
+        Override position reading.
+        """
+        if not (len(opts) >= 2):
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+
+        entry = 'entry%d' % int(opts[0])
+
+        with h5py.File(fileName, 'r') as hf:
+            x = np.array(hf.get(entry + '/measurement/samx'))
+            y = np.array(hf.get(entry + '/measurement/samy'))
+
+        return -np.vstack((x, y)).T
+
+    def _readData(self, fileName, opts=None):
+        """ 
+        Override data reading.
+        """
+        if not (len(opts) >= 2):
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+
+        scannr = int(opts[0])
+        path = opts[1]
+        if not (path[-1] == '/'): path += '/'
+        filepattern = 'pilatus_scan_%d_%04d.hdf5'
+
+        data = []
+        for im in range(self.positions.shape[0]):
+            with h5py.File(path + filepattern%(scannr, im), 'r') as hf:
+                print 'loading data: ' + filepattern%(scannr, im)
+                dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                data.append(np.array(dataset)[0])
+        print "loaded %d Pilatus images"%len(data)
+        data = np.array(data)
+        return data
+
 # if __name__ == '__main__':
 #    import matplotlib.pyplot as plt
 #    #s = nanomaxScan()
