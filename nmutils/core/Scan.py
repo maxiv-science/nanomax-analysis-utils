@@ -372,10 +372,10 @@ class nanomaxScan_flyscan_week48(Scan):
         if not (path[-1] == '/'): path += '/'
         
         # check which detector was used
-        if os.path.isfile('pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+        if os.path.isfile(path+'pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
             filepattern = 'pilatus_scan_%d_%04d.hdf5'
             print "This is a Pilatus 100k scan"
-        elif os.path.isfile('pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+        elif os.path.isfile(path+'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
             filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
             print "This is a Pilatus 1M scan"
         else:
@@ -432,10 +432,10 @@ class nanomaxScan_stepscan_week48(Scan):
         if not (path[-1] == '/'): path += '/'
 
         # check which detector was used
-        if os.path.isfile('pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+        if os.path.isfile(path+'pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
             filepattern = 'pilatus_scan_%d_%04d.hdf5'
             print "This is a Pilatus 100k scan"
-        elif os.path.isfile('pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+        elif os.path.isfile(path+'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
             filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
             print "This is a Pilatus 1M scan"
         else:
