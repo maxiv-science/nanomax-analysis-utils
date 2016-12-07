@@ -321,17 +321,17 @@ class nanomaxScan_flyscan_week48(Scan):
     # up in a very temporary way. Uses the addData opts list both for
     # the scan number and for the path to Pilatus data files:
     #
-    # opts = [scannr, pilatus-path]
+    # opts = [scannr, pilatus-path, (ROI size, skip-x-positions)]
 
     def _readPositions(self, fileName, opts=None):
         """ 
         Override position reading.
         """
         if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (skip-x-positions)]')
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (ROI size, skip-x-positions)]')
 
-        if len(opts) == 3:
-            skipX = int(opts[2])
+        if len(opts) == 4:
+            skipX = int(opts[3])
         else:
             skipX = 1
 
@@ -365,7 +365,12 @@ class nanomaxScan_flyscan_week48(Scan):
         Override data reading.
         """
         if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (skip-x-positions)]')
+            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (ROI size, skip-x-positions)]')
+
+        if len(opts) == 3:
+            delta = int(opts[2]) / 2
+        else:
+            delta = None
 
         scannr = int(opts[0])
         path = opts[1]
@@ -389,7 +394,18 @@ class nanomaxScan_flyscan_week48(Scan):
                 with h5py.File(path + filepattern%(scannr, line), 'r') as hf:
                     print 'loading data: ' + filepattern%(scannr, line)
                     dataset = hf.get('entry_0000/measurement/Pilatus/data')
-                    data.append(np.array(dataset))
+                    if len(data) == 0:
+                        import scipy.ndimage.measurements
+                        im = np.array(dataset[0])
+                        ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
+                        print "Estimated center of mass to (%d, %d)"%(ic, jc)
+                    # for the first file, determine center of mass
+                    if delta:
+                        data.append(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]))
+                    else:
+                        data.append(np.array(dataset))
+                    del dataset
+                    #data.append(np.array(dataset))
                 line += 1
             except IOError:
                 done = True
