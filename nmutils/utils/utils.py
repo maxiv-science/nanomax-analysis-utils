@@ -147,6 +147,12 @@ def binPixels(image, n=2):
             new[i, j] = np.round(np.mean(image[i * n : (i + 1) * n, j * n : (j + 1) * n], axis=(0, 1)))
     return new
 
+def complex2image(z):
+    """ Wraps a ptypy util """
+    import ptypy
+    rgb = ptypy.utils.complex2rgb(z)
+    return rgb / rgb.max()
+
     
 # constants
 from matplotlib.colors import LinearSegmentedColormap

@@ -5,6 +5,7 @@ import ptypy
 import nmutils
 import matplotlib.gridspec as gridspec
 import sys
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 """
 This script visualizes the output of a ptypy run, by loading a ptyr or ptyd file.
@@ -26,9 +27,11 @@ if len(sys.argv) == 4:
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
     probe = np.array(hf.get('content/probe/S00G00/data'))[0]
+    obj = np.array(hf.get('content/obj/S00G00/data'))[0]
     psize = np.array(hf.get('content/probe/S00G00/_psize'))[0]
     energy = np.array(hf.get('content/probe/S00G00/_energy'))
-print "Loaded probe %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + (psize*1e9, energy))
+    origin = np.array(hf.get('content/probe/S00G00/_origin'))
+print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
 
 ### define distances and propagate
 dist = np.arange(-1000, 1000, 10) * 1e-6
@@ -108,5 +111,36 @@ for tk in ax_vertical.get_xticklabels(): tk.set_visible(False)
 plt.suptitle(title, fontsize=20)
 if outputFile:
     plt.savefig(outputFile)
-else:
+
+### Object
+fig, ax = plt.subplots(ncols=2, figsize=(10,6), sharex=True, sharey=True)
+plt.subplots_adjust(wspace=.3)
+fig.suptitle(title, fontsize=20)
+extent = 1e6 * np.array([origin[0], origin[0]+(obj.shape[1]-1)*psize, origin[1], origin[1]+(obj.shape[0]-1)*psize])
+
+# amplitude
+mag = np.abs(obj)
+mag_cut = mag[mag.shape[0]/3:2*mag.shape[0]/3, mag.shape[1]/3:2*mag.shape[1]/3] # to find relevant dynamic range
+vmin = mag_cut.min()
+vmax = mag_cut.max()
+img = ax[0].imshow(mag, cmap='gray', extent=extent, vmin=vmin, vmax=vmax, interpolation='none')
+plt.setp(ax[0].xaxis.get_majorticklabels(), rotation=70)
+ax[0].set_ylabel('$\mu$m')
+ax[0].set_xlabel('$\mu$m')
+divider = make_axes_locatable(ax[0])
+cax = divider.append_axes("right", size="5%", pad=0.05)
+plt.colorbar(img, cax=cax)
+ax[0].set_title('Amplitude')
+
+# phase
+img = ax[1].imshow(np.angle(obj), vmin=-np.pi, vmax=np.pi, cmap='hsv', extent=extent, interpolation='none')
+plt.setp(ax[1].xaxis.get_majorticklabels(), rotation=70 )
+ax[1].set_xlabel('$\mu$m')
+divider = make_axes_locatable(ax[1])
+cax = divider.append_axes("right", size="5%", pad=0.05)
+cb = plt.colorbar(img, cax=cax, ticks=(-np.pi, -np.pi/2, 0, np.pi/2, np.pi))
+cb.ax.set_yticklabels(['-$\pi$', '-$\pi/2$', '0', '$\pi/2$', '$\pi$'])
+ax[1].set_title('Phase')
+
+if not outputFile:
     plt.show()
