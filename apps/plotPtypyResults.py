@@ -12,17 +12,29 @@ This script visualizes the output of a ptypy run, by loading a ptyr or ptyd file
 """
 
 ### Parse input
-if len(sys.argv) < 2 or len(sys.argv) > 4:
-    print "\nUsage: reconstructionAnalysis.py <ptyd file> [<title> <output file>] \n"
-    print "If an output file isn't specified, the plot will be interactive.\n"
+if len(sys.argv) < 2 or len(sys.argv) > 6:
+    print "\nUsage: reconstructionAnalysis.py <ptyd file> [<title> <output file>"
+    print   "                                 <back propagation um> <forward propagation um>] \n"
+    print "If an output file isn't specified or is 'None', the plot will be interactive.\n"
     exit()
 inputFile = sys.argv[1]
 title = ''
 outputFile = None
-if len(sys.argv) == 3:
+backProp = -1000
+forwProp = 1000
+if len(sys.argv) >= 3:
     title = sys.argv[2]
-if len(sys.argv) == 4:
+if len(sys.argv) >= 4:
     outputFile = sys.argv[3]
+    outputPrefix = outputFile.split('.')[0]
+    try:
+        outputSuffix = outputFile.split('.')[1]
+    except IndexError:
+        outputSuffix = 'png'
+if len(sys.argv) >= 5:
+    backProp = float(sys.argv[4])
+if len(sys.argv) >= 6:
+    forwProp = float(sys.argv[5])
 
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
@@ -34,7 +46,7 @@ with h5py.File(inputFile, 'r') as hf:
 print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
 
 ### define distances and propagate
-dist = np.arange(-1000, 1000, 10) * 1e-6
+dist = np.linspace(backProp, forwProp, 200) * 1e-6
 dx = dist[1] - dist[0]
 print "propagating to %d positions..."%len(dist)
 field3d = nmutils.utils.propagateNearfield(probe, psize, dist, energy)
@@ -109,8 +121,9 @@ ax_horizontal.set_ylabel('$\mu$m', y=1.05)
 for tk in ax_vertical.get_xticklabels(): tk.set_visible(False)
 
 plt.suptitle(title, fontsize=20)
-if outputFile:
-    plt.savefig(outputFile)
+if outputFile and (not outputFile.lower() == 'none'):
+    print outputPrefix + '_probe.' + outputSuffix
+    plt.savefig(outputPrefix + '_probe.' + outputSuffix)
 
 ### Object
 fig, ax = plt.subplots(ncols=2, figsize=(10,6), sharex=True, sharey=True)
@@ -142,5 +155,8 @@ cb = plt.colorbar(img, cax=cax, ticks=(-np.pi, -np.pi/2, 0, np.pi/2, np.pi))
 cb.ax.set_yticklabels(['-$\pi$', '-$\pi/2$', '0', '$\pi/2$', '$\pi$'])
 ax[1].set_title('Phase')
 
-if not outputFile:
+if outputFile and (not outputFile.lower() == 'none'):
+    plt.savefig(outputPrefix + '_object.' + outputSuffix)
+
+if (not outputFile) or (outputFile.lower() == 'none'):
     plt.show()
