@@ -122,8 +122,9 @@ for tk in ax_vertical.get_xticklabels(): tk.set_visible(False)
 
 plt.suptitle(title, fontsize=20)
 if outputFile and (not outputFile.lower() == 'none'):
-    print outputPrefix + '_probe.' + outputSuffix
-    plt.savefig(outputPrefix + '_probe.' + outputSuffix)
+    fn = outputPrefix + '_probe.' + outputSuffix
+    plt.savefig(fn)
+    print 'Saved to %s'%fn
 
 ### Object
 fig, ax = plt.subplots(ncols=2, figsize=(10,6), sharex=True, sharey=True)
@@ -156,7 +157,9 @@ cb.ax.set_yticklabels(['-$\pi$', '-$\pi/2$', '0', '$\pi/2$', '$\pi$'])
 ax[1].set_title('Phase')
 
 if outputFile and (not outputFile.lower() == 'none'):
-    plt.savefig(outputPrefix + '_object.' + outputSuffix)
+    fn = outputPrefix + '_object.' + outputSuffix
+    plt.savefig(fn)
+    print "Saved to %s"%fn
 
 if (not outputFile) or (outputFile.lower() == 'none'):
     plt.show()
