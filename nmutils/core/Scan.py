@@ -269,53 +269,6 @@ class alsScan(Scan):
         return data
 
 
-class nanomaxScan_nov2016(Scan):
-    # This class optionally uses the opts entry to addData(), where the
-    # first element specifies the first-level hdf5 group.
-
-    def _readPositions(self, fileName, opts=None):
-        """ 
-        Override position reading. Based on a preliminary hdf5 format,
-        where either x or y position can be undefined.
-        """
-        x, y = None, None
-        with h5py.File(fileName, 'r') as hf:
-            # check if the entry has been specified, otherwise use the first
-            # one
-            if opts:
-                entry = opts[0]
-            else:
-                entry = hf.keys()[0]
-                print "\nWARNING! Arbitrarily using the first entry ('%s') of the hdf5 file. Better specify it.\n" % entry
-            xdataset = hf.get(entry + '/measurement/pi727_x')
-            ydataset = hf.get(entry + '/measurement/pi727_y')
-            if (xdataset is None) and (ydataset is None):
-                raise RuntimeError('No x or y data found!')
-            if xdataset is not None:
-                x = -np.array(xdataset)
-            if ydataset is not None:
-                y = -np.array(ydataset)
-        if (y is None):
-            y = np.zeros(x.shape)
-        if (x is None):
-            x = np.zeros(y.shape)
-        return np.vstack((x, y)).T
-
-    def _readData(self, fileName, opts=None):
-        """ 
-        Override data reading. Based on a preliminary hdf5 format.
-        """
-        with h5py.File(fileName, 'r') as hf:
-            # check if the entry has been specified, otherwise use the first
-            # one
-            if opts:
-                entry = opts[0]
-            else:
-                entry = hf.keys()[0]
-            data = hf.get(entry + '/measurement/pilatus1m')
-            data = np.array(data)
-        return data
-
 class nanomaxScan_flyscan_week48(Scan):
     # Class representing late November 2016, when fly-scanning was set
     # up in a very temporary way. Uses the addData opts list both for
