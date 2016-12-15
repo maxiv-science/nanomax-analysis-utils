@@ -271,23 +271,20 @@ class alsScan(Scan):
 
 class nanomaxScan_flyscan_week48(Scan):
     # Class representing late November 2016, when fly-scanning was set
-    # up in a very temporary way. Uses the addData opts list both for
-    # the scan number and for the path to Pilatus data files:
+    # up in a very temporary way. Uses the addData opts list for the
+    # scan number and optionally for the amount of data around the
+    # diffraction center of mass to load:
     #
-    # opts = [scannr, pilatus-path, (ROI size, skip-x-positions)]
+    # opts = [scannr (ROI size)]
 
     def _readPositions(self, fileName, opts=None):
         """ 
         Override position reading.
         """
-        if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (ROI size, skip-x-positions)]')
+        if not (len(opts) >= 1):
+            raise Exception('This Scan subclass requires an option: [scannr, (ROI size)]')
 
-        if len(opts) == 4:
-            skipX = int(opts[3])
-        else:
-            skipX = 1
-
+        skipX = 1
         entry = 'entry%d' % int(opts[0])
 
         x, y = None, None
@@ -317,23 +314,22 @@ class nanomaxScan_flyscan_week48(Scan):
         """ 
         Override data reading.
         """
-        if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path, (ROI size, skip-x-positions)]')
+        if not (len(opts) >= 1):
+            raise Exception('This Scan subclass requires an option: [scannr, (ROI size)]')
 
-        if len(opts) == 3:
-            delta = int(opts[2]) / 2
+        if len(opts) == 2:
+            delta = int(opts[1]) / 2
         else:
             delta = None
 
         scannr = int(opts[0])
-        path = opts[1]
-        if not (path[-1] == '/'): path += '/'
+        path = os.path.split(os.path.abspath(fileName))[0]
         
         # check which detector was used
-        if os.path.isfile(path+'pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+        if os.path.isfile(os.path.join(path, 'pilatus_scan_%d_%04d.hdf5'%(scannr,0))):
             filepattern = 'pilatus_scan_%d_%04d.hdf5'
             print "This is a Pilatus 100k scan"
-        elif os.path.isfile(path+'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+        elif os.path.isfile(os.path.join(path, 'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0))):
             filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
             print "This is a Pilatus 1M scan"
         else:
@@ -344,15 +340,15 @@ class nanomaxScan_flyscan_week48(Scan):
         data = []
         while not done:
             try:
-                with h5py.File(path + filepattern%(scannr, line), 'r') as hf:
+                with h5py.File(os.path.join(path, filepattern%(scannr, line)), 'r') as hf:
                     print 'loading data: ' + filepattern%(scannr, line)
                     dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                    # for the first file, determine center of mass
                     if len(data) == 0:
                         import scipy.ndimage.measurements
                         im = np.array(dataset[0])
                         ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
                         print "Estimated center of mass to (%d, %d)"%(ic, jc)
-                    # for the first file, determine center of mass
                     if delta:
                         data.append(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]))
                     else:
@@ -369,17 +365,17 @@ class nanomaxScan_flyscan_week48(Scan):
 
 class nanomaxScan_stepscan_week48(Scan):
     # Class representing late November 2016, when step-scanning was set
-    # up in a very temporary way. Uses the addData opts list both for
-    # the scan number and for the path to Pilatus data files:
+    # up in a very temporary way. Uses the addData opts list for the
+    # scan number:
     #
-    # opts = [scannr, pilatus-path]
+    # opts = [scannr]
 
     def _readPositions(self, fileName, opts=None):
         """ 
         Override position reading.
         """
-        if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+        if not (len(opts) >= 1):
+            raise Exception('This Scan subclass requires an option: [scannr]')
 
         entry = 'entry%d' % int(opts[0])
 
@@ -393,18 +389,17 @@ class nanomaxScan_stepscan_week48(Scan):
         """ 
         Override data reading.
         """
-        if not (len(opts) >= 2):
-            raise Exception('This Scan subclass requires two options: [scannr, pilatus-path]')
+        if not (len(opts) >= 1):
+            raise Exception('This Scan subclass requires an option: [scannr]')
 
         scannr = int(opts[0])
-        path = opts[1]
-        if not (path[-1] == '/'): path += '/'
+        path = os.path.split(os.path.abspath(fileName))[0]
 
         # check which detector was used
-        if os.path.isfile(path+'pilatus_scan_%d_%04d.hdf5'%(scannr,0)):
+        if os.path.isfile(os.path.join(path, 'pilatus_scan_%d_%04d.hdf5'%(scannr,0))):
             filepattern = 'pilatus_scan_%d_%04d.hdf5'
             print "This is a Pilatus 100k scan"
-        elif os.path.isfile(path+'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0)):
+        elif os.path.isfile(os.path.join(path, 'pilatus1m_scan_%d_%04d.hdf5'%(scannr,0))):
             filepattern = 'pilatus1m_scan_%d_%04d.hdf5'
             print "This is a Pilatus 1M scan"
         else:
@@ -412,7 +407,7 @@ class nanomaxScan_stepscan_week48(Scan):
 
         data = []
         for im in range(self.positions.shape[0]):
-            with h5py.File(path + filepattern%(scannr, im), 'r') as hf:
+            with h5py.File(os.path.join(path, filepattern%(scannr, im)), 'r') as hf:
                 print 'loading data: ' + filepattern%(scannr, im)
                 dataset = hf.get('entry_0000/measurement/Pilatus/data')
                 data.append(np.array(dataset)[0])
