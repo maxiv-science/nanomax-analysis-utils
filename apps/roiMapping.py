@@ -19,7 +19,8 @@ class Plotter():
         self.ax[0].set_xlim(0, imshape[1])
         self.ax[0].set_ylim(imshape[0], 0)
         # map
-        x, y, z = interpolate([0, imshape[0], 0, imshape[1]], self.scan, 5)
+        integral = np.mean(self.scan.data['data0'], axis=(1,2))
+        x, y, z = self.scan.interpolatedMap(integral, 5)
         self.ax[1].clear()
         self.ax[1].imshow(z, 
             extent = [x.max(), x.min(), y.min(), y.max()],
@@ -60,8 +61,13 @@ class Plotter():
         ymin, ymax = min(rect[1], rect[3]), max(rect[1], rect[3])
         #import ipdb; ipdb.set_trace()
         # convert the event's xy coordinates into image row-column:
-        rect = np.array([ymin, ymax, xmin, xmax], dtype=int) 
-        x, y, z = interpolate(rect, scan, 5)
+        roi = np.array([ymin, ymax, xmin, xmax], dtype=int) 
+        if roi[0] == roi[1]: roi[1] += 1
+        if roi[2] == roi[3]: roi[3] += 1
+        # calculate the integrated roi and get an interpolated map
+        integral = np.mean(scan.data['data0'][:, roi[0]:roi[1], roi[2]:roi[3]], axis=(1,2))
+        x, y, z = self.scan.interpolatedMap(integral, 5)
+        # show it
         xlim, ylim = self.ax[1].get_xlim(), self.ax[1].get_ylim()
         self.ax[1].clear()
         self.ax[1].imshow(z, 
@@ -115,36 +121,6 @@ class GuiListener(object):
         elif event.inaxes == self.plotter.ax[1]:
             self.plotter.updateImage(rect)
 
-def interpolate(roi, scan, oversampling):
-    """ 
-    Helper function which provides a regular and interpolated xy map of
-    a scan, integrated over a roi. The map is in the coordinates defined
-    in the Scan class, that is, right-handed lab coordinates in the 
-    sample frame, with x horizontal and y vertical, and the origin in 
-    the bottom right of the sample map array.
-    """
-    if roi[0] == roi[1]: roi[1] += 1
-    if roi[2] == roi[3]: roi[3] += 1
-    integral = np.mean(scan.data['data0'][:, roi[0]:roi[1], roi[2]:roi[3]], axis=(1,2))
-
-    xMin, xMax = np.min(scan.positions[:,0]), np.max(scan.positions[:,0])
-    yMin, yMax = np.min(scan.positions[:,1]), np.max(scan.positions[:,1])
-
-    # here we need special cases for 1d scans (where x or y doesn't vary)
-    if np.abs(yMax - yMin) < 1e-12:
-        stepsize = (xMax - xMin) / float(scan.nPositions) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax+margin:xMin-margin:-stepsize]
-    elif np.abs(xMax - xMin) < 1e-12:
-        stepsize = (yMax - yMin) / float(scan.nPositions) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
-    else:
-        stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
-    z = griddata(scan.positions, integral, (x, y), method='nearest')
-    return x, y, z
 
 # parse arguments
 if len(sys.argv) < 3:

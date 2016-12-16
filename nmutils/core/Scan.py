@@ -10,6 +10,9 @@ import h5py
 import copy as cp
 import os.path
 
+import scipy.ndimage.measurements
+from scipy.interpolate import griddata
+
 __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 
 
@@ -180,6 +183,35 @@ class Scan(object):
         new.nPositions = new.positions.shape[0]
 
         return new
+
+    def interpolatedMap(self, values, oversampling): 
+        """ 
+        Provides a regular and interpolated xy map of the scan, with the
+        values provided. For example, a ROI integral can be provided which
+        results in an interpolated map of that ROI.
+
+        values: a length-N array, with one value per position
+        oversampling: the oversampling ratio relative to the average position spacing
+        """
+        xMin, xMax = np.min(self.positions[:,0]), np.max(self.positions[:,0])
+        yMin, yMax = np.min(self.positions[:,1]), np.max(self.positions[:,1])
+
+        # here we need special cases for 1d scans (where x or y doesn't vary)
+        if np.abs(yMax - yMin) < 1e-12:
+            stepsize = (xMax - xMin) / float(self.nPositions) / oversampling
+            margin = oversampling * stepsize / 2
+            y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax+margin:xMin-margin:-stepsize]
+        elif np.abs(xMax - xMin) < 1e-12:
+            stepsize = (yMax - yMin) / float(self.nPositions) / oversampling
+            margin = oversampling * stepsize / 2
+            y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
+        else:
+            stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(self.nPositions)) / oversampling
+            margin = oversampling * stepsize / 2
+            y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
+        z = griddata(self.positions, values, (x, y), method='nearest')
+        
+        return x, y, z
 
 
 ####
