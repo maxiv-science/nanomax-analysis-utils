@@ -160,7 +160,7 @@ if len(sys.argv) < 3:
         sys.exit(0)
 subclass = sys.argv[1]
 fileName = sys.argv[2]
-opts = sys.argv[3:]
+opts = ['xrd',] + sys.argv[3:]
 
 # create a Scan object and load data
 scan = None
