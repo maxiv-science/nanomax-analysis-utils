@@ -1,4 +1,5 @@
 from scipy.interpolate import griddata
+import scipy.ndimage.measurements
 import nmutils
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +12,25 @@ class Plotter():
         self.fig, self.ax = plt.subplots(ncols=2)
         self.scan = scan
         self.reset()
+        self.com_map()
+
+    def com_map(self):
+        com = []
+        for im in self.scan.data['data0']:
+            com.append(scipy.ndimage.measurements.center_of_mass(im))
+        com = np.array(com)
+        x, y, z = scan.interpolatedMap(np.sum((com-np.mean(com, axis=0))**2, axis=1), 5)
+        plt.figure()
+        plt.imshow(z, extent = [x.max(), x.min(), y.min(), y.max()],
+            interpolation='none', cmap='gray')
+        plt.xlim((x.max(), x.min()))
+        plt.ylim((y.min(), y.max()))
+        plt.title('Diffraction center of mass deviation')
+        ax = plt.gca()
+        plt.setp(ax, xlabel='laboratory x (um)', ylabel='laboratory y (um)')
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position('right')
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=70)
 
     def reset(self):
         # diffraction pattern
