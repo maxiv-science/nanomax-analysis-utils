@@ -19,7 +19,7 @@ class Plotter():
         for im in self.scan.data['data0']:
             com.append(scipy.ndimage.measurements.center_of_mass(im))
         com = np.array(com)
-        x, y, z = scan.interpolatedMap(np.sum((com-np.mean(com, axis=0))**2, axis=1), 5)
+        x, y, z = scan.interpolatedMap(np.sum((com-np.mean(com, axis=0))**2, axis=1), 5, origin='ul')
         plt.figure()
         plt.imshow(z, extent = [x.max(), x.min(), y.min(), y.max()],
             interpolation='none', cmap='gray')
@@ -40,14 +40,15 @@ class Plotter():
         self.ax[0].set_ylim(imshape[0], 0)
         # map
         integral = np.mean(self.scan.data['data0'], axis=(1,2))
-        x, y, z = self.scan.interpolatedMap(integral, 5)
+        x, y, z = self.scan.interpolatedMap(integral, 5, origin='ul')
+        # show it
         self.ax[1].clear()
         self.ax[1].imshow(z, 
-            extent = [x.max(), x.min(), y.min(), y.max()],
+            extent = [x.min(), x.max(), y.max(), y.min()],
             interpolation='none', cmap='gray')
         self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
-        self.ax[1].set_xlim((x.max(), x.min()))
-        self.ax[1].set_ylim((y.min(), y.max()))
+        self.ax[1].set_xlim((x.min(), x.max()))
+        self.ax[1].set_ylim((y.max(), y.min()))
         self.format_axes()
         plt.draw()
 
@@ -86,12 +87,12 @@ class Plotter():
         if roi[2] == roi[3]: roi[3] += 1
         # calculate the integrated roi and get an interpolated map
         integral = np.mean(scan.data['data0'][:, roi[0]:roi[1], roi[2]:roi[3]], axis=(1,2))
-        x, y, z = self.scan.interpolatedMap(integral, 5)
+        x, y, z = self.scan.interpolatedMap(integral, 5, origin='ul')
         # show it
         xlim, ylim = self.ax[1].get_xlim(), self.ax[1].get_ylim()
         self.ax[1].clear()
         self.ax[1].imshow(z, 
-            extent = [x.max(), x.min(), y.min(), y.max()],
+            extent = [x.min(), x.max(), y.max(), y.min()],
             interpolation='none', cmap='gray')
         self.ax[1].plot(scan.positions[:,0], scan.positions[:,1], 'k.', ms=2)
         self.ax[1].set_xlim(xlim)

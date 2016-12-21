@@ -35,11 +35,12 @@ class Scan(object):
         coordinates N-by-(number of scan dimensions).
 
         The positions are defined as [x, y], where columns x and y are
-        the beam positions on the sample, in right-handed lab
-        coordinates but relative to the sample frame (which means that
-        moving a motor positive moves the position on the sample
-        negative). The coordinate system is the same as NEXUS:
-        http://download.nexusformat.org/doc/html/design.html#nexus-coordinate-systems
+        motor positions. It is then up to the viewer to display the
+        image in a good way. For example, if the motor positions denote
+        sample position and under the nanomax coordinate system, the xy
+        origin should be top left. Then, the bottom right corner
+        corresponds to maximum motor positions, which means minimum in
+        the sample frame under the nanomax coordinate system. Phew.
         """
         pass
 
@@ -184,7 +185,7 @@ class Scan(object):
 
         return new
 
-    def interpolatedMap(self, values, oversampling): 
+    def interpolatedMap(self, values, oversampling, origin='lr'):
         """ 
         Provides a regular and interpolated xy map of the scan, with the
         values provided. For example, a ROI integral can be provided which
@@ -192,6 +193,7 @@ class Scan(object):
 
         values: a length-N array, with one value per position
         oversampling: the oversampling ratio relative to the average position spacing
+        origin: 'lr', 'll', 'ur', 'ul'
         """
         xMin, xMax = np.min(self.positions[:,0]), np.max(self.positions[:,0])
         yMin, yMax = np.min(self.positions[:,1]), np.max(self.positions[:,1])
@@ -211,6 +213,23 @@ class Scan(object):
             y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
         z = griddata(self.positions, values, (x, y), method='nearest')
         
+        # we've been assuming lower-right origin. adjust:
+        if origin == 'll':
+            x = np.fliplr(x)
+            y = np.fliplr(y)
+            z = np.fliplr(z)
+        elif origin == 'ur':
+            x = np.flipud(x)
+            y = np.flipud(y)
+            z = np.flipud(z)
+        elif origin == 'ul':
+            x = np.flipud(x)
+            y = np.flipud(y)
+            z = np.flipud(z)
+            x = np.fliplr(x)
+            y = np.fliplr(y)
+            z = np.fliplr(z)
+
         return x, y, z
 
 
@@ -240,7 +259,7 @@ class nanomaxScan_june2016(Scan):
         for i in range(Ny):
             for j in range(Nx):
                 # by the convention noted in the base class:
-                positions.append([j, -i])
+                positions.append([-j, i])
         return np.array(positions) * stepsize
 
     def _readData(self, fileName, opts=None):
@@ -264,8 +283,8 @@ class i13Scan(Scan):
         with h5py.File(fileName, 'r') as hf:
             # assuming the xy positions are motor positions, we want the
             # negative of those for the sample frame.
-            x = -np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
-            y = -np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
+            x = np.array(hf.get('entry1/instrument/lab_sxy/lab_sx'))
+            y = np.array(hf.get('entry1/instrument/lab_sxy/lab_sy'))
         positions = np.vstack((x, y)).T
         return positions
 
@@ -340,7 +359,7 @@ class nanomaxScan_flyscan_week48(Scan):
             if not (len(yall) == Ny): raise Exception('Something''s wrong with the positions')
             y = np.repeat(yall, Nx)
 
-        return -np.vstack((x, y)).T
+        return np.vstack((x, y)).T
 
     def _readData(self, fileName, opts=None):
         """ 
@@ -423,7 +442,7 @@ class nanomaxScan_stepscan_week48(Scan):
             x = np.array(hf.get(entry + '/measurement/samx'))
             y = np.array(hf.get(entry + '/measurement/samy'))
 
-        return -np.vstack((x, y)).T
+        return np.vstack((x, y)).T
 
     def _readData(self, fileName, opts=None):
         """ 
