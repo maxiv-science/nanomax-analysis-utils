@@ -92,8 +92,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
     def togglePositions(self):
         if self.positionsAction.isChecked():
             self.ui.mapPlot.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
-                label='scan positions', symbol=',', linestyle=' ',
-                selectable=True)
+                label='scan positions', symbol='+', color='red', linestyle=' ')
         else:
             self.ui.mapPlot.addCurve([], [], label='scan positions')
 
@@ -105,14 +104,13 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
 
     def resetMap(self):
         average = np.mean(self.scan.data['xrd'], axis=(1,2))
-        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING)
+        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING, origin='ul')
         self.ui.mapPlot.addImage(z, colormap=self.mapCmap,
             scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])], 
-            #origin=[x.max(), y.max()],
+            origin=[x.min(), y.min()],
             legend='data')
         self.ui.mapPlot.setKeepDataAspectRatio(True)
-        print [x[0,0]-x[0,1], y[0,0]-y[1,0]]
-        print [x.max(), y.max()]
+        self.ui.mapPlot.setYAxisInverted(True)
 
     def reset(self):
         self.resetImage()
@@ -124,15 +122,14 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.mapPlot.maskToolsDockWidget.setVisible(False)
         # get and check the mask array
         mask = self.ui.diffPlot.maskToolsDockWidget.widget().getSelectionMask()
-        print 'updating map %d'%mask.sum()
         # if the mask is cleared, reset without wasting time
         if mask.sum() == 0:
-            print 'resetting'
             self.resetMap()
             return
         ii, jj = np.where(mask)
+        print 'building map by averaging %d pixels'%len(ii)
         average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
-        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING)
+        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING, origin='ul')
         self.ui.mapPlot.addImage(z, legend='data')
 
     def updateImage(self):
@@ -141,16 +138,14 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.diffPlot.maskToolsDockWidget.setVisible(False)
         # get and check the mask array
         mask = self.ui.mapPlot.maskToolsDockWidget.widget().getSelectionMask()
-        print 'updating image %d'%mask.sum()
         # if the mask is cleared, reset without wasting time
         if mask.sum() == 0:
-            print 'resetting'
             self.resetImage()
             return
         # recreate the interpolated grid from above, to find masked
         # positions on the oversampled grid
         dummy = np.zeros(self.scan.nPositions)
-        x, y, z = self.scan.interpolatedMap(dummy, MAP_OVERSAMPLING)
+        x, y, z = self.scan.interpolatedMap(dummy, MAP_OVERSAMPLING, origin='ul')
         maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
         pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
         # go through actual positions and find the masked ones
@@ -160,6 +155,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
             if dist2 < pointSpacing2:
                 maskedPositions.append(i)
+        print 'building diffraction pattern from %d positions'%len(maskedPositions)
         # get the average and replace the image with legend 'data',
         # retaining settings from reset()
         data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0) 
