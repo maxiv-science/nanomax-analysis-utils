@@ -7,6 +7,7 @@ import nmutils
 import numpy as np
 from scipy.interpolate import griddata
 
+MAP_OVERSAMPLING = 5
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html
@@ -52,6 +53,10 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             self.ui.filenameBox.setText(PyQt4.QtGui.QFileDialog.getOpenFileName())
         self.ui.browseButton.clicked.connect(wrap)
 
+        # connect the mask widget to update functions
+        self.ui.diffPlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateMap)
+        self.ui.mapPlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateImage)
+
         # hint at the subclass options when a subclass is selected
         def wrap():
             subclass = str(self.ui.scanClassBox.currentText())
@@ -69,9 +74,19 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             filename = str(self.ui.filenameBox.text())
             self.scan = getattr(nmutils.core, subclass)()
             opts = str(self.ui.scanOptionsBox.text()).split()
-            self.scan.addData(filename, opts=opts)
+            # add xrd data:
+            try:
+                self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
+                print "loaded xrd data"
+            except:
+                print "no xrd data for this scan"
+            # add xrf data:
+            try:
+                self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
+                print "loaded xrf data"
+            except:
+                print "no xrf data for this scan"
             self.reset()
-
         self.ui.loadButton.clicked.connect(wrap)
 
     def togglePositions(self):
@@ -82,51 +97,73 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         else:
             self.ui.mapPlot.addCurve([], [], label='scan positions')
 
-    def reset(self):
-        # diffraction pattern
-        self.ui.diffPlot.addImage(self.scan.meanData(), colormap=self.diffCmap, 
-            replace=True, selectable=True)
+    def resetImage(self):
+        self.ui.diffPlot.addImage(self.scan.meanData(name='xrd'), 
+            colormap=self.diffCmap, legend='data')
         self.ui.diffPlot.setKeepDataAspectRatio(True)
         self.ui.diffPlot.setYAxisInverted(True)
-        # map
-        imshape = self.scan.meanData().shape
-        x, y, z = interpolate([0, imshape[0], 0, imshape[1]], self.scan, 5)
-        self.ui.mapPlot.addImage(z, colormap=self.mapCmap, replace=True,
-            scale=[x[0,1]-x[0,0], y[1,0]-y[0,0]], origin=[x.max(), y.max()])
+
+    def resetMap(self):
+        average = np.mean(self.scan.data['xrd'], axis=(1,2))
+        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING)
+        self.ui.mapPlot.addImage(z, colormap=self.mapCmap,
+            scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])], 
+            #origin=[x.max(), y.max()],
+            legend='data')
         self.ui.mapPlot.setKeepDataAspectRatio(True)
+        print [x[0,0]-x[0,1], y[0,0]-y[1,0]]
+        print [x.max(), y.max()]
 
-def interpolate(roi, scan, oversampling):
-    """ 
-    Helper function which provides a regular and interpolated xy map of
-    a scan, integrated over a roi. The map is in the coordinates defined
-    in the Scan class, that is, right-handed lab coordinates in the 
-    sample frame, with x horizontal and y vertical, and the origin in 
-    the bottom right of the sample map array.
-    """
-    if roi[0] == roi[1]: roi[1] += 1
-    if roi[2] == roi[3]: roi[3] += 1
-    integral = np.mean(scan.data['data0'][:, roi[0]:roi[1], roi[2]:roi[3]], axis=(1,2))
+    def reset(self):
+        self.resetImage()
+        self.resetMap()
 
-    xMin, xMax = np.min(scan.positions[:,0]), np.max(scan.positions[:,0])
-    yMin, yMax = np.min(scan.positions[:,1]), np.max(scan.positions[:,1])
+    def updateMap(self):
+        # workaround to avoid the infinite loop which occurs when both
+        # mask widgets are open at the same time
+        self.ui.mapPlot.maskToolsDockWidget.setVisible(False)
+        # get and check the mask array
+        mask = self.ui.diffPlot.maskToolsDockWidget.widget().getSelectionMask()
+        print 'updating map %d'%mask.sum()
+        # if the mask is cleared, reset without wasting time
+        if mask.sum() == 0:
+            print 'resetting'
+            self.resetMap()
+            return
+        ii, jj = np.where(mask)
+        average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
+        x, y, z = self.scan.interpolatedMap(average, MAP_OVERSAMPLING)
+        self.ui.mapPlot.addImage(z, legend='data')
 
-    # here we need special cases for 1d scans (where x or y doesn't vary)
-    if np.abs(yMax - yMin) < 1e-12:
-        stepsize = (xMax - xMin) / float(scan.nPositions) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMin-(stepsize*oversampling*5)/2:yMin+(stepsize*oversampling*5)/2:stepsize, xMax+margin:xMin-margin:-stepsize]
-    elif np.abs(xMax - xMin) < 1e-12:
-        stepsize = (yMax - yMin) / float(scan.nPositions) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
-    else:
-        stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(scan.nPositions)) / oversampling
-        margin = oversampling * stepsize / 2
-        y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
-    print stepsize
-    z = griddata(scan.positions, integral, (x, y), method='nearest')
-    return x, y, z
-
+    def updateImage(self):
+        # workaround to avoid the infinite loop which occurs when both
+        # mask widgets are open at the same time
+        self.ui.diffPlot.maskToolsDockWidget.setVisible(False)
+        # get and check the mask array
+        mask = self.ui.mapPlot.maskToolsDockWidget.widget().getSelectionMask()
+        print 'updating image %d'%mask.sum()
+        # if the mask is cleared, reset without wasting time
+        if mask.sum() == 0:
+            print 'resetting'
+            self.resetImage()
+            return
+        # recreate the interpolated grid from above, to find masked
+        # positions on the oversampled grid
+        dummy = np.zeros(self.scan.nPositions)
+        x, y, z = self.scan.interpolatedMap(dummy, MAP_OVERSAMPLING)
+        maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
+        pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
+        # go through actual positions and find the masked ones
+        maskedPositions = []
+        for i in range(self.scan.nPositions):
+            # the minimum distance of the current position to a selected grid point:
+            dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
+            if dist2 < pointSpacing2:
+                maskedPositions.append(i)
+        # get the average and replace the image with legend 'data',
+        # retaining settings from reset()
+        data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0) 
+        self.ui.diffPlot.addImage(data, legend='data')
 
 if __name__ == '__main__':
     # you always need a qt app
