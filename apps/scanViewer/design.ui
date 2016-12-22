@@ -14,8 +14,8 @@
    <string>NanoMAX Scan Viewer</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>../../nmutils/resources/N.png</normaloff>../../nmutils/resources/N.png</iconset>
+   <iconset resource="design.qrc">
+    <normaloff>:/logos/N.png</normaloff>:/logos/N.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
@@ -86,7 +86,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap>../../nmutils/resources/nanomax.png</pixmap>
+         <pixmap resource="design.qrc">:/logos/nanomax.png</pixmap>
         </property>
        </widget>
       </item>
@@ -242,6 +242,8 @@
    <header>silx.gui.plot.PlotWindow</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="design.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -27,7 +27,7 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(1082, 678)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8("../../nmutils/resources/N.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/logos/N.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
         self.logoLabel.setSizePolicy(sizePolicy)
         self.logoLabel.setMinimumSize(QtCore.QSize(260, 0))
         self.logoLabel.setText(_fromUtf8(""))
-        self.logoLabel.setPixmap(QtGui.QPixmap(_fromUtf8("../../nmutils/resources/nanomax.png")))
+        self.logoLabel.setPixmap(QtGui.QPixmap(_fromUtf8(":/logos/nanomax.png")))
         self.logoLabel.setObjectName(_fromUtf8("logoLabel"))
         self.gridLayout.addWidget(self.logoLabel, 0, 0, 3, 1)
         self.scanOptionsBox = QtGui.QLineEdit(self.centralwidget)
@@ -153,3 +153,4 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.xrf), _translate("MainWindow", "XRF region of interest", None))
 
 from silx.gui.plot.PlotWindow import Plot2D
+import design_rc
