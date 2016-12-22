@@ -185,7 +185,7 @@ class Scan(object):
 
         return new
 
-    def interpolatedMap(self, values, oversampling, origin='lr'):
+    def interpolatedMap(self, values, oversampling, origin='lr', method='nearest'):
         """ 
         Provides a regular and interpolated xy map of the scan, with the
         values provided. For example, a ROI integral can be provided which
@@ -211,7 +211,7 @@ class Scan(object):
             stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(self.nPositions)) / oversampling
             margin = oversampling * stepsize / 2
             y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
-        z = griddata(self.positions, values, (x, y), method='nearest')
+        z = griddata(self.positions, values, (x, y), method=method)
         
         # we've been assuming lower-right origin. adjust:
         if origin == 'll':
