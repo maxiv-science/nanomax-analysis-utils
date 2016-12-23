@@ -81,6 +81,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
 
         self.ui.comWidget.setScan(self.scan)
         self.ui.xrdWidget.setScan(self.scan)
+        self.ui.xrfWidget.setScan(self.scan)
 
 if __name__ == '__main__':
     # you always need a qt app

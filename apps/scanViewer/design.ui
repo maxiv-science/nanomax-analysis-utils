@@ -19,6 +19,46 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="focusPolicy">
+       <enum>Qt::TabFocus</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="roi">
+       <attribute name="title">
+        <string>XRD region of interest</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="XrdWidget" name="xrdWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="com">
+       <attribute name="title">
+        <string>XRD center of mass</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="ComWidget" name="comWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="xrf">
+       <attribute name="title">
+        <string>XRF region of interest</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="XrfWidget" name="xrfWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="2">
@@ -185,41 +225,6 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="focusPolicy">
-       <enum>Qt::TabFocus</enum>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="roi">
-       <attribute name="title">
-        <string>XRD region of interest</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="XrdWidget" name="xrdWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="com">
-       <attribute name="title">
-        <string>XRD center of mass</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="ComWidget" name="comWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="xrf">
-       <attribute name="title">
-        <string>XRF region of interest</string>
-       </attribute>
-      </widget>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -245,6 +250,12 @@
    <class>XrdWidget</class>
    <extends>QWidget</extends>
    <header>widgets/XrdWidget</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>XrfWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/XrfWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

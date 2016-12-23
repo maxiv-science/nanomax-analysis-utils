@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'apps/scanViewer/design.ui'
+# Form implementation generated from reading ui file 'design.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -33,6 +33,34 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.gridLayout_2 = QtGui.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.tabWidget = QtGui.QTabWidget(self.centralwidget)
+        self.tabWidget.setFocusPolicy(QtCore.Qt.TabFocus)
+        self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
+        self.roi = QtGui.QWidget()
+        self.roi.setObjectName(_fromUtf8("roi"))
+        self.horizontalLayout = QtGui.QHBoxLayout(self.roi)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.xrdWidget = XrdWidget(self.roi)
+        self.xrdWidget.setObjectName(_fromUtf8("xrdWidget"))
+        self.horizontalLayout.addWidget(self.xrdWidget)
+        self.tabWidget.addTab(self.roi, _fromUtf8(""))
+        self.com = QtGui.QWidget()
+        self.com.setObjectName(_fromUtf8("com"))
+        self.horizontalLayout_2 = QtGui.QHBoxLayout(self.com)
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        self.comWidget = ComWidget(self.com)
+        self.comWidget.setObjectName(_fromUtf8("comWidget"))
+        self.horizontalLayout_2.addWidget(self.comWidget)
+        self.tabWidget.addTab(self.com, _fromUtf8(""))
+        self.xrf = QtGui.QWidget()
+        self.xrf.setObjectName(_fromUtf8("xrf"))
+        self.horizontalLayout_3 = QtGui.QHBoxLayout(self.xrf)
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.xrfWidget = XrfWidget(self.xrf)
+        self.xrfWidget.setObjectName(_fromUtf8("xrfWidget"))
+        self.horizontalLayout_3.addWidget(self.xrfWidget)
+        self.tabWidget.addTab(self.xrf, _fromUtf8(""))
+        self.gridLayout_2.addWidget(self.tabWidget, 1, 0, 1, 1)
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.browseButton = QtGui.QPushButton(self.centralwidget)
@@ -101,29 +129,6 @@ class Ui_MainWindow(object):
         self.filenameBox.setObjectName(_fromUtf8("filenameBox"))
         self.gridLayout.addWidget(self.filenameBox, 1, 1, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
-        self.tabWidget = QtGui.QTabWidget(self.centralwidget)
-        self.tabWidget.setFocusPolicy(QtCore.Qt.TabFocus)
-        self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
-        self.roi = QtGui.QWidget()
-        self.roi.setObjectName(_fromUtf8("roi"))
-        self.horizontalLayout = QtGui.QHBoxLayout(self.roi)
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.xrdWidget = XrdWidget(self.roi)
-        self.xrdWidget.setObjectName(_fromUtf8("xrdWidget"))
-        self.horizontalLayout.addWidget(self.xrdWidget)
-        self.tabWidget.addTab(self.roi, _fromUtf8(""))
-        self.com = QtGui.QWidget()
-        self.com.setObjectName(_fromUtf8("com"))
-        self.horizontalLayout_2 = QtGui.QHBoxLayout(self.com)
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.comWidget = ComWidget(self.com)
-        self.comWidget.setObjectName(_fromUtf8("comWidget"))
-        self.horizontalLayout_2.addWidget(self.comWidget)
-        self.tabWidget.addTab(self.com, _fromUtf8(""))
-        self.xrf = QtGui.QWidget()
-        self.xrf.setObjectName(_fromUtf8("xrf"))
-        self.tabWidget.addTab(self.xrf, _fromUtf8(""))
-        self.gridLayout_2.addWidget(self.tabWidget, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1082, 27))
@@ -144,6 +149,9 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "NanoMAX Scan Viewer", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.roi), _translate("MainWindow", "XRD region of interest", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.com), _translate("MainWindow", "XRD center of mass", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.xrf), _translate("MainWindow", "XRF region of interest", None))
         self.browseButton.setToolTip(_translate("MainWindow", "<html><head/><body><p>Browse for data files</p></body></html>", None))
         self.browseButton.setText(_translate("MainWindow", "Browse...", None))
         self.scanClassBox.setToolTip(_translate("MainWindow", "<html><head/><body><p>Available Scan subclasses</p></body></html>", None))
@@ -152,10 +160,8 @@ class Ui_MainWindow(object):
         self.loadButton.setToolTip(_translate("MainWindow", "<html><head/><body><p>Go!</p></body></html>", None))
         self.loadButton.setText(_translate("MainWindow", "Load", None))
         self.filenameBox.setText(_translate("MainWindow", "<input file>", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.roi), _translate("MainWindow", "XRD region of interest", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.com), _translate("MainWindow", "XRD center of mass", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.xrf), _translate("MainWindow", "XRF region of interest", None))
 
 from widgets.ComWidget import ComWidget
 from widgets.XrdWidget import XrdWidget
+from widgets.XrfWidget import XrfWidget
 import design_rc
