@@ -199,24 +199,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="Plot2D" name="xrdImagePlot">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Plot2D" name="xrdMapPlot">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
+         <widget class="XrdWidget" name="xrdWidget" native="true"/>
         </item>
        </layout>
       </widget>
@@ -253,24 +236,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Plot2D</class>
-   <extends>PlotWindow</extends>
-   <header>silx.gui.plot.PlotWindow</header>
-  </customwidget>
-  <customwidget>
-   <class>PlotWidget</class>
-   <extends>QMainWindow</extends>
-   <header>silx.gui.plot.PlotWidget</header>
-  </customwidget>
-  <customwidget>
-   <class>PlotWindow</class>
-   <extends>PlotWidget</extends>
-   <header>silx.gui.plot.PlotWindow</header>
-  </customwidget>
-  <customwidget>
    <class>ComWidget</class>
    <extends>QWidget</extends>
    <header>widgets/ComWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>XrdWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/XrdWidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -281,8 +255,6 @@
   <tabstop>browseButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>xrdImagePlot</tabstop>
-  <tabstop>xrdMapPlot</tabstop>
  </tabstops>
  <resources>
   <include location="design.qrc"/>

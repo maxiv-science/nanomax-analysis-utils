@@ -108,22 +108,9 @@ class Ui_MainWindow(object):
         self.roi.setObjectName(_fromUtf8("roi"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.roi)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.xrdImagePlot = Plot2D(self.roi)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.xrdImagePlot.sizePolicy().hasHeightForWidth())
-        self.xrdImagePlot.setSizePolicy(sizePolicy)
-        self.xrdImagePlot.setObjectName(_fromUtf8("xrdImagePlot"))
-        self.horizontalLayout.addWidget(self.xrdImagePlot)
-        self.xrdMapPlot = Plot2D(self.roi)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.xrdMapPlot.sizePolicy().hasHeightForWidth())
-        self.xrdMapPlot.setSizePolicy(sizePolicy)
-        self.xrdMapPlot.setObjectName(_fromUtf8("xrdMapPlot"))
-        self.horizontalLayout.addWidget(self.xrdMapPlot)
+        self.xrdWidget = XrdWidget(self.roi)
+        self.xrdWidget.setObjectName(_fromUtf8("xrdWidget"))
+        self.horizontalLayout.addWidget(self.xrdWidget)
         self.tabWidget.addTab(self.roi, _fromUtf8(""))
         self.com = QtGui.QWidget()
         self.com.setObjectName(_fromUtf8("com"))
@@ -154,8 +141,6 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.filenameBox, self.browseButton)
         MainWindow.setTabOrder(self.browseButton, self.loadButton)
         MainWindow.setTabOrder(self.loadButton, self.tabWidget)
-        MainWindow.setTabOrder(self.tabWidget, self.xrdImagePlot)
-        MainWindow.setTabOrder(self.xrdImagePlot, self.xrdMapPlot)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "NanoMAX Scan Viewer", None))
@@ -171,6 +156,6 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.com), _translate("MainWindow", "XRD center of mass", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.xrf), _translate("MainWindow", "XRF region of interest", None))
 
-from silx.gui.plot.PlotWindow import Plot2D
 from widgets.ComWidget import ComWidget
+from widgets.XrdWidget import XrdWidget
 import design_rc
