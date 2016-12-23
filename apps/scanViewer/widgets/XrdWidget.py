@@ -56,12 +56,8 @@ class MapWidget(PlotWindow):
         self.positionsAction = PyQt4.QtGui.QAction('positions', self, checkable=True)
         self.toolBar().addAction(self.positionsAction)
 
+        # add a profile tool
         self.profile = ProfileToolBar(plot=self)
-        """"Profile tools attached to this plot.
-
-        See :class:`silx.gui.plot.PlotTools.ProfileToolBar`
-        """
-
         self.addToolBar(self.profile)
 
     def _getActiveImageValue(self, x, y):

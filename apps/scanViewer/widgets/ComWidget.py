@@ -1,4 +1,5 @@
 from silx.gui.plot import PlotWindow
+from silx.gui.plot.PlotTools import ProfileToolBar
 import PyQt4
 import scipy.ndimage.measurements
 import numpy as np
@@ -56,6 +57,11 @@ class MapWidget(PlotWindow):
         # add a button to toggle positions
         self.positionsAction = PyQt4.QtGui.QAction('positions', self, checkable=True)
         self.toolBar().addAction(self.positionsAction)
+
+        # add a profile tool
+        self.profile = ProfileToolBar(plot=self)
+        self.addToolBar(self.profile)
+
 
     def _getActiveImageValue(self, x, y):
         """Get value of active image at position (x, y)
