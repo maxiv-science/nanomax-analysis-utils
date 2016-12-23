@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'design.ui'
+# Form implementation generated from reading ui file 'apps/scanViewer/design.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -85,6 +85,8 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.loadButton.sizePolicy().hasHeightForWidth())
         self.loadButton.setSizePolicy(sizePolicy)
         self.loadButton.setMaximumSize(QtCore.QSize(10000, 16777215))
+        self.loadButton.setAutoDefault(True)
+        self.loadButton.setDefault(True)
         self.loadButton.setObjectName(_fromUtf8("loadButton"))
         self.gridLayout.addWidget(self.loadButton, 1, 3, 1, 1)
         self.filenameBox = QtGui.QLineEdit(self.centralwidget)
@@ -100,6 +102,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.filenameBox, 1, 1, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
         self.tabWidget = QtGui.QTabWidget(self.centralwidget)
+        self.tabWidget.setFocusPolicy(QtCore.Qt.TabFocus)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.roi = QtGui.QWidget()
         self.roi.setObjectName(_fromUtf8("roi"))
@@ -141,11 +144,22 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.setTabOrder(self.scanClassBox, self.scanOptionsBox)
+        MainWindow.setTabOrder(self.scanOptionsBox, self.filenameBox)
+        MainWindow.setTabOrder(self.filenameBox, self.browseButton)
+        MainWindow.setTabOrder(self.browseButton, self.loadButton)
+        MainWindow.setTabOrder(self.loadButton, self.tabWidget)
+        MainWindow.setTabOrder(self.tabWidget, self.diffPlot)
+        MainWindow.setTabOrder(self.diffPlot, self.mapPlot)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "NanoMAX Scan Viewer", None))
+        self.browseButton.setToolTip(_translate("MainWindow", "<html><head/><body><p>Browse for data files</p></body></html>", None))
         self.browseButton.setText(_translate("MainWindow", "Browse...", None))
+        self.scanClassBox.setToolTip(_translate("MainWindow", "<html><head/><body><p>Available Scan subclasses</p></body></html>", None))
+        self.scanOptionsBox.setToolTip(_translate("MainWindow", "<html><head/><body><p>Optional class-dependent options, such as scan nr, detector area to load, etc.</p></body></html>", None))
         self.scanOptionsBox.setText(_translate("MainWindow", "<class options>", None))
+        self.loadButton.setToolTip(_translate("MainWindow", "<html><head/><body><p>Go!</p></body></html>", None))
         self.loadButton.setText(_translate("MainWindow", "Load", None))
         self.filenameBox.setText(_translate("MainWindow", "<input file>", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.roi), _translate("MainWindow", "XRD region of interest", None))

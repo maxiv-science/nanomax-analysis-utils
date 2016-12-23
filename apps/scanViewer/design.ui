@@ -35,6 +35,9 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse for data files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Browse...</string>
         </property>
@@ -59,6 +62,9 @@
           <width>200</width>
           <height>0</height>
          </size>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available Scan subclasses&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="maxVisibleItems">
          <number>100</number>
@@ -113,6 +119,9 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Optional class-dependent options, such as scan nr, detector area to load, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>&lt;class options&gt;</string>
         </property>
@@ -132,8 +141,17 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Load</string>
+        </property>
+        <property name="autoDefault">
+         <bool>true</bool>
+        </property>
+        <property name="default">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -169,6 +187,9 @@
     </item>
     <item row="1" column="0">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="focusPolicy">
+       <enum>Qt::TabFocus</enum>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -242,6 +263,16 @@
    <header>silx.gui.plot.PlotWindow</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>scanClassBox</tabstop>
+  <tabstop>scanOptionsBox</tabstop>
+  <tabstop>filenameBox</tabstop>
+  <tabstop>browseButton</tabstop>
+  <tabstop>loadButton</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>diffPlot</tabstop>
+  <tabstop>mapPlot</tabstop>
+ </tabstops>
  <resources>
   <include location="design.qrc"/>
  </resources>

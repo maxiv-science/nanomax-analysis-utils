@@ -1,6 +1,7 @@
 import PyQt4
 from silx.gui import qt
 from silx.gui.plot.PlotActions import PlotAction
+from silx.gui.icons import getQIcon
 import sys
 import design
 import nmutils
@@ -37,6 +38,15 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.mapPlot.toolBar().addAction(self.positionsAction)
         self.positionsAction.triggered.connect(self.togglePositions)
 
+        # customize the mask tools for use as ROI selectors
+        # unfortunately, tooltip and icon reset each other, so only changing the icon.
+        self.ui.mapPlot.maskToolsDockWidget.setWindowTitle('scan map ROI')
+        self.ui.mapPlot.maskAction.setToolTip('Select a scan map region of interest')
+        self.ui.mapPlot.maskAction.setIcon(getQIcon('image-select-box'))
+        self.ui.diffPlot.maskToolsDockWidget.setWindowTitle('diffraction ROI')
+        self.ui.diffPlot.maskAction.setToolTip('Select a diffraction region of interest')
+        self.ui.diffPlot.maskAction.setIcon(getQIcon('image-select-box'))
+
         # add an interpolation toolbar
         self.ui.mapPlot.interpolToolbar = self.ui.mapPlot.addToolBar('Interpolation')
         self.ui.mapPlot.interpolBox = PyQt4.QtGui.QSpinBox(
@@ -46,8 +56,9 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.mapPlot.interpolMenu = PyQt4.QtGui.QComboBox(
             toolTip='Type of interpolation between scan positions')
         self.ui.mapPlot.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
-        self.ui.mapPlot.interpolToolbar.addWidget(self.ui.mapPlot.interpolBox)
         self.ui.mapPlot.interpolToolbar.addWidget(self.ui.mapPlot.interpolMenu)
+        self.ui.mapPlot.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' N:'))
+        self.ui.mapPlot.interpolToolbar.addWidget(self.ui.mapPlot.interpolBox)
         self.ui.mapPlot.interpolBox.valueChanged.connect(self.updateMap)
         self.ui.mapPlot.interpolMenu.currentIndexChanged.connect(self.updateMap)
 
