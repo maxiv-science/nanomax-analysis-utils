@@ -24,6 +24,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         # Qt base class constructor
         super(ScanViewer, self).__init__()
 
+        ###### INITIALIZE THE GLOBAL WIDGETS
         # instantiate the form class and set it up in the current QMainWindow
         self.ui = design.Ui_MainWindow()
         self.ui.setupUi(self)
@@ -31,36 +32,6 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         # possibly set initial values
         if filename:
             self.ui.filenameBox.setText(filename)
-
-        # add a positionsAction button to the toolbar - didn't work with
-        # PlotAction as the silx tutorial says so using normal PyQT.
-        self.positionsAction = qt.QAction('positions', self.ui.mapPlot, checkable=True)
-        self.ui.mapPlot.toolBar().addAction(self.positionsAction)
-        self.positionsAction.triggered.connect(self.togglePositions)
-
-        # customize the mask tools for use as ROI selectors
-        # unfortunately, tooltip and icon reset each other, so only changing the icon.
-        self.ui.mapPlot.maskToolsDockWidget.setWindowTitle('scan map ROI')
-        self.ui.mapPlot.maskAction.setToolTip('Select a scan map region of interest')
-        self.ui.mapPlot.maskAction.setIcon(getQIcon('image-select-box'))
-        self.ui.diffPlot.maskToolsDockWidget.setWindowTitle('diffraction ROI')
-        self.ui.diffPlot.maskAction.setToolTip('Select a diffraction region of interest')
-        self.ui.diffPlot.maskAction.setIcon(getQIcon('image-select-box'))
-
-        # add an interpolation toolbar
-        self.ui.mapPlot.interpolToolbar = self.ui.mapPlot.addToolBar('Interpolation')
-        self.ui.mapPlot.interpolBox = PyQt4.QtGui.QSpinBox(
-            toolTip='Map oversampling relative to average step size')
-        self.ui.mapPlot.interpolBox.setRange(1, 50)
-        self.ui.mapPlot.interpolBox.setValue(5)
-        self.ui.mapPlot.interpolMenu = PyQt4.QtGui.QComboBox(
-            toolTip='Type of interpolation between scan positions')
-        self.ui.mapPlot.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
-        self.ui.mapPlot.interpolToolbar.addWidget(self.ui.mapPlot.interpolMenu)
-        self.ui.mapPlot.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' N:'))
-        self.ui.mapPlot.interpolToolbar.addWidget(self.ui.mapPlot.interpolBox)
-        self.ui.mapPlot.interpolBox.valueChanged.connect(self.updateMap)
-        self.ui.mapPlot.interpolMenu.currentIndexChanged.connect(self.updateMap)
 
         # set up default plot settings
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
@@ -76,10 +47,6 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             self.ui.filenameBox.setText(PyQt4.QtGui.QFileDialog.getOpenFileName())
         self.ui.browseButton.clicked.connect(wrap)
 
-        # connect the mask widget to update functions
-        self.ui.diffPlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateMap)
-        self.ui.mapPlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateImage)
-
         # hint at the subclass options when a subclass is selected
         def wrap():
             subclass = str(self.ui.scanClassBox.currentText())
@@ -92,69 +59,110 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.scanClassBox.currentIndexChanged.connect(wrap)
 
         # connect load button
-        def wrap():
-            subclass = str(self.ui.scanClassBox.currentText())
-            filename = str(self.ui.filenameBox.text())
-            self.scan = getattr(nmutils.core, subclass)()
-            opts = str(self.ui.scanOptionsBox.text()).split()
-            # add xrd data:
-            try:
-                self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
-                print "loaded xrd data"
-            except:
-                print "no xrd data for this scan"
-            # add xrf data:
-            try:
-                self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
-                print "loaded xrf data"
-            except:
-                print "no xrf data for this scan"
-            self.reset()
-        self.ui.loadButton.clicked.connect(wrap)
+        self.ui.loadButton.clicked.connect(self.load)
 
-    def togglePositions(self):
-        xlims = self.ui.mapPlot.getGraphXLimits()
-        ylims = self.ui.mapPlot.getGraphYLimits()
-        if self.positionsAction.isChecked():
-            self.ui.mapPlot.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
+        ###### INITIALIZE THE XRD TAB
+        # add a positionsAction button to the toolbar - didn't work with
+        # PlotAction as the silx tutorial says so using normal PyQT.
+        self.ui.xrdMapPlot.positionsAction = qt.QAction('positions', self.ui.xrdMapPlot, checkable=True)
+        self.ui.xrdMapPlot.toolBar().addAction(self.ui.xrdMapPlot.positionsAction)
+        self.ui.xrdMapPlot.positionsAction.triggered.connect(self.toggleXrdPositions)
+
+        # customize the mask tools for use as ROI selectors
+        # unfortunately, tooltip and icon reset each other, so only changing the icon.
+        self.ui.xrdMapPlot.maskToolsDockWidget.setWindowTitle('scan map ROI')
+        self.ui.xrdMapPlot.maskAction.setToolTip('Select a scan map region of interest')
+        self.ui.xrdMapPlot.maskAction.setIcon(getQIcon('image-select-box'))
+        self.ui.xrdImagePlot.maskToolsDockWidget.setWindowTitle('diffraction ROI')
+        self.ui.xrdImagePlot.maskAction.setToolTip('Select a diffraction region of interest')
+        self.ui.xrdImagePlot.maskAction.setIcon(getQIcon('image-select-box'))
+
+        # add an interpolation toolbar
+        self.ui.xrdMapPlot.interpolToolbar = self.ui.xrdMapPlot.addToolBar('Interpolation')
+        self.ui.xrdMapPlot.interpolBox = PyQt4.QtGui.QSpinBox(
+            toolTip='Map oversampling relative to average step size')
+        self.ui.xrdMapPlot.interpolBox.setRange(1, 50)
+        self.ui.xrdMapPlot.interpolBox.setValue(5)
+        self.ui.xrdMapPlot.interpolMenu = PyQt4.QtGui.QComboBox(
+            toolTip='Type of interpolation between scan positions')
+        self.ui.xrdMapPlot.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
+        self.ui.xrdMapPlot.interpolToolbar.addWidget(self.ui.xrdMapPlot.interpolMenu)
+        self.ui.xrdMapPlot.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' N:'))
+        self.ui.xrdMapPlot.interpolToolbar.addWidget(self.ui.xrdMapPlot.interpolBox)
+        self.ui.xrdMapPlot.interpolBox.valueChanged.connect(self.updateXrdMap)
+        self.ui.xrdMapPlot.interpolMenu.currentIndexChanged.connect(self.updateXrdMap)
+
+        # connect the mask widget to update functions
+        self.ui.xrdImagePlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateXrdMap)
+        self.ui.xrdMapPlot.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateXrdImage)
+
+    def load(self):
+        subclass = str(self.ui.scanClassBox.currentText())
+        filename = str(self.ui.filenameBox.text())
+        self.scan = getattr(nmutils.core, subclass)()
+        opts = str(self.ui.scanOptionsBox.text()).split()
+        # add xrd data:
+        self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
+        try:
+            print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
+        except:
+            print "no xrd data found"
+        # add xrf data:
+        try:
+            self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
+        except: pass
+        try:
+            print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
+        except:
+            print "no xrf data found"
+
+        self.ui.comWidget.setScan(self.scan)
+
+        self.reset()
+        
+    def toggleXrdPositions(self):
+        xlims = self.ui.xrdMapPlot.getGraphXLimits()
+        ylims = self.ui.xrdMapPlot.getGraphYLimits()
+        if self.ui.xrdMapPlot.positionsAction.isChecked():
+            self.ui.xrdMapPlot.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
                 label='scan positions', symbol='+', color='red', linestyle=' ')
         else:
-            self.ui.mapPlot.addCurve([], [], label='scan positions')
-        self.ui.mapPlot.setGraphXLimits(*xlims)
-        self.ui.mapPlot.setGraphYLimits(*ylims)
+            self.ui.xrdMapPlot.addCurve([], [], label='scan positions')
+        self.ui.xrdMapPlot.setGraphXLimits(*xlims)
+        self.ui.xrdMapPlot.setGraphYLimits(*ylims)
 
-    def resetImage(self):
-        self.ui.diffPlot.addImage(self.scan.meanData(name='xrd'), 
+    def resetXrdImage(self):
+        self.ui.xrdImagePlot.addImage(self.scan.meanData(name='xrd'), 
             colormap=self.diffCmap, legend='data')
-        self.ui.diffPlot.setKeepDataAspectRatio(True)
-        self.ui.diffPlot.setYAxisInverted(True)
+        self.ui.xrdImagePlot.setKeepDataAspectRatio(True)
+        self.ui.xrdImagePlot.setYAxisInverted(True)
 
-    def resetMap(self):
+    def resetXrdMap(self):
         average = np.mean(self.scan.data['xrd'], axis=(1,2))
-        method = self.ui.mapPlot.interpolMenu.currentText()
-        sampling = self.ui.mapPlot.interpolBox.value()
+        method = self.ui.xrdMapPlot.interpolMenu.currentText()
+        sampling = self.ui.xrdMapPlot.interpolBox.value()
         x, y, z = self.scan.interpolatedMap(average, sampling, 
             origin='ul', method=method)
-        self.ui.mapPlot.addImage(z, colormap=self.mapCmap,
+        self.ui.xrdMapPlot.addImage(z, colormap=self.mapCmap,
             scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])], 
             origin=[x.min(), y.min()],
             legend='data')
-        self.ui.mapPlot.setKeepDataAspectRatio(True)
-        self.ui.mapPlot.setYAxisInverted(True)
+        self.ui.xrdMapPlot.setKeepDataAspectRatio(True)
+        self.ui.xrdMapPlot.setYAxisInverted(True)
 
     def reset(self):
-        self.resetImage()
-        self.resetMap()
+        self.resetXrdImage()
+        self.resetXrdMap()
 
-    def updateMap(self):
+    def updateXrdMap(self):
         # workaround to avoid the infinite loop which occurs when both
         # mask widgets are open at the same time
-        self.ui.mapPlot.maskToolsDockWidget.setVisible(False)
+        self.ui.xrdMapPlot.maskToolsDockWidget.setVisible(False)
         # store the limits to maintain zoom
-        xlims = self.ui.mapPlot.getGraphXLimits()
-        ylims = self.ui.mapPlot.getGraphYLimits()
+        xlims = self.ui.xrdMapPlot.getGraphXLimits()
+        ylims = self.ui.xrdMapPlot.getGraphYLimits()
         # get and check the mask array
-        mask = self.ui.diffPlot.maskToolsDockWidget.widget().getSelectionMask()
+        mask = self.ui.xrdImagePlot.maskToolsDockWidget.widget().getSelectionMask()
         # if the mask is cleared, reset without wasting time
         if mask.sum() == 0:
             print 'building map by averaging all pixels'
@@ -163,21 +171,21 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             ii, jj = np.where(mask)
             print 'building map by averaging %d pixels'%len(ii)
             average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
-        method = self.ui.mapPlot.interpolMenu.currentText()
-        sampling = self.ui.mapPlot.interpolBox.value()
+        method = self.ui.xrdMapPlot.interpolMenu.currentText()
+        sampling = self.ui.xrdMapPlot.interpolBox.value()
         x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
-        self.ui.mapPlot.addImage(z, legend='data', 
+        self.ui.xrdMapPlot.addImage(z, legend='data', 
             scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
             origin=[x.min(), y.min()])
-        self.ui.mapPlot.setGraphXLimits(*xlims)
-        self.ui.mapPlot.setGraphYLimits(*ylims)
+        self.ui.xrdMapPlot.setGraphXLimits(*xlims)
+        self.ui.xrdMapPlot.setGraphYLimits(*ylims)
 
-    def updateImage(self):
+    def updateXrdImage(self):
         # workaround to avoid the infinite loop which occurs when both
         # mask widgets are open at the same time
-        self.ui.diffPlot.maskToolsDockWidget.setVisible(False)
+        self.ui.xrdImagePlot.maskToolsDockWidget.setVisible(False)
         # get and check the mask array
-        mask = self.ui.mapPlot.maskToolsDockWidget.widget().getSelectionMask()
+        mask = self.ui.xrdMapPlot.maskToolsDockWidget.widget().getSelectionMask()
         if mask.sum() == 0:
             # the mask is empty, don't waste time with positions
             print 'building diffraction pattern from all positions'
@@ -186,7 +194,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             # recreate the interpolated grid from above, to find masked
             # positions on the oversampled grid
             dummy = np.zeros(self.scan.nPositions)
-            x, y, z = self.scan.interpolatedMap(dummy, self.ui.mapPlot.interpolBox.value(), origin='ul')
+            x, y, z = self.scan.interpolatedMap(dummy, self.ui.xrdMapPlot.interpolBox.value(), origin='ul')
             maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
             pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
             # go through actual positions and find the masked ones
@@ -200,7 +208,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             # get the average and replace the image with legend 'data',
             # retaining settings from reset()
             data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0)
-        self.ui.diffPlot.addImage(data, legend='data')
+        self.ui.xrdImagePlot.addImage(data, legend='data')
 
 if __name__ == '__main__':
     # you always need a qt app

@@ -191,7 +191,7 @@
        <enum>Qt::TabFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="roi">
        <attribute name="title">
@@ -199,7 +199,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="Plot2D" name="diffPlot">
+         <widget class="Plot2D" name="xrdImagePlot">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -209,7 +209,7 @@
          </widget>
         </item>
         <item>
-         <widget class="Plot2D" name="mapPlot">
+         <widget class="Plot2D" name="xrdMapPlot">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -224,6 +224,11 @@
        <attribute name="title">
         <string>XRD center of mass</string>
        </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="ComWidget" name="comWidget" native="true"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="xrf">
        <attribute name="title">
@@ -262,6 +267,12 @@
    <extends>PlotWidget</extends>
    <header>silx.gui.plot.PlotWindow</header>
   </customwidget>
+  <customwidget>
+   <class>ComWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/ComWidget.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>scanClassBox</tabstop>
@@ -270,8 +281,8 @@
   <tabstop>browseButton</tabstop>
   <tabstop>loadButton</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>diffPlot</tabstop>
-  <tabstop>mapPlot</tabstop>
+  <tabstop>xrdImagePlot</tabstop>
+  <tabstop>xrdMapPlot</tabstop>
  </tabstops>
  <resources>
   <include location="design.qrc"/>
