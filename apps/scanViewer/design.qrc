@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="logos">
+    <file>nanomax.png</file>
+    <file>N.png</file>
+  </qresource>
+</RCC>
