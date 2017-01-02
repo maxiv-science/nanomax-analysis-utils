@@ -181,11 +181,11 @@ class XrdWidget(PyQt4.QtGui.QWidget):
         mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
         # if the mask is cleared, reset without wasting time
         if mask.sum() == 0:
-            print 'building map by averaging all pixels'
+            print 'building XRD map by averaging all pixels'
             average = np.mean(self.scan.data['xrd'], axis=(1,2))
         else:
             ii, jj = np.where(mask)
-            print 'building map by averaging %d pixels'%len(ii)
+            print 'building XRD map by averaging %d pixels'%len(ii)
             average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
         method = self.map.interpolMenu.currentText()
         sampling = self.map.interpolBox.value()

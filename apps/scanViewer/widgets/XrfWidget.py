@@ -80,13 +80,33 @@ class MapWidget(PlotWindow):
                     return data[row, col]
         return '-'
 
+class SpectrumWidget(PlotWindow):
+    """
+    Reimplementation of Plot1D, with custom tools.
+    """
+
+    def __init__(self, parent=None):
+        super(SpectrumWidget, self).__init__(parent=parent, backend=None,
+                                     resetzoom=True, autoScale=True,
+                                     logScale=True, grid=True,
+                                     curveStyle=True, colormap=False,
+                                     aspectRatio=False, yInverted=False,
+                                     copy=True, save=True, print_=False,
+                                     control=False, position=True,
+                                     roi=True, mask=False, fit=False)
+        if parent is None:
+            self.setWindowTitle('Plot1D')
+        self.setGraphXLabel('Detector channel')
+        self.setGraphYLabel('Signal')
+        self.setGraphTitle('Fluorescence emission')
+        self.setYAxisLogarithmic(True)
+
 class XrfWidget(PyQt4.QtGui.QWidget):
     def __init__(self, parent=None):
-
+        
         super(XrfWidget, self).__init__()
         self.map = MapWidget()
-        self.spectrum = Plot1D()
-        self.spectrum.setGraphTitle('Fluorescence emission')
+        self.spectrum = SpectrumWidget()
         parent.layout().addWidget(self.spectrum)
         parent.layout().addWidget(self.map)
 
@@ -102,6 +122,7 @@ class XrfWidget(PyQt4.QtGui.QWidget):
 
         # connect the mask widget to the update
         self.map.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateSpectrum)
+        self.spectrum.curvesROIDockWidget.sigROISignal.connect(self.updateMap)
 
     def setScan(self, scan):
         self.scan = scan
@@ -123,9 +144,21 @@ class XrfWidget(PyQt4.QtGui.QWidget):
         # store the limits to maintain zoom
         xlims = self.map.getGraphXLimits()
         ylims = self.map.getGraphYLimits()
-        # get ROI information here...
-        pass
-        #
+        # get ROI information
+        try:
+            roiName = self.spectrum.curvesROIDockWidget.currentROI
+            # this doesn't update properly:
+            # roiDict = self.spectrum.curvesROIDockWidget.roidict
+            # ... but this does:
+            roiList, roiDict = self.spectrum.curvesROIDockWidget.widget().getROIListAndDict()
+            lower = int(np.floor(roiDict[roiName]['from']))
+            upper = int(np.ceil(roiDict[roiName]['to']))
+            print "building fluorescence map from channels %d to %d"%(lower, upper)
+            average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
+        except:
+            print "building fluorescence map from the whole spectrum"
+            average = np.mean(self.scan.data['xrf'], axis=1)
+        # interpolate and plot map
         method = self.map.interpolMenu.currentText()
         sampling = self.map.interpolBox.value()
         x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
@@ -136,15 +169,12 @@ class XrfWidget(PyQt4.QtGui.QWidget):
         self.map.setGraphYLimits(*ylims)
 
     def updateSpectrum(self):
-        # workaround to avoid the infinite loop which occurs when both
-        # mask widgets are open at the same time
-        self.image.maskToolsDockWidget.setVisible(False)
         # get and check the mask array
         mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
         if mask.sum() == 0:
             # the mask is empty, don't waste time with positions
-            print 'building diffraction pattern from all positions'
-            data = np.mean(self.scan.data['xrd'], axis=0)
+            print 'building fluorescence spectrum from all positions'
+            data = np.mean(self.scan.data['xrf'], axis=0)
         else:
             # recreate the interpolated grid from above, to find masked
             # positions on the oversampled grid
@@ -159,10 +189,10 @@ class XrfWidget(PyQt4.QtGui.QWidget):
                 dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
                 if dist2 < pointSpacing2:
                     maskedPositions.append(i)
-            print 'building diffraction pattern from %d positions'%len(maskedPositions)
+            print 'building fluorescence spectrum from %d positions'%len(maskedPositions)
             # get the average and replace the image with legend 'data'
             data = np.mean(self.scan.data['xrf'][maskedPositions], axis=0)
-        self.image.addCurve(data, legend='data')
+        self.spectrum.addCurve(range(len(data)), data, legend='data')
 
     def togglePositions(self):
         xlims = self.map.getGraphXLimits()
