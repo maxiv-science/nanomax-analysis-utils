@@ -1,4 +1,5 @@
 import PyQt4
+import hdf5plugin # necessary to import early for Eiger images
 from silx.gui import qt
 from silx.gui.icons import getQIcon
 import sys
@@ -52,6 +53,8 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')
             elif subclass == 'nanomaxScan_stepscan_week48':
                 self.ui.scanOptionsBox.setText('<scannr>')
+            elif subclass == 'id13Scan':
+                self.ui.scanOptionsBox.setText('<ROI size>')
             else:
                 self.ui.scanOptionsBox.setText('')
         self.ui.scanClassBox.currentIndexChanged.connect(wrap)
