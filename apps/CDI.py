@@ -27,6 +27,7 @@ startHIO = 0
 blobNumber = 0 #Set this value to 0 to have all blobs
 allowSupportHoles = True
 enforceRealness = False # this messes up shrink wrap. suspicious. is there something fishy with shrink wrap?
+shrinkWrapStop = 0.01 # Corresponds to a criteria of 1% of the support difference beteween 2 support modification
 beta = 0.5
 photons = 0 #0 means don't apply noise
 outputN = 20
@@ -97,6 +98,9 @@ imageErrors, sampleErrors = [], []
 tmp = []
 norm = np.sum(imageAmplitude**2)
 oldSample = support
+supportAfter = np.zeros(support.shape,np.uint8)
+supportBefore = np.ones(support.shape,np.uint8)
+
 for i in range(N):
     t0 = time.time()
     # transform to real space
@@ -117,8 +121,13 @@ for i in range(N):
     if enforceRealness:
         sample = np.abs(sample)
 
-    # shrink wrap the support    
-    if (i % shrinkWrapN == 0) and (i > 0):
+    # shrink wrap the support
+    supportDiff = np.sum(sum(supportBefore - supportAfter))  #Starting point of SW stop criteria
+    if (i % shrinkWrapN == 0) and (i > 0) and (supportDiff >= shrinkWrapStop*np.sum(sum(support))):
+        #Stop shrink wrap and block support if shrinkWrapStop criteria is achieved (Ex :1% difference)
+        supportBefore = support
+        print(supportDiff)
+        print(np.sum(sum(support)))
         #sigma = {False: shrinkWrapSigmaLoose, True: shrinkWrapSigmaTight}[i > 300]
         #sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
         sigma = shrinkWrapSigmaTight
@@ -140,6 +149,8 @@ for i in range(N):
         if allowSupportHoles == False:
             support = binary_fill_holes(support)
         sample = utils.shift(sample, shifts)
+
+    supportAfter = support #End point of SW stop criteria
 
     oldSample = sample
 
