@@ -19,6 +19,7 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 PLOT = True
 N = 1000000
 beamStopSize = 4#4
+overSamplingCoeff = 2
 shrinkWrapN = 20
 shrinkWrapSigmaTight = 2#Depends on the sharpness of the sample. 2 very sharp, 4 middle sharp, 8 round shape
 shrinkWrapSigmaLoose = 2#7
@@ -39,7 +40,7 @@ sample = sample / sample.max()
 
 # pad the image to make a square matrix
 #sample = np.pad(sample, ((0,0), (1,0)), mode='constant'); print "ad hoc padding"
-minPad = 100 # add these many zeros to the image's largest dimension on each side
+minPad = np.max(sample.shape)/overSamplingCoeff # add these many zeros to the image's largest dimension on each side
 maxAx = np.where(sample.shape == np.max(sample.shape))[0][0]
 minAx = int(not maxAx)
 pads = [(0,0), (0,0)]
