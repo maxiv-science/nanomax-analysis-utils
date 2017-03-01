@@ -5,6 +5,7 @@
 
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+from scipy.ndimage.morphology import binary_fill_holes
 import numpy as np
 import time
 import statprof
@@ -18,17 +19,17 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 PLOT = True
 N = 1000000
 beamStopSize = 4#4
-shrinkWrapN = 100
-shrinkWrapSigmaTight = 20
-shrinkWrapSigmaLoose = 5#7
-shrinkWrapThreshold = .2#2#.15
+shrinkWrapN = 20
+shrinkWrapSigmaTight = 2#Depends on the sharpness of the sample. 2 very sharp, 4 middle sharp, 8 round shape
+shrinkWrapSigmaLoose = 2#7
+shrinkWrapThreshold = .1#.15#.2
 startHIO = 0
 keepSupportTogether = True
-allowSupportHoles = False # not implemented
+allowSupportHoles = True
 enforceRealness = False # this messes up shrink wrap. suspicious. is there something fishy with shrink wrap?
 beta = 0.5
 photons = 0 #0 means don't apply noise
-outputN = 10
+outputN = 20
 
 #%%% Define the sample
 
@@ -51,7 +52,7 @@ midPoint = tuple(np.array(sample.shape) / 2)
 supportBox = ((midPoint[0] - sample.shape[0] * linRatios[0] / 2, midPoint[0] + sample.shape[0] * linRatios[0] / 2),
               (midPoint[1] - sample.shape[1] * linRatios[1] / 2, midPoint[1] + sample.shape[1] * linRatios[1] / 2) )
 support = np.zeros(sample.shape, dtype=int)
-support[supportBox[0][0]:supportBox[0][1], supportBox[1][0]:supportBox[1][1]] = 1
+support[int(supportBox[0][0]):int(supportBox[0][1]), int(supportBox[1][0]):int(supportBox[1][1])] = 1
 
 #%%% Transform the sample to get the image
 
@@ -119,7 +120,8 @@ for i in range(N):
     # shrink wrap the support    
     if (i % shrinkWrapN == 0) and (i > 0):
         #sigma = {False: shrinkWrapSigmaLoose, True: shrinkWrapSigmaTight}[i > 300]
-        sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
+        #sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
+        sigma = shrinkWrapSigmaTight
         blurredSample = utils.smoothImage(sample, sigma)
         # working with amplitudes here, numpy.ndarray.max() only looks at real part.
         support = ( np.abs(blurredSample) >= shrinkWrapThreshold * np.max(np.abs(blurredSample)) )
@@ -127,11 +129,13 @@ for i in range(N):
         centers = np.array(support.shape) / 2
         shifts = centers - medians
         support = utils.shift(support, shifts)
+        if allowSupportHoles == False:
+            support = binary_fill_holes(support)
         if keepSupportTogether:
             support = utils.biggestBlob(support)
         sample = utils.shift(sample, shifts)
 
-    oldSample = sample #
+    oldSample = sample
 
     # show the current state
     if (i % outputN == 0) and PLOT:
