@@ -24,8 +24,7 @@ shrinkWrapSigmaTight = 2#Depends on the sharpness of the sample. 2 very sharp, 4
 shrinkWrapSigmaLoose = 2#7
 shrinkWrapThreshold = .1#.15#.2
 startHIO = 0
-blobNumber = 1 #Set this value to 0 to have all blobs
-keepSupportTogether = True
+blobNumber = 0 #Set this value to 0 to have all blobs
 allowSupportHoles = True
 enforceRealness = False # this messes up shrink wrap. suspicious. is there something fishy with shrink wrap?
 beta = 0.5
@@ -140,8 +139,6 @@ for i in range(N):
         support = utils.shift(support, shifts)
         if allowSupportHoles == False:
             support = binary_fill_holes(support)
-        if keepSupportTogether:
-            support = utils.biggestBlob(support)
         sample = utils.shift(sample, shifts)
 
     oldSample = sample
