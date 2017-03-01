@@ -28,8 +28,8 @@ class MapWidget(PlotWindow):
             self.setWindowTitle('comMapWidget')
 
         self.setGraphTitle('COM deviation from the mean')
-        self.setGraphXLabel('Columns')
-        self.setGraphYLabel('Rows')
+        self.setGraphXLabel('motor x [um]')
+        self.setGraphYLabel('motor y [um]')
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 

@@ -28,8 +28,8 @@ class MapWidget(PlotWindow):
             self.setWindowTitle('comMapWidget')
 
         self.setGraphTitle('Scan map')
-        self.setGraphXLabel('Columns')
-        self.setGraphYLabel('Rows')
+        self.setGraphXLabel('motor x [um]')
+        self.setGraphYLabel('motor y [um]')
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
