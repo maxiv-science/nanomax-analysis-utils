@@ -24,6 +24,7 @@ shrinkWrapSigmaTight = 2#Depends on the sharpness of the sample. 2 very sharp, 4
 shrinkWrapSigmaLoose = 2#7
 shrinkWrapThreshold = .1#.15#.2
 startHIO = 0
+blobNumber = 1 #Set this value to 0 to have all blobs
 keepSupportTogether = True
 allowSupportHoles = True
 enforceRealness = False # this messes up shrink wrap. suspicious. is there something fishy with shrink wrap?
@@ -128,6 +129,14 @@ for i in range(N):
         medians = [np.median(np.where(support)[0]), np.median(np.where(support)[1])]
         centers = np.array(support.shape) / 2
         shifts = centers - medians
+        mask = np.zeros(support.shape,np.uint8)
+        supportBlob = support
+        if blobNumber != 0:
+            for k in range(blobNumber):
+                supportBlob1 = utils.biggestBlob(supportBlob)
+                supportBlob = supportBlob - supportBlob1
+                mask = mask + supportBlob1
+            support = mask
         support = utils.shift(support, shifts)
         if allowSupportHoles == False:
             support = binary_fill_holes(support)
