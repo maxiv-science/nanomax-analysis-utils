@@ -122,12 +122,12 @@ for i in range(N):
         sample = np.abs(sample)
 
     # shrink wrap the support
-    supportDiff = np.sum(sum(supportBefore - supportAfter))  #Starting point of SW stop criteria
-    if (i % shrinkWrapN == 0) and (i > 0) and (supportDiff >= shrinkWrapStop*np.sum(sum(support))):
+    supportDiff = np.sum(np.abs(supportBefore - supportAfter))  #Starting point of SW stop criteria
+    if (i % shrinkWrapN == 0) and (i > 0) and (supportDiff >= shrinkWrapStop*np.sum(support)):
         #Stop shrink wrap and block support if shrinkWrapStop criteria is achieved (Ex :1% difference)
         supportBefore = support
         print(supportDiff)
-        print(np.sum(sum(support)))
+        print(np.sum(support))
         #sigma = {False: shrinkWrapSigmaLoose, True: shrinkWrapSigmaTight}[i > 300]
         #sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
         sigma = shrinkWrapSigmaTight
