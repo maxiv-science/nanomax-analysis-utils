@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import nmutils
 import h5py
 import ptypy
-import nmutils
 import matplotlib.gridspec as gridspec
 import sys
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -13,7 +13,7 @@ This script visualizes the output of a ptypy run, by loading a ptyr or ptyd file
 
 ### Parse input
 if len(sys.argv) < 2 or len(sys.argv) > 6:
-    print "\nUsage: reconstructionAnalysis.py <ptyd file> [<title> <output file>"
+    print "\nUsage: plotPtypyResults.py <ptyd file> [<title> <output file>"
     print   "                                 <back propagation um> <forward propagation um>] \n"
     print "If an output file isn't specified or is 'None', the plot will be interactive.\n"
     exit()

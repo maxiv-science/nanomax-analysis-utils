@@ -28,8 +28,8 @@ class MapWidget(PlotWindow):
             self.setWindowTitle('comMapWidget')
 
         self.setGraphTitle('COM deviation from the mean')
-        self.setGraphXLabel('Columns')
-        self.setGraphYLabel('Rows')
+        self.setGraphXLabel('motor x [um]')
+        self.setGraphYLabel('motor y [um]')
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
@@ -183,7 +183,10 @@ class ComWidget(PyQt4.QtGui.QWidget):
         if np.prod(mask.shape) == 0:
             mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
         for im in self.scan.data['xrd']:
-            com.append(scipy.ndimage.measurements.center_of_mass(im * (1 - mask)))
+            com_ = scipy.ndimage.measurements.center_of_mass(im * (1 - mask))
+            if np.any(np.isnan(com_)):
+                com_ = (0, 0)
+            com.append(com_)
         com = np.array(com)
         # choose which COM to show
         direction = self.map.comDirectionBox.currentIndex()

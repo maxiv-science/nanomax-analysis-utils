@@ -77,15 +77,37 @@ def smoothImage(image, sigma):
     smoothImage = scipy.signal.fftconvolve(image, gaussian, mode='same')
     return smoothImage
     
-def noisyImage(image, photons):
-    """ Returns a noisy copy of the input image, with simulated photon-counting noise (Poisson noise) corresponding to an overall average number of photons per pixel. """
-    result = np.zeros(image.shape)
-    averagePhotonsPerPixelValue = np.prod(image.shape) * photons / float(np.sum(image))
-    hist = []
+def noisyImage(image, photonsPerPixel=None, photonsAtMax=None, photonsTotal=None, dtype=None):
+    """ 
+    Returns a noisy copy of the input image, with simulated 
+    photon-counting noise (Poisson noise) corresponding to:
+    - an overall average number of photons per pixel, or
+    - a certain number of photons expected in the maximum pixel, or
+    - a certain number of total expected photons.
+    
+    You can specify the dtype of the output, by default it is the same 
+    as the input image.
+    """
+
+    if not dtype:
+        dtype = image.dtype
+    print dtype
+
+    if photonsPerPixel and not photonsAtMax and not photonsTotal:
+        photonsTotal = np.prod(image.shape) * photonsPerPixel
+    elif photonsAtMax and not photonsPerPixel and not photonsTotal:
+        photonsTotal = np.sum(image) / np.max(image) * photonsAtMax
+    elif photonsTotal and not photonsAtMax and not photonsPerPixel:
+        pass
+    else:
+        raise ValueError('Confusing input to noisyImage')
+
+    result = np.zeros(image.shape, dtype=dtype)
+    totalSum = image.sum()
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            hist.append(image[i, j] * averagePhotonsPerPixelValue)
-            result[i, j] = np.random.poisson(image[i, j] * averagePhotonsPerPixelValue) / averagePhotonsPerPixelValue
+            expected = image[i, j] / totalSum * photonsTotal
+            result[i, j] = np.random.poisson(expected)
     return result
 
 # at this point, with a 300x300 image, FFTW is about twice as fast as numpy. Threading doesn't help at this point. 

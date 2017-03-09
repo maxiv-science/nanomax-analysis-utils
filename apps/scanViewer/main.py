@@ -1,4 +1,5 @@
 import PyQt4
+import hdf5plugin # necessary to import early for Eiger images
 from silx.gui import qt
 from silx.gui.icons import getQIcon
 import sys
@@ -52,6 +53,8 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')
             elif subclass == 'nanomaxScan_stepscan_week48':
                 self.ui.scanOptionsBox.setText('<scannr>')
+            elif subclass == 'id13Scan':
+                self.ui.scanOptionsBox.setText('<ROI size>')
             else:
                 self.ui.scanOptionsBox.setText('')
         self.ui.scanClassBox.currentIndexChanged.connect(wrap)
@@ -60,28 +63,37 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.loadButton.clicked.connect(self.load)
 
     def load(self):
+        print "Loading data..."
         subclass = str(self.ui.scanClassBox.currentText())
         filename = str(self.ui.filenameBox.text())
         self.scan = getattr(nmutils.core, subclass)()
         opts = str(self.ui.scanOptionsBox.text()).split()
+
         # add xrd data:
         self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
         try:
             print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
+            has_xrd = True
         except:
             print "no xrd data found"
+            has_xrd = False
+
         # add xrf data:
         try:
             self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
         except: pass
         try:
             print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
+            has_xrf = True
         except:
             print "no xrf data found"
+            has_xrf = False
 
-        self.ui.comWidget.setScan(self.scan)
-        self.ui.xrdWidget.setScan(self.scan)
-        self.ui.xrfWidget.setScan(self.scan)
+        if has_xrd:
+            self.ui.comWidget.setScan(self.scan)
+            self.ui.xrdWidget.setScan(self.scan)
+        if has_xrf:
+            self.ui.xrfWidget.setScan(self.scan)
 
 if __name__ == '__main__':
     # you always need a qt app
