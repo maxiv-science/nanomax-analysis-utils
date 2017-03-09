@@ -148,6 +148,7 @@ ax[0].set_title('Amplitude')
 
 # phase
 img = ax[1].imshow(np.angle(obj), vmin=-np.pi, vmax=np.pi, cmap='hsv', extent=extent, interpolation='none')
+#img = ax[1].imshow(np.angle(obj), vmin=-.1, vmax=.2, cmap='hsv', extent=extent, interpolation='none')
 plt.setp(ax[1].xaxis.get_majorticklabels(), rotation=70 )
 ax[1].set_xlabel('$\mu$m')
 divider = make_axes_locatable(ax[1])
