@@ -5,6 +5,11 @@ try:
 except ImportError:
     print "hdf5plugin not found - won't be able to read compressed Eiger files"
 
+# temporarily suppress deprecation warnings from silx
+import logging
+deprecation_logger = logging.getLogger("DEPRECATION")
+deprecation_logger.setLevel(logging.ERROR)
+
 import PyQt4
 from silx.gui import qt
 from silx.gui.icons import getQIcon
