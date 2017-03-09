@@ -1,12 +1,18 @@
+# hdf5plugin is needed to read compressed Eiger files, and has to be
+# imported before h5py.
+try:
+    import hdf5plugin 
+except ImportError:
+    print "hdf5plugin not found - won't be able to read compressed Eiger files"
+
 import PyQt4
-import hdf5plugin # necessary to import early for Eiger images
 from silx.gui import qt
 from silx.gui.icons import getQIcon
 import sys
 import design
-import nmutils
 import numpy as np
 from scipy.interpolate import griddata
+import nmutils
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html
