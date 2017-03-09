@@ -1,5 +1,5 @@
 from silx.gui.plot import PlotWindow
-from silx.gui.plot.PlotTools import ProfileToolBar
+from silx.gui.plot.Profile import ProfileToolBar
 import PyQt4
 import scipy.ndimage.measurements
 import numpy as np
