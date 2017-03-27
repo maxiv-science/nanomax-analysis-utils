@@ -40,7 +40,7 @@ sample = sample / sample.max()
 
 # pad the image to make a square matrix
 #sample = np.pad(sample, ((0,0), (1,0)), mode='constant'); print "ad hoc padding"
-minPad = np.max(sample.shape)/overSamplingCoeff # add these many zeros to the image's largest dimension on each side
+minPad = np.max(sample.shape)*overSamplingCoeff # add these many zeros to the image's largest dimension on each side
 maxAx = np.where(sample.shape == np.max(sample.shape))[0][0]
 minAx = int(not maxAx)
 pads = [(0,0), (0,0)]
