@@ -45,7 +45,10 @@ maxAx = np.where(sample.shape == np.max(sample.shape))[0][0]
 minAx = int(not maxAx)
 pads = [(0,0), (0,0)]
 pads[maxAx] = (minPad,) * 2
-pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2,) * 2
+if sample.shape[1] % 2 == 0: #Make square matrix even if sample.shape is not odd, odd or even, even
+    pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2,) * 2
+else:
+    pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2 + 1, minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2)
 sample = np.pad(sample, pads, mode='constant')
 
 #%%% Define the support
