@@ -166,7 +166,11 @@ def binPixels(image, n=2):
     new = np.zeros(size, dtype=image.dtype)
     for i in range(size[0]):
         for j in range(size[1]):
-            new[i, j] = np.round(np.mean(image[i * n : (i + 1) * n, j * n : (j + 1) * n], axis=(0, 1)))
+            tmp = np.mean(image[i * n : (i + 1) * n, j * n : (j + 1) * n], axis=(0, 1))
+            if issubclass(image.dtype.type, np.integer):
+                new[i, j] = np.round(tmp)
+            else:
+                new[i, j] = tmp
     return new
 
 def complex2image(z):
