@@ -40,12 +40,16 @@ sample = sample / sample.max()
 
 # pad the image to make a square matrix
 #sample = np.pad(sample, ((0,0), (1,0)), mode='constant'); print "ad hoc padding"
-minPad = np.max(sample.shape)/overSamplingCoeff # add these many zeros to the image's largest dimension on each side
+minPad = np.max(sample.shape)*overSamplingCoeff # add these many zeros to the image's largest dimension on each side
 maxAx = np.where(sample.shape == np.max(sample.shape))[0][0]
 minAx = int(not maxAx)
 pads = [(0,0), (0,0)]
 pads[maxAx] = (minPad,) * 2
 pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2,) * 2
+if sample.shape[0] % 2 == 0 and sample.shape[1] % 2 != 0: #Make square matrix even if sample.shape is not odd, odd or even, even
+    pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2 + 1, minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2)
+elif sample.shape[0] % 2 != 0 and sample.shape[1] % 2 == 0:
+    pads[minAx] = (minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2, minPad + (sample.shape[maxAx] - sample.shape[minAx]) / 2 +1)
 sample = np.pad(sample, pads, mode='constant')
 
 #%%% Define the support
@@ -127,8 +131,6 @@ for i in range(N):
     if (i % shrinkWrapN == 0) and (i > 0) and (supportDiff >= shrinkWrapStop*np.sum(support)):
         #Stop shrink wrap and block support if shrinkWrapStop criteria is achieved (Ex :1% difference)
         supportBefore = support
-        print(supportDiff)
-        print(np.sum(support))
         #sigma = {False: shrinkWrapSigmaLoose, True: shrinkWrapSigmaTight}[i > 300]
         #sigma = max(shrinkWrapSigmaTight, int(round(shrinkWrapSigmaLoose - (shrinkWrapSigmaLoose - shrinkWrapSigmaTight) * i / 3000.0)))
         sigma = shrinkWrapSigmaTight
