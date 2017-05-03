@@ -162,6 +162,8 @@ class XrdWidget(PyQt4.QtGui.QWidget):
 
     def setScan(self, scan):
         self.scan = scan
+        if not scan:
+            return
         self.resetMap()
         self.resetImage()
 

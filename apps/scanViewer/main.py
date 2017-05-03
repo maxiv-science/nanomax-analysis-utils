@@ -14,6 +14,7 @@ import PyQt4
 from silx.gui import qt
 from silx.gui.icons import getQIcon
 import sys
+import gc
 import design
 import numpy as np
 from scipy.interpolate import griddata
@@ -77,10 +78,22 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
 
+	# dummy scan
+	self.scan = None
+
     def load(self):
         print "Loading data..."
         subclass = str(self.ui.scanClassBox.currentText())
         filename = str(self.ui.filenameBox.text())
+    	if self.scan:
+            print "Deleting previous scan from memory"
+            # These references have to go
+            self.ui.comWidget.setScan(None)
+            self.ui.xrdWidget.setScan(None)
+            self.ui.xrfWidget.setScan(None)
+            del(self.scan)
+            # enforcing garbage collection for good measure
+            gc.collect()
         self.scan = getattr(nmutils.core, subclass)()
         opts = str(self.ui.scanOptionsBox.text()).split()
 
