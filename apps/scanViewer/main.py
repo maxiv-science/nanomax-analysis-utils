@@ -68,6 +68,8 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 self.ui.scanOptionsBox.setText('<ROI size>')
             elif subclass == 'nanomaxScan_stepscan_april2017':
                 self.ui.scanOptionsBox.setText('<scannr>')
+            elif subclass == 'nanomaxScan_flyscan_april2017':
+                self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')
             else:
                 self.ui.scanOptionsBox.setText('')
         self.ui.scanClassBox.currentIndexChanged.connect(wrap)
@@ -120,3 +122,4 @@ if __name__ == '__main__':
     viewer.show()
     # run the app
     app.exec_()
+
