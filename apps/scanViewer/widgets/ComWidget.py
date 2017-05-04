@@ -207,11 +207,14 @@ class ComWidget(PyQt4.QtGui.QWidget):
         method = self.map.interpolMenu.currentText()
         sampling = self.map.interpolBox.value()
         x, y, z = self.scan.interpolatedMap(com, sampling, origin='ul', method=method)
-        self.map.addImage(z, legend='data', 
-            scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
-            origin=[x.min(), y.min()])
-        self.map.setGraphXLimits(*xlims)
-        self.map.setGraphYLimits(*ylims)
+        try:
+            self.map.addImage(z, legend='data', 
+                scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
+                origin=[x.min(), y.min()])
+            self.map.setGraphXLimits(*xlims)
+            self.map.setGraphYLimits(*ylims)
+        except:
+            print "Invalid center of mass"
 
 
     def togglePositions(self):
