@@ -143,61 +143,73 @@ class XrfWidget(PyQt4.QtGui.QWidget):
         self.spectrum.resetZoom()
 
     def updateMap(self):
-        # workaround to avoid the infinite loop which occurs when both
-        # mask widgets are open at the same time
-        self.map.maskToolsDockWidget.setVisible(False)
-        # store the limits to maintain zoom
-        xlims = self.map.getGraphXLimits()
-        ylims = self.map.getGraphYLimits()
-        # get ROI information
         try:
-            roiName = self.spectrum.curvesROIDockWidget.currentROI
-            # this doesn't update properly:
-            # roiDict = self.spectrum.curvesROIDockWidget.roidict
-            # ... but this does:
-            roiList, roiDict = self.spectrum.curvesROIDockWidget.widget().getROIListAndDict()
-            lower = int(np.floor(roiDict[roiName]['from']))
-            upper = int(np.ceil(roiDict[roiName]['to']))
-            print "building fluorescence map from channels %d to %d"%(lower, upper)
-            average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
+            self.window().statusOutput('Building XRF map...')
+            # workaround to avoid the infinite loop which occurs when both
+            # mask widgets are open at the same time
+            self.map.maskToolsDockWidget.setVisible(False)
+            # store the limits to maintain zoom
+            xlims = self.map.getGraphXLimits()
+            ylims = self.map.getGraphYLimits()
+            # get ROI information
+            try:
+                roiName = self.spectrum.curvesROIDockWidget.currentROI
+                # this doesn't update properly:
+                # roiDict = self.spectrum.curvesROIDockWidget.roidict
+                # ... but this does:
+                roiList, roiDict = self.spectrum.curvesROIDockWidget.widget().getROIListAndDict()
+                lower = int(np.floor(roiDict[roiName]['from']))
+                upper = int(np.ceil(roiDict[roiName]['to']))
+                print "building fluorescence map from channels %d to %d"%(lower, upper)
+                average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
+            except:
+                print "building fluorescence map from the whole spectrum"
+                average = np.mean(self.scan.data['xrf'], axis=1)
+            # interpolate and plot map
+            method = self.map.interpolMenu.currentText()
+            sampling = self.map.interpolBox.value()
+            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
+            self.map.addImage(z, legend='data', 
+                scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
+                origin=[x.min(), y.min()])
+            self.map.setGraphXLimits(*xlims)
+            self.map.setGraphYLimits(*ylims)
+            self.window().statusOutput('')
         except:
-            print "building fluorescence map from the whole spectrum"
-            average = np.mean(self.scan.data['xrf'], axis=1)
-        # interpolate and plot map
-        method = self.map.interpolMenu.currentText()
-        sampling = self.map.interpolBox.value()
-        x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
-        self.map.addImage(z, legend='data', 
-            scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
-            origin=[x.min(), y.min()])
-        self.map.setGraphXLimits(*xlims)
-        self.map.setGraphYLimits(*ylims)
+            self.window().statusOutput('Failed to build XRF map. See terminal output.')
+            raise
 
     def updateSpectrum(self):
-        # get and check the mask array
-        mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
-        if mask.sum() == 0:
-            # the mask is empty, don't waste time with positions
-            print 'building fluorescence spectrum from all positions'
-            data = np.mean(self.scan.data['xrf'], axis=0)
-        else:
-            # recreate the interpolated grid from above, to find masked
-            # positions on the oversampled grid
-            dummy = np.zeros(self.scan.nPositions)
-            x, y, z = self.scan.interpolatedMap(dummy, self.map.interpolBox.value(), origin='ul')
-            maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
-            pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
-            # go through actual positions and find the masked ones
-            maskedPositions = []
-            for i in range(self.scan.nPositions):
-                # the minimum distance of the current position to a selected grid point:
-                dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
-                if dist2 < pointSpacing2:
-                    maskedPositions.append(i)
-            print 'building fluorescence spectrum from %d positions'%len(maskedPositions)
-            # get the average and replace the image with legend 'data'
-            data = np.mean(self.scan.data['xrf'][maskedPositions], axis=0)
-        self.spectrum.addCurve(range(len(data)), data, legend='data')
+        try:
+            self.window().statusOutput('Building XRF spectrum...')
+            # get and check the mask array
+            mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
+            if mask.sum() == 0:
+                # the mask is empty, don't waste time with positions
+                print 'building fluorescence spectrum from all positions'
+                data = np.mean(self.scan.data['xrf'], axis=0)
+            else:
+                # recreate the interpolated grid from above, to find masked
+                # positions on the oversampled grid
+                dummy = np.zeros(self.scan.nPositions)
+                x, y, z = self.scan.interpolatedMap(dummy, self.map.interpolBox.value(), origin='ul')
+                maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
+                pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
+                # go through actual positions and find the masked ones
+                maskedPositions = []
+                for i in range(self.scan.nPositions):
+                    # the minimum distance of the current position to a selected grid point:
+                    dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
+                    if dist2 < pointSpacing2:
+                        maskedPositions.append(i)
+                print 'building fluorescence spectrum from %d positions'%len(maskedPositions)
+                # get the average and replace the image with legend 'data'
+                data = np.mean(self.scan.data['xrf'][maskedPositions], axis=0)
+            self.spectrum.addCurve(range(len(data)), data, legend='data')
+            self.window().statusOutput('')
+        except:
+            self.window().statusOutput('Failed to build XRF spectrum. See terminal output.')
+            raise
 
     def togglePositions(self):
         xlims = self.map.getGraphXLimits()

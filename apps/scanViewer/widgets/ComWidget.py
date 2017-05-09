@@ -178,43 +178,49 @@ class ComWidget(PyQt4.QtGui.QWidget):
         self.image.resetZoom()
 
     def updateMap(self):
-        print 'building COM map'
-        # store the limits to maintain zoom
-        xlims = self.map.getGraphXLimits()
-        ylims = self.map.getGraphYLimits()
-        # calculate COM
-        com = []
-        mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
-        if np.prod(mask.shape) == 0:
-            mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
-        for im in self.scan.data['xrd']:
-            com_ = scipy.ndimage.measurements.center_of_mass(im * (1 - mask))
-            if np.any(np.isnan(com_)):
-                com_ = (0, 0)
-            com.append(com_)
-        com = np.array(com)
-        # choose which COM to show
-        direction = self.map.comDirectionBox.currentIndex()
-        if direction == 0:
-            com = com[:, 1] - np.mean(com[:, 1])
-        elif direction == 1:
-            com = com[:, 0] - np.mean(com[:, 0])
-        elif direction == 2:
-            com = np.sum((com - np.mean(com, axis=0))**2, axis=1)
-        else:
-            return
-        # interpolate and show
-        method = self.map.interpolMenu.currentText()
-        sampling = self.map.interpolBox.value()
-        x, y, z = self.scan.interpolatedMap(com, sampling, origin='ul', method=method)
         try:
-            self.map.addImage(z, legend='data', 
-                scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
-                origin=[x.min(), y.min()])
-            self.map.setGraphXLimits(*xlims)
-            self.map.setGraphYLimits(*ylims)
+            print 'building COM map'
+            self.window().statusOutput('Building COM map...')
+            # store the limits to maintain zoom
+            xlims = self.map.getGraphXLimits()
+            ylims = self.map.getGraphYLimits()
+            # calculate COM
+            com = []
+            mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
+            if np.prod(mask.shape) == 0:
+                mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
+            for im in self.scan.data['xrd']:
+                com_ = scipy.ndimage.measurements.center_of_mass(im * (1 - mask))
+                if np.any(np.isnan(com_)):
+                    com_ = (0, 0)
+                com.append(com_)
+            com = np.array(com)
+            # choose which COM to show
+            direction = self.map.comDirectionBox.currentIndex()
+            if direction == 0:
+                com = com[:, 1] - np.mean(com[:, 1])
+            elif direction == 1:
+                com = com[:, 0] - np.mean(com[:, 0])
+            elif direction == 2:
+                com = np.sum((com - np.mean(com, axis=0))**2, axis=1)
+            else:
+                return
+            # interpolate and show
+            method = self.map.interpolMenu.currentText()
+            sampling = self.map.interpolBox.value()
+            x, y, z = self.scan.interpolatedMap(com, sampling, origin='ul', method=method)
+            try:
+                self.map.addImage(z, legend='data', 
+                    scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
+                    origin=[x.min(), y.min()])
+                self.map.setGraphXLimits(*xlims)
+                self.map.setGraphYLimits(*ylims)
+            except:
+                print "Invalid center of mass"
+            self.window().statusOutput('')
         except:
-            print "Invalid center of mass"
+            self.window().statusOutput('Failed to build COM map. See terminal output.')
+            raise
 
 
     def togglePositions(self):

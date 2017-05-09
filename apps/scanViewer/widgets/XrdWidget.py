@@ -176,59 +176,71 @@ class XrdWidget(PyQt4.QtGui.QWidget):
         self.image.resetZoom()
 
     def updateMap(self):
-        # workaround to avoid the infinite loop which occurs when both
-        # mask widgets are open at the same time
-        self.map.maskToolsDockWidget.setVisible(False)
-        # store the limits to maintain zoom
-        xlims = self.map.getGraphXLimits()
-        ylims = self.map.getGraphYLimits()
-        # get and check the mask array
-        mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
-        # if the mask is cleared, reset without wasting time
-        if mask.sum() == 0:
-            print 'building XRD map by averaging all pixels'
-            average = np.mean(self.scan.data['xrd'], axis=(1,2))
-        else:
-            ii, jj = np.where(mask)
-            print 'building XRD map by averaging %d pixels'%len(ii)
-            average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
-        method = self.map.interpolMenu.currentText()
-        sampling = self.map.interpolBox.value()
-        x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
-        self.map.addImage(z, legend='data', 
-            scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
-            origin=[x.min(), y.min()])
-        self.map.setGraphXLimits(*xlims)
-        self.map.setGraphYLimits(*ylims)
+        try:
+            self.window().statusOutput('Building XRD map...')
+            # workaround to avoid the infinite loop which occurs when both
+            # mask widgets are open at the same time
+            self.map.maskToolsDockWidget.setVisible(False)
+            # store the limits to maintain zoom
+            xlims = self.map.getGraphXLimits()
+            ylims = self.map.getGraphYLimits()
+            # get and check the mask array
+            mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
+            # if the mask is cleared, reset without wasting time
+            if mask.sum() == 0:
+                print 'building XRD map by averaging all pixels'
+                average = np.mean(self.scan.data['xrd'], axis=(1,2))
+            else:
+                ii, jj = np.where(mask)
+                print 'building XRD map by averaging %d pixels'%len(ii)
+                average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
+            method = self.map.interpolMenu.currentText()
+            sampling = self.map.interpolBox.value()
+            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
+            self.map.addImage(z, legend='data', 
+                scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
+                origin=[x.min(), y.min()])
+            self.map.setGraphXLimits(*xlims)
+            self.map.setGraphYLimits(*ylims)
+            self.window().statusOutput('')
+        except:
+            self.window().statusOutput('Failed to build XRD map. See terminal output.')
+            raise
 
     def updateImage(self):
-        # workaround to avoid the infinite loop which occurs when both
-        # mask widgets are open at the same time
-        self.image.maskToolsDockWidget.setVisible(False)
-        # get and check the mask array
-        mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
-        if mask.sum() == 0:
-            # the mask is empty, don't waste time with positions
-            print 'building diffraction pattern from all positions'
-            data = np.mean(self.scan.data['xrd'], axis=0)
-        else:
-            # recreate the interpolated grid from above, to find masked
-            # positions on the oversampled grid
-            dummy = np.zeros(self.scan.nPositions)
-            x, y, z = self.scan.interpolatedMap(dummy, self.map.interpolBox.value(), origin='ul')
-            maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
-            pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
-            # go through actual positions and find the masked ones
-            maskedPositions = []
-            for i in range(self.scan.nPositions):
-                # the minimum distance of the current position to a selected grid point:
-                dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
-                if dist2 < pointSpacing2:
-                    maskedPositions.append(i)
-            print 'building diffraction pattern from %d positions'%len(maskedPositions)
-            # get the average and replace the image with legend 'data'
-            data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0)
-        self.image.addImage(data, legend='data', colormap=self.diffCmap)
+        try:
+            self.window().statusOutput('Building diffraction pattern...')
+            # workaround to avoid the infinite loop which occurs when both
+            # mask widgets are open at the same time
+            self.image.maskToolsDockWidget.setVisible(False)
+            # get and check the mask array
+            mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
+            if mask.sum() == 0:
+                # the mask is empty, don't waste time with positions
+                print 'building diffraction pattern from all positions'
+                data = np.mean(self.scan.data['xrd'], axis=0)
+            else:
+                # recreate the interpolated grid from above, to find masked
+                # positions on the oversampled grid
+                dummy = np.zeros(self.scan.nPositions)
+                x, y, z = self.scan.interpolatedMap(dummy, self.map.interpolBox.value(), origin='ul')
+                maskedPoints = np.vstack((x[np.where(mask)], y[np.where(mask)])).T
+                pointSpacing2 = (x[0,1] - x[0,0])**2 + (y[0,0] - y[1,0])**2
+                # go through actual positions and find the masked ones
+                maskedPositions = []
+                for i in range(self.scan.nPositions):
+                    # the minimum distance of the current position to a selected grid point:
+                    dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
+                    if dist2 < pointSpacing2:
+                        maskedPositions.append(i)
+                print 'building diffraction pattern from %d positions'%len(maskedPositions)
+                # get the average and replace the image with legend 'data'
+                data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0)
+            self.image.addImage(data, legend='data', colormap=self.diffCmap)
+            self.window().statusOutput('')
+        except:
+            self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')
+            raise
 
     def togglePositions(self):
         xlims = self.map.getGraphXLimits()

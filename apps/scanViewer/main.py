@@ -19,6 +19,7 @@ import design
 import numpy as np
 from scipy.interpolate import griddata
 import nmutils
+import time
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html
@@ -78,50 +79,59 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
 
-	# dummy scan
-	self.scan = None
+        # dummy scan
+        self.scan = None
+
+    def statusOutput(self, msg):
+        self.ui.statusbar.showMessage(msg)
+        self.ui.statusbar.showMessage(msg)
 
     def load(self):
-        print "Loading data..."
-        subclass = str(self.ui.scanClassBox.currentText())
-        filename = str(self.ui.filenameBox.text())
-    	if self.scan:
-            print "Deleting previous scan from memory"
-            # These references have to go
-            self.ui.comWidget.setScan(None)
-            self.ui.xrdWidget.setScan(None)
-            self.ui.xrfWidget.setScan(None)
-            del(self.scan)
-            # enforcing garbage collection for good measure
-            gc.collect()
-        self.scan = getattr(nmutils.core, subclass)()
-        opts = str(self.ui.scanOptionsBox.text()).split()
-
-        # add xrd data:
-        self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
         try:
-            print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
-            has_xrd = True
+            self.statusOutput("Loading data...")
+            subclass = str(self.ui.scanClassBox.currentText())
+            filename = str(self.ui.filenameBox.text())
+            if self.scan:
+                print "Deleting previous scan from memory"
+                # These references have to go
+                self.ui.comWidget.setScan(None)
+                self.ui.xrdWidget.setScan(None)
+                self.ui.xrfWidget.setScan(None)
+                del(self.scan)
+                # enforcing garbage collection for good measure
+                gc.collect()
+            self.scan = getattr(nmutils.core, subclass)()
+            opts = str(self.ui.scanOptionsBox.text()).split()
+
+            # add xrd data:
+            self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
+            try:
+                print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
+                has_xrd = True
+            except:
+                print "no xrd data found"
+                has_xrd = False
+
+            # add xrf data:
+            try:
+                self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
+            except: pass
+            try:
+                print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
+                has_xrf = True
+            except:
+                print "no xrf data found"
+                has_xrf = False
+
+            if has_xrd:
+                self.ui.comWidget.setScan(self.scan)
+                self.ui.xrdWidget.setScan(self.scan)
+            if has_xrf:
+                self.ui.xrfWidget.setScan(self.scan)
+            self.statusOutput("")
         except:
-            print "no xrd data found"
-            has_xrd = False
-
-        # add xrf data:
-        try:
-            self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
-        except: pass
-        try:
-            print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
-            has_xrf = True
-        except:
-            print "no xrf data found"
-            has_xrf = False
-
-        if has_xrd:
-            self.ui.comWidget.setScan(self.scan)
-            self.ui.xrdWidget.setScan(self.scan)
-        if has_xrf:
-            self.ui.xrfWidget.setScan(self.scan)
+            self.statusOutput("Loading failed. See terminal output for details.")
+            raise
 
 if __name__ == '__main__':
     # you always need a qt app
