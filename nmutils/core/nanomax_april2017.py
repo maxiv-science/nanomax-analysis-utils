@@ -128,7 +128,8 @@ class nanomaxScan_stepscan_april2017(Scan):
 
     def _readData(self, fileName, opts=None):
         """ 
-        Override data reading.
+        Override data reading. Here the filename is only used to find the
+        path of the Lima hdf5 files.
         """
 
         datatype = opts[0]
@@ -157,8 +158,17 @@ class nanomaxScan_stepscan_april2017(Scan):
             data = np.array(data)
 
         elif datatype == 'xrf':
-            with h5py.File(fileName, 'r') as hf:
-                data = np.array(hf.get('entry%d/measurement/xrf_px5'%scannr))
+            print "loading flurescence data..."
+            path = os.path.split(os.path.abspath(fileName))[0]
+            filepattern = 'scan_%04d_xspress3_0000.hdf5'
+            channel = 1
+            print 'loading data: ' + filepattern%(scannr)
+            data = []
+            with h5py.File(os.path.join(path, filepattern%(scannr)), 'r') as hf:
+                for im in range(self.positions.shape[0]):
+                    dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
+                    data.append(np.array(dataset)[0, channel])
+            data = np.array(data)
 
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
