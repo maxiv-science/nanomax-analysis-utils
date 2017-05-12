@@ -177,7 +177,12 @@ class XrdWidget(PyQt4.QtGui.QWidget):
     def setScan(self, scan):
         self.scan = scan
         if not scan:
+            self.map.removeImage('data')
+            self.image.removeImage('data')
             return
+        # avoid old position grids:
+        if self.map.positionsAction.isChecked():
+            self.togglePositions()
         self.map.indexBox.setMaximum(scan.nPositions - 1)
         self.resetMap()
         self.resetImage()
@@ -214,7 +219,7 @@ class XrdWidget(PyQt4.QtGui.QWidget):
             x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
             self.map.addImage(z, legend='data', 
                 scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
-                origin=[x.min(), y.min()])
+                origin=[x.min(), y.min()], resetzoom=False)
             self.map.setGraphXLimits(*xlims)
             self.map.setGraphYLimits(*ylims)
             self.window().statusOutput('')
@@ -256,7 +261,8 @@ class XrdWidget(PyQt4.QtGui.QWidget):
                     print 'building diffraction pattern from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0)
-            self.image.addImage(data, legend='data', colormap=self.diffCmap)
+            self.image.addImage(data, legend='data', colormap=self.diffCmap,
+                resetzoom=False)
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')
@@ -265,20 +271,20 @@ class XrdWidget(PyQt4.QtGui.QWidget):
     def togglePositions(self):
         if self.map.positionsAction.isChecked():
             self.map.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
-                label='scan positions', symbol='+', color='red', linestyle=' ',
+                legend='scan positions', symbol='+', color='red', linestyle=' ',
                 resetzoom=False, replace=False)
         else:
-            self.map.addCurve([], [], label='scan positions', resetzoom=False, replace=False)
+            self.map.addCurve([], [], legend='scan positions', resetzoom=False, replace=False)
 
     def indexMarkerOn(self, on):
         index = self.map.indexBox.value()
         if on:
             self.map.addCurve([self.scan.positions[index, 0]], 
                 [self.scan.positions[index, 1]], symbol='o', color='red', 
-                linestyle=' ', label='index marker', resetzoom=False,
+                linestyle=' ', legend='index marker', resetzoom=False,
                 replace=False)
         else:
-            self.map.addCurve([], [], label='index marker', 
+            self.map.addCurve([], [], legend='index marker', 
                 resetzoom=False, replace=False)
 
     def selectByIndex(self):

@@ -162,7 +162,12 @@ class ComWidget(PyQt4.QtGui.QWidget):
     def setScan(self, scan):
         self.scan = scan
         if not scan:
+            self.map.removeImage('data')
+            self.image.removeImage('data')
             return
+        # avoid old position grids:
+        if self.map.positionsAction.isChecked():
+            self.togglePositions()
         self.resetMap()
         self.resetImage()
 
@@ -228,8 +233,8 @@ class ComWidget(PyQt4.QtGui.QWidget):
         ylims = self.map.getGraphYLimits()
         if self.map.positionsAction.isChecked():
             self.map.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
-                label='scan positions', symbol='+', color='red', linestyle=' ')
+                legend='scan positions', symbol='+', color='red', linestyle=' ')
         else:
-            self.map.addCurve([], [], label='scan positions')
+            self.map.addCurve([], [], legend='scan positions')
         self.map.setGraphXLimits(*xlims)
         self.map.setGraphYLimits(*ylims)
