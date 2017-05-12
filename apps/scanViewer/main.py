@@ -53,6 +53,8 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         self.ui.scanClassBox.addItem('select scan type')
         for subclass in nmutils.core.Scan.__subclasses__():
             self.ui.scanClassBox.addItem(subclass.__name__)
+            for subclass_ in subclass.__subclasses__():
+                self.ui.scanClassBox.addItem(subclass_.__name__)
 
         # connect browse button
         def wrap():
@@ -68,7 +70,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 self.ui.scanOptionsBox.setText('<scannr>')
             elif subclass == 'id13Scan':
                 self.ui.scanOptionsBox.setText('<ROI size>')
-            elif subclass == 'nanomaxScan_stepscan_april2017':
+            elif (subclass == 'nanomaxScan_stepscan_april2017') or (subclass == 'nanomaxScan_rough_stepscan_april2017'):
                 self.ui.scanOptionsBox.setText('<scannr>')
             elif subclass == 'nanomaxScan_flyscan_april2017':
                 self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')

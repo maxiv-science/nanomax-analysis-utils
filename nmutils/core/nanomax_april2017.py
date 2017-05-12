@@ -166,3 +166,21 @@ class nanomaxScan_stepscan_april2017(Scan):
 
         return data
 
+class nanomaxScan_rough_stepscan_april2017(nanomaxScan_stepscan_april2017):
+    # Override to read the rough stages instead
+
+    def _readPositions(self, fileName, opts=None):
+        """ 
+        Override position reading.
+        """
+        if not (len(opts) >= 2):
+            raise RuntimeError('The addData opts list is insufficient for this Scan subclass.')
+
+        entry = 'entry%d' % int(opts[1])
+
+        with h5py.File(fileName, 'r') as hf:
+            x = np.array(hf.get(entry + '/measurement/sams_x'))
+            y = np.array(hf.get(entry + '/measurement/sams_y'))
+
+        return np.vstack((x, y)).T
+
