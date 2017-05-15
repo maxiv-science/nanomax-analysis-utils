@@ -71,9 +71,9 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             elif subclass == 'id13Scan':
                 self.ui.scanOptionsBox.setText('<ROI size>')
             elif (subclass == 'nanomaxScan_stepscan_april2017') or (subclass == 'nanomaxScan_rough_stepscan_april2017'):
-                self.ui.scanOptionsBox.setText('<scannr>')
+                self.ui.scanOptionsBox.setText('<scannr> (<XRF channel>)')
             elif subclass == 'nanomaxScan_flyscan_april2017':
-                self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')
+                self.ui.scanOptionsBox.setText('<scannr> (<XRF channel>) (<ROI size>)')
             else:
                 self.ui.scanOptionsBox.setText('')
         self.ui.scanClassBox.currentIndexChanged.connect(wrap)

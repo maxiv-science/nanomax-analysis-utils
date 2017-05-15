@@ -10,7 +10,7 @@ class nanomaxScan_flyscan_april2017(Scan):
     # scan number and optionally for the amount of data around the
     # diffraction center of mass to load:
     #
-    # opts = [datatype scannr (ROI size)], where datatype is 'xrf' or 'xrd'
+    # opts = [datatype scannr (XRF channel) (ROI size)], where datatype is 'xrf' or 'xrd'
 
     def _readPositions(self, fileName, opts=None):
         """ 
@@ -55,8 +55,13 @@ class nanomaxScan_flyscan_april2017(Scan):
 
         datatype = opts[0]
 
-        if len(opts) == 3:
-            delta = int(opts[2]) / 2
+        if len(opts) >= 3:
+            xrfChannel = int(opts[2])
+        else: 
+            xrfChannel = 2
+
+        if len(opts) == 4:
+            delta = int(opts[3]) / 2
         else:
             delta = None
 
@@ -64,6 +69,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         
         if datatype == 'xrd':
             print "loading diffraction data..."
+            print "selecting fluorescence channel %d"%xrfChannel
             path = os.path.split(os.path.abspath(fileName))[0]
             # check which detector was used
             if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(scannr,0))):
@@ -97,8 +103,20 @@ class nanomaxScan_flyscan_april2017(Scan):
             data = np.concatenate(data, axis=0)
 
         elif datatype == 'xrf':
-            raise NotImplementedError('xrf for fly scan not implemented')
-
+            print "loading flurescence data..."
+            path = os.path.split(os.path.abspath(fileName))[0]
+            filepattern = 'scan_%04d_xspress3_0000.hdf5'
+            print 'loading data: ' + filepattern%(scannr)
+            data = []
+            with h5py.File(os.path.join(path, filepattern%(scannr)), 'r') as hf:
+                line = 0
+                while True:
+                    dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
+                    if not dataset:
+                        break
+                    data.append(np.array(dataset)[:, xrfChannel, :])
+                    line += 1
+            data = np.vstack(data)
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
         return data
@@ -109,7 +127,7 @@ class nanomaxScan_stepscan_april2017(Scan):
     # set up for commissioning and user runs. Uses the addData opts list
     # for the scan number:
     #
-    # opts = [datatype, scannr], where datatype is 'xrf' or 'xrd'
+    # opts = [datatype, scannr, (XRF channel)], where datatype is 'xrf' or 'xrd'
 
     def _readPositions(self, fileName, opts=None):
         """ 
@@ -135,6 +153,11 @@ class nanomaxScan_stepscan_april2017(Scan):
         datatype = opts[0]
         scannr = int(opts[1])
 
+        if len(opts) >= 3:
+            xrfChannel = int(opts[2])
+        else: 
+            xrfChannel = 2
+
         if datatype == 'xrd':
             print "loading diffraction data..."
             path = os.path.split(os.path.abspath(fileName))[0]
@@ -159,15 +182,15 @@ class nanomaxScan_stepscan_april2017(Scan):
 
         elif datatype == 'xrf':
             print "loading flurescence data..."
+            print "selecting fluorescence channel %d"%xrfChannel
             path = os.path.split(os.path.abspath(fileName))[0]
             filepattern = 'scan_%04d_xspress3_0000.hdf5'
-            channel = 1
             print 'loading data: ' + filepattern%(scannr)
             data = []
             with h5py.File(os.path.join(path, filepattern%(scannr)), 'r') as hf:
                 for im in range(self.positions.shape[0]):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
-                    data.append(np.array(dataset)[0, channel])
+                    data.append(np.array(dataset)[0, xrfChannel])
             data = np.array(data)
 
         else:
