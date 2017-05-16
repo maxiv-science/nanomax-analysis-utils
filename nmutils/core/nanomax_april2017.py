@@ -150,6 +150,16 @@ class nanomaxScan_stepscan_april2017(Scan):
             x = np.array(hf.get(entry + '/measurement/samx'))
             y = np.array(hf.get(entry + '/measurement/samy'))
 
+        # allow 1d scans
+        try:
+            len(y)
+        except TypeError:
+            y = np.zeros(x.shape)
+        try:
+            len(x)
+        except TypeError:
+            x = np.zeros(y.shape)
+
         return np.vstack((x, y)).T
 
     def _readData(self, fileName, opts=None):
@@ -229,6 +239,16 @@ class nanomaxScan_rough_stepscan_april2017(nanomaxScan_stepscan_april2017):
         with h5py.File(fileName, 'r') as hf:
             x = np.array(hf.get(entry + '/measurement/sams_x'))
             y = np.array(hf.get(entry + '/measurement/sams_y'))
+
+        # allow 1d scans
+        try:
+            len(y)
+        except TypeError:
+            y = np.zeros(x.shape)
+        try:
+            len(x)
+        except TypeError:
+            x = np.zeros(y.shape)
 
         return np.vstack((x, y)).T
 
