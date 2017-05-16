@@ -46,6 +46,8 @@ class nanomaxScan_flyscan_april2017(Scan):
             # save number of lines for the _readData method
             self.nlines = Ny
 
+            print "loaded positions from %d lines, %d positions on each"%(self.nlines, Nx)
+
         return np.vstack((x, y)).T
 
     def _readData(self, fileName, opts=None):
@@ -84,20 +86,25 @@ class nanomaxScan_flyscan_april2017(Scan):
             data = []
             print "attempting to read %d lines of diffraction data (based on the positions array)"%self.nlines
             for line in range(self.nlines):
-                with h5py.File(os.path.join(path, filepattern%(scannr, line)), 'r') as hf:
-                    print 'loading data: ' + filepattern%(scannr, line)
-                    dataset = hf.get('entry_0000/measurement/Pilatus/data')
-                    # for the first file, determine center of mass
-                    if len(data) == 0:
-                        import scipy.ndimage.measurements
-                        im = np.array(dataset[0])
-                        ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
-                        print "Estimated center of mass to (%d, %d)"%(ic, jc)
-                    if delta:
-                        data.append(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]))
-                    else:
-                        data.append(np.array(dataset))
-                    del dataset
+                try:
+                    with h5py.File(os.path.join(path, filepattern%(scannr, line)), 'r') as hf:
+                        print 'loading data: ' + filepattern%(scannr, line)
+                        dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                        # for the first file, determine center of mass
+                        if len(data) == 0:
+                            import scipy.ndimage.measurements
+                            im = np.array(dataset[0])
+                            ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
+                            print "Estimated center of mass to (%d, %d)"%(ic, jc)
+                        if delta:
+                            data.append(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]))
+                        else:
+                            data.append(np.array(dataset))
+                        del dataset
+                except IOError:
+                    # fewer hdf5 files than positions -- this is ok
+                    print "couldn't find expected file %s, returning"%(filepattern%(scannr, line))
+                    break
 
             print "loaded %d lines of Pilatus data"%len(data)
             data = np.concatenate(data, axis=0)
@@ -116,6 +123,7 @@ class nanomaxScan_flyscan_april2017(Scan):
                         break
                     data.append(np.array(dataset)[:, xrfChannel, :])
                     line += 1
+            print "loaded %d lines of xspress3 data"%len(data)
             data = np.vstack(data)
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
@@ -173,10 +181,15 @@ class nanomaxScan_stepscan_april2017(Scan):
 
             data = []
             for im in range(self.positions.shape[0]):
-                with h5py.File(os.path.join(path, filepattern%(scannr, im)), 'r') as hf:
-                    print 'loading data: ' + filepattern%(scannr, im)
-                    dataset = hf.get('entry_0000/measurement/Pilatus/data')
-                    data.append(np.array(dataset)[0])
+                try:
+                    with h5py.File(os.path.join(path, filepattern%(scannr, im)), 'r') as hf:
+                        print 'loading data: ' + filepattern%(scannr, im)
+                        dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                        data.append(np.array(dataset)[0])
+                except IOError:
+                    # missing files -- this is ok
+                    print "couldn't find expected file %s, returning"%(filepattern%(scannr, im))
+                    break
             print "loaded %d Pilatus images"%len(data)
             data = np.array(data)
 
@@ -190,6 +203,8 @@ class nanomaxScan_stepscan_april2017(Scan):
             with h5py.File(os.path.join(path, filepattern%(scannr)), 'r') as hf:
                 for im in range(self.positions.shape[0]):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
+                    if not dataset:
+                        break
                     data.append(np.array(dataset)[0, xrfChannel])
             data = np.array(data)
 

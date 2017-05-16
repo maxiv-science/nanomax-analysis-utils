@@ -51,6 +51,11 @@ class Scan(object):
         size) array. The name kwarg should hint at what type of data
         we're reading (for example 'pilatus', 'transmission', ...), so
         data from different sources can be handled by this method.
+
+        The parent Scan class can handle an inconsistent number of 
+        positions and data points, so the important thing is to not
+        raise unnecessary exceptions, but instead to just return what
+        you can.
         """
         pass
 
@@ -83,6 +88,20 @@ class Scan(object):
         # The actual reading is done by _readData() which knows about the
         # details of the hdf5 file
         data = self._readData(fileName, opts)
+
+        # pad the data in case there were missing frames
+        if data.shape[0] < self.nPositions:
+            missing = self.nPositions - data.shape[0]
+            print "there were %d missing images for dataset '%s', filling with average values"%(missing, name)
+            pads = ((0, missing),) + ((0, 0),) * (data.ndim - 1)
+            data = np.pad(data, pads, mode='mean')
+
+        # remove data in case too much has been returned
+        if data.shape[0] > self.nPositions:
+            excess = data.shape[0] - self.nPositions
+            print "there were %d too many images for dataset '%s', ignoring"%(excess, name)
+            data = data[:self.nPositions]
+
         self.data[name] = data
         self.nDataSets += 1
 
