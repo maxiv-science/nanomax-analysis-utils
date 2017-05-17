@@ -25,8 +25,14 @@
        <enum>Qt::TabFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Scan options</string>
+       </attribute>
+       <layout class="QGridLayout" name="optionsGrid"/>
+      </widget>
       <widget class="QWidget" name="roi">
        <attribute name="title">
         <string>XRD region of interest</string>
@@ -136,37 +142,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2" colspan="2">
-       <widget class="QLineEdit" name="scanOptionsBox">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>250</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>350</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Optional class-dependent options, such as scan nr, detector area to load, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>&lt;class options&gt;</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="3">
        <widget class="QPushButton" name="loadButton">
         <property name="sizePolicy">
@@ -223,6 +198,13 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="2" colspan="2">
+       <widget class="QSpinBox" name="scanNumberBox">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -261,7 +243,7 @@
  </customwidgets>
  <tabstops>
   <tabstop>scanClassBox</tabstop>
-  <tabstop>scanOptionsBox</tabstop>
+  <tabstop>scanNumberBox</tabstop>
   <tabstop>filenameBox</tabstop>
   <tabstop>browseButton</tabstop>
   <tabstop>loadButton</tabstop>

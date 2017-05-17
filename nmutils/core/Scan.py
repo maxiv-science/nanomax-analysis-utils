@@ -18,6 +18,16 @@ __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 
 class Scan(object):
 
+    # An options structure, overridden in subclasses to allow passing 
+    # more kwargs to addData(). 
+    default_opts = {
+        'dataType': {
+            'value': 'xrd',
+            'type': str,
+            'doc': "type of data, 'xrd' or 'xrf'",
+            }
+    }
+
     def __init__(self, options=None):
         """ 
         Only initializes counters and options. Positions and data are
@@ -28,7 +38,17 @@ class Scan(object):
         self.nDimensions = None  # scan dimensions
         self.options = None
 
-    def _readPositions(self, fileName, opts=None):
+    def _prepareData(self, **kwargs):
+        """
+        Placeholder method to be subclassed. Private method which is 
+        passed the kwargs from addData, and uses these to set up all
+        optional parameters for the next dataset to be read. Note that
+        these parameters are not kept, and are only used for data 
+        loading.
+        """
+        raise NotImplementedError
+
+    def _readPositions(self):
         """ 
         Placeholder method to be subclassed. Private method which
         interfaces with the actual hdf5 file and returns an array of
@@ -42,38 +62,62 @@ class Scan(object):
         corresponds to maximum motor positions, which means minimum in
         the sample frame under the nanomax coordinate system. Phew.
         """
-        pass
+        raise NotImplementedError
 
-    def _readData(self, fileName, opts=None):
+    def _readData(self):
         """ 
         Placeholder method to be subclassed. Private method which
         interfaces with the actual hdf5 file and returns an N-by-(image
-        size) array. The name kwarg should hint at what type of data
-        we're reading (for example 'pilatus', 'transmission', ...), so
-        data from different sources can be handled by this method.
+        size) array. 
 
         The parent Scan class can handle an inconsistent number of 
         positions and data points, so the important thing is to not
         raise unnecessary exceptions, but instead to just return what
         you can.
         """
-        pass
+        raise NotImplementedError
 
-    def addData(self, fileName, name=None, opts=None):
+    def _updateOpts(self, opts, **kwargs):
+        """
+        Helper method which updates the 'value' fields of an options 
+        structure (copied from the defaults) with kwargs. Typically 
+        called from _prepareData().
+        """
+        opts = opts.copy()
+        for key, val in kwargs.iteritems():
+            if key in opts.keys():
+                if not (type(val) == opts[key]['type']):
+                    raise Exception('Data type for option %s should be %s, not %s'%(str(key), str(opts[key]['type']), str(type(val))))
+                opts[key]['value'] = val
+            else:
+                raise Exception('Unknown option %s' % str(key))
+        return opts
+
+    def addData(self, name=None, filename=None, scannr=None, **kwargs):
         """ 
         This method adds positions the first time data is loaded. Then,
         subsequent data additions should check for consistency and
-        complain if datasets are not compatible.
+        complain if datasets are not compatible. The name kwarg should 
+        hint at what type of data we're reading (for example 'pilatus', 
+        'transmission', ...), so data from different sources can be 
+        handled by this method.
         """
 
         if not name:
             name = 'data%u' % self.nDataSets
 
+        if (not scannr) or (not filename):
+            raise Exception('Scan.addData needs a filename and a scan number!')
+
+        self.scanNr = scannr
+        self.fileName = filename
+        self._prepareData(**kwargs)
+
         # Check if any data exists.
         if not hasattr(self, 'data'):
             # initialize data dict and read positions
             self.data = {}
-            self.positions = self._readPositions(fileName, opts)
+            self.positions = self._readPositions()
             self.nPositions = self.positions.shape[0]
             self.nDimensions = self.positions.shape[1]
         else:
@@ -81,13 +125,13 @@ class Scan(object):
             if name in self.data.keys():
                 raise ValueError("Dataset '%s' already exists!" % name)
             # verify that positions are are consistent
-            if not np.all(self.positions == self._readPositions(fileName, opts)):
+            if not np.all(self.positions == self._readPositions()):
                 raise ValueError(
                     "Positions of new dataset are inconsistent with previously loaded positions!")
 
         # The actual reading is done by _readData() which knows about the
         # details of the hdf5 file
-        data = self._readData(fileName, opts)
+        data = self._readData()
 
         # pad the data in case there were missing frames
         if data.shape[0] < self.nPositions:

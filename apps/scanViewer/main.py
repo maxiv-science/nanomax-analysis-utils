@@ -1,3 +1,10 @@
+"""
+This application loads data through subclasses of nmutils.core.Scan. 
+These subclasses should have the option "dataType" for data loading,
+and should expect the 'xrd' and 'xrf' values for this keyword. In 
+addition, they can have whatever options they want.
+"""
+
 # hdf5plugin is needed to read compressed Eiger files, and has to be
 # imported before h5py.
 try:
@@ -61,28 +68,65 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             self.ui.filenameBox.setText(PyQt4.QtGui.QFileDialog.getOpenFileName())
         self.ui.browseButton.clicked.connect(wrap)
 
-        # hint at the subclass options when a subclass is selected
-        def wrap():
-            subclass = str(self.ui.scanClassBox.currentText())
-            if subclass == 'nanomaxScan_flyscan_week48':
-                self.ui.scanOptionsBox.setText('<scannr> (<ROI size>)')
-            elif subclass == 'nanomaxScan_stepscan_week48':
-                self.ui.scanOptionsBox.setText('<scannr>')
-            elif subclass == 'id13Scan':
-                self.ui.scanOptionsBox.setText('<ROI size>')
-            elif (subclass == 'nanomaxScan_stepscan_april2017') or (subclass == 'nanomaxScan_rough_stepscan_april2017'):
-                self.ui.scanOptionsBox.setText('<scannr> (<XRF channel>)')
-            elif subclass == 'nanomaxScan_flyscan_april2017':
-                self.ui.scanOptionsBox.setText('<scannr> (<XRF channel>) (<ROI size>)')
-            else:
-                self.ui.scanOptionsBox.setText('')
-        self.ui.scanClassBox.currentIndexChanged.connect(wrap)
+        # populate the options tab
+        self.ui.scanClassBox.currentIndexChanged.connect(self.populateOptions)
 
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
 
         # dummy scan
         self.scan = None
+
+    def gatherOptions(self):
+        # should return a dict of kwargs based on the options fields
+        opts = {}
+        for name, w in self.formWidgets.iteritems():
+            if isinstance(w, PyQt4.QtGui.QCheckBox):
+                val = bool(w.isChecked())
+            elif isinstance(w, PyQt4.QtGui.QLineEdit):
+                val = str(w.text())
+            else:
+                val = w.value()
+            opts[name] = val
+        return opts
+
+    def populateOptions(self):
+        grid = self.ui.optionsGrid
+        # remove all old options
+        for i in reversed(range(grid.count())): 
+            grid.itemAt(i).widget().setParent(None)
+        # add new ones
+        subclass_ = str(self.ui.scanClassBox.currentText())
+        try:
+            subclass = getattr(nmutils.core, subclass_)
+        except:
+            return
+        opts = subclass.default_opts.copy()
+        self.formWidgets = {}
+        i = 0
+        for name, opt in opts.iteritems():
+            # special: dataType should not have a field
+            if name == 'dataType':
+                continue
+            grid.addWidget(PyQt4.QtGui.QLabel(name), i, 0)
+            grid.addWidget(PyQt4.QtGui.QLabel(opt['doc']), i, 2)
+            if opt['type'] == int:
+                w = PyQt4.QtGui.QSpinBox()
+                w.setMaximum(9999)
+                w.setValue(opt['value'])
+            elif opt['type'] == float:
+                w = PyQt4.QtGui.QDoubleSpinBox()
+                w.setValue(opt['value'])
+            elif opt['type'] == bool:
+                w = PyQt4.QtGui.QCheckBox()
+                w.setChecked(opt['value'])
+            else:
+                w = PyQt4.QtGui.QLineEdit()
+                w.setText(opt['value'])
+            grid.addWidget(w, i, 1)
+            # save a dict of the options widgets, to parse when loading
+            self.formWidgets[name] = w
+            i += 1
 
     def statusOutput(self, msg):
         self.ui.statusbar.showMessage(msg)
@@ -91,8 +135,6 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
     def load(self):
         try:
             self.statusOutput("Loading data...")
-            subclass = str(self.ui.scanClassBox.currentText())
-            filename = str(self.ui.filenameBox.text())
             if self.scan:
                 print "Deleting previous scan from memory"
                 # These references have to go
@@ -102,12 +144,22 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 del(self.scan)
                 # enforcing garbage collection for good measure
                 gc.collect()
-            self.scan = getattr(nmutils.core, subclass)()
-            opts = str(self.ui.scanOptionsBox.text()).split()
+
+            # construct a scan
+            try:
+                subclass = str(self.ui.scanClassBox.currentText())
+                self.scan = getattr(nmutils.core, subclass)()
+            except:
+                raise Exception("Invalid subclass")
+
+            # get options
+            scannr = self.ui.scanNumberBox.value()
+            filename = str(self.ui.filenameBox.text())
+            opts = self.gatherOptions()
 
             # add xrd data:
-            self.scan.addData(filename, opts=['xrd',]+opts, name='xrd')
             try:
+                self.scan.addData(scannr=scannr, filename=filename, dataType='xrd', name='xrd', **opts)
                 print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
                 has_xrd = True
             except:
@@ -116,9 +168,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
 
             # add xrf data:
             try:
-                self.scan.addData(filename, opts=['xrf',]+opts, name='xrf')
-            except: pass
-            try:
+                self.scan.addData(scannr=scannr, filename=filename, dataType='xrf', name='xrf', **opts)
                 print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
                 has_xrf = True
             except:
