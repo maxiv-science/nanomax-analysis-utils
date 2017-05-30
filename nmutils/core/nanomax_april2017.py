@@ -1,5 +1,5 @@
 from Scan import Scan
-from ..utils import binPixels
+from ..utils import fastBinPixels
 import numpy as np
 import h5py
 import copy as cp
@@ -34,7 +34,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         'xrdBinning': {
             'value': 1,
             'type': int,
-            'doc': 'bin xrd pixels n-by-n (efter cropping) - NOT IMPLEMENTED',
+            'doc': 'bin xrd pixels n-by-n (after cropping)',
             },
     }
 
@@ -51,8 +51,8 @@ class nanomaxScan_flyscan_april2017(Scan):
         self.dataType = opts['dataType']['value']
         self.steppedMotor = opts['steppedMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        self.xrdCropping = opts['xrdCropping']['value']
-        self.xrdBinning = opts['xrdBinning']['value']
+        self.xrdCropping = int(opts['xrdCropping']['value'])
+        self.xrdBinning = int(opts['xrdBinning']['value'])
 
     def _readPositions(self):
         """ 
@@ -130,7 +130,7 @@ class nanomaxScan_flyscan_april2017(Scan):
                         else:
                             data_ = np.array(dataset)
                         if self.xrdBinning > 1:
-                            raise NotImplementedError
+                            data_ = fastBinPixels(data_, self.xrdBinning)
                         data.append(data_)
                         del dataset
                 except IOError:
@@ -188,6 +188,16 @@ class nanomaxScan_stepscan_april2017(Scan):
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },
+        'xrdCropping': {
+            'value': 0,
+            'type': int,
+            'doc': 'size of detector area to load, 0 means no cropping',
+            },
+        'xrdBinning': {
+            'value': 1,
+            'type': int,
+            'doc': 'bin xrd pixels n-by-n (after cropping)',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -204,6 +214,8 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
+        self.xrdCropping = int(opts['xrdCropping']['value'])
+        self.xrdBinning = int(opts['xrdBinning']['value'])
 
     def _readPositions(self):
         """ 
@@ -252,7 +264,20 @@ class nanomaxScan_stepscan_april2017(Scan):
                     with h5py.File(os.path.join(path, filepattern%(self.scanNr, im)), 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, im)
                         dataset = hf.get('entry_0000/measurement/Pilatus/data')
-                        data.append(np.array(dataset)[0])
+                        # for the first file, determine center of mass
+                        if len(data) == 0:
+                            import scipy.ndimage.measurements
+                            im = np.array(dataset[0])
+                            ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
+                            print "Estimated center of mass to (%d, %d)"%(ic, jc)
+                        if self.xrdCropping:
+                            delta = self.xrdCropping / 2
+                            data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
+                        else:
+                            data_ = np.array(dataset[0])
+                        if self.xrdBinning > 1:
+                            data_ = fastBinPixels(data_, self.xrdBinning)
+                        data.append(data_)
                 except IOError:
                     # missing files -- this is ok
                     print "couldn't find expected file %s, returning"%(filepattern%(self.scanNr, im))

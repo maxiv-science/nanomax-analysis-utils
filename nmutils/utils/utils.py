@@ -7,6 +7,7 @@ except:
     pass
 import scipy.signal
 import math
+from numpy.lib.stride_tricks import as_strided
 
 def shift(a, shifts):
     """ Shifts an array periodically. """
@@ -159,7 +160,7 @@ def shiftAndMultiply(block, wall, position, mode='center'):
         raise ValueError('Shifting out of bounds.')
         
 def binPixels(image, n=2):
-    """ Downsamples an image by an integer amount, by binning adjacent pixels n-by-n. Odd pixels on the bottom and right are discarded. """
+    """ Explicitly downsamples an image by an integer amount, by binning adjacent pixels n-by-n. Odd pixels on the bottom and right are discarded. """
     size = np.array(image.shape)
     size[0] = size[0] // n
     size[1] = size[1] // n
@@ -172,6 +173,23 @@ def binPixels(image, n=2):
             else:
                 new[i, j] = tmp
     return new
+
+def fastBinPixels(image, n=2):
+    """ Downsamples an image by convolution followed by stride-tricks downsampling. """
+    # first a convolution
+    kernel = np.ones((n, n))
+    image_conv = scipy.signal.convolve2d(image, kernel, mode='valid')
+
+    # then downsampling by picking every n:th pixel
+    # this function taken from stackoverflow:
+    def strided_rescale(g, bin_fac):
+        strided = as_strided(g,
+            shape=(g.shape[0]//bin_fac, g.shape[1]//bin_fac, bin_fac, bin_fac),
+            strides=((g.strides[0]*bin_fac, g.strides[1]*bin_fac)+g.strides))
+        return strided.mean(axis=-1).mean(axis=-1)
+    image_downsampled = strided_rescale(image_conv, n)
+
+    return image_downsampled
 
 def complex2image(z):
     """ Wraps a ptypy util """
