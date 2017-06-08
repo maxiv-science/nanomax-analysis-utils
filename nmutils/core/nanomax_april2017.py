@@ -27,14 +27,24 @@ class nanomaxScan_flyscan_april2017(Scan):
             'doc': 'xspress3 channel from which to read XRF',
             },
         'xrdCropping': {
-            'value': 0,
-            'type': int,
-            'doc': 'size of detector area to load, 0 means no cropping',
+            'value': 'none',
+            'type': str,
+            'doc': 'detector area to load, "i0 i1 j0 j1" - none means load all',
             },
         'xrdBinning': {
             'value': 1,
             'type': int,
             'doc': 'bin xrd pixels n-by-n (after cropping)',
+            },
+        'xrdNormalize': {
+            'value': 'none',
+            'type': str,
+            'doc': 'normalize XRD images by average over the ROI "i0 i1 j0 j1"',
+            },
+        'nMaxLines': {
+            'value': 0,
+            'type': int,
+            'doc': 'load at most N lines - 0 means load all',
             },
     }
 
@@ -51,8 +61,16 @@ class nanomaxScan_flyscan_april2017(Scan):
         self.dataType = opts['dataType']['value']
         self.steppedMotor = opts['steppedMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        self.xrdCropping = int(opts['xrdCropping']['value'])
+        if len(opts['xrdCropping']['value'].split()) == 4:
+            self.xrdCropping = map(int, opts['xrdCropping']['value'].split())
+        else:
+            self.xrdCropping = False
         self.xrdBinning = int(opts['xrdBinning']['value'])
+        if len(opts['xrdNormalize']['value'].split()) == 4:
+            self.xrdNormalize = map(int, opts['xrdNormalize']['value'].split())
+        else:
+            self.xrdNormalize = False
+        self.nMaxLines = int(opts['nMaxLines']['value'])
 
     def _readPositions(self):
         """ 
@@ -87,6 +105,12 @@ class nanomaxScan_flyscan_april2017(Scan):
             # save number of lines for the _readData method
             self.nlines = Ny
 
+            if self.nMaxLines:
+                self.nlines = self.nMaxLines
+                x = x[:Nx * self.nMaxLines]
+                y = y[:Nx * self.nMaxLines]
+                print "x and y shapes:", x.shape, y.shape
+
             print "loaded positions from %d lines, %d positions on each"%(self.nlines, Nx)
 
         return np.vstack((x, y)).T
@@ -112,25 +136,29 @@ class nanomaxScan_flyscan_april2017(Scan):
                 return
 
             data = []
-            print "attempting to read %d lines of diffraction data (based on the positions array)"%self.nlines
+            print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
             for line in range(self.nlines):
                 try:
                     with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, line)
                         dataset = hf.get('entry_0000/measurement/Pilatus/data')
-                        # for the first file, determine center of mass
-                        if len(data) == 0:
-                            import scipy.ndimage.measurements
-                            im = np.array(dataset[0])
-                            ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
-                            print "Estimated center of mass to (%d, %d)"%(ic, jc)
-                        if self.xrdCropping:
-                            delta = self.xrdCropping / 2
-                            data_ = np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta])
+                        if isinstance(self.xrdCropping, list):
+                            i0, i1, j0, j1 = self.xrdCropping
+                            data_ = np.array(dataset[:, i0 : i1, j0 : j1])
                         else:
                             data_ = np.array(dataset)
                         if self.xrdBinning > 1:
-                            data_ = fastBinPixels(data_, self.xrdBinning)
+                            shape = fastBinPixels(data_[0], self.xrdBinning).shape
+                            new_data_ = np.zeros((data_.shape[0],) + shape)
+                            for ii in range(data_.shape[0]):
+                                new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
+                            data_ = new_data_
+                        if isinstance(self.xrdNormalize, list):
+                            i0, i1, j0, j1 = self.xrdNormalize
+                            data_ = np.array(data_, dtype=float)
+                            for i in range(data_.shape[0]):
+                                norm = float(np.sum(np.array(dataset[i, i0 : i1, j0 : j1])))
+                                data_[i] /= norm
                         data.append(data_)
                         del dataset
                 except IOError:
@@ -150,6 +178,8 @@ class nanomaxScan_flyscan_april2017(Scan):
             with h5py.File(os.path.join(path, filepattern%(self.scanNr)), 'r') as hf:
                 line = 0
                 while True:
+                    if line >= self.nlines:
+                        break
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
                     if not dataset:
                         break
@@ -198,6 +228,11 @@ class nanomaxScan_stepscan_april2017(Scan):
             'type': int,
             'doc': 'bin xrd pixels n-by-n (after cropping)',
             },
+        'xrdNormalize': {
+            'value': False,
+            'type': bool,
+            'doc': 'normalize XRD images by total intensity',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -216,6 +251,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.xrfChannel = int(opts['xrfChannel']['value'])
         self.xrdCropping = int(opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
+        self.xrdNormalize = bool(opts['xrdNormalize']['value'])
 
     def _readPositions(self):
         """ 
@@ -277,6 +313,8 @@ class nanomaxScan_stepscan_april2017(Scan):
                             data_ = np.array(dataset[0])
                         if self.xrdBinning > 1:
                             data_ = fastBinPixels(data_, self.xrdBinning)
+                        if self.xrdNormalize:
+                            data_ = np.array(data_, dtype=float) / np.sum(self.xrdNormalize)
                         data.append(data_)
                 except IOError:
                     # missing files -- this is ok
