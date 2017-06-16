@@ -125,11 +125,17 @@ class nanomaxScan_flyscan_april2017(Scan):
             print "selecting fluorescence channel %d"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
             # check which detector was used
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr, 0))):
+            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr, 0))):
+                filepattern = 'scan_%04d_merlin_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Merlin/data'
+                print "This is a Merlin scan"
+            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr, 0))):
                 filepattern = 'scan_%04d_pil100k_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "This is a Pilatus 100k scan"
             elif os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr, 0))):
                 filepattern = 'scan_%04d_pil1m_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "This is a Pilatus 1M scan"
             else:
                 print "No 1M or 100k data found."
@@ -141,7 +147,7 @@ class nanomaxScan_flyscan_april2017(Scan):
                 try:
                     with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, line)
-                        dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                        dataset = hf.get(hdfDataPath)
                         if isinstance(self.xrdCropping, list):
                             i0, i1, j0, j1 = self.xrdCropping
                             data_ = np.array(dataset[:, i0 : i1, j0 : j1])
@@ -159,6 +165,9 @@ class nanomaxScan_flyscan_april2017(Scan):
                             for i in range(data_.shape[0]):
                                 norm = float(np.sum(np.array(dataset[i, i0 : i1, j0 : j1])))
                                 data_[i] /= norm
+                        if 'Merlin' in hdfDataPath:
+                            for i in range(data_.shape[0]):
+                                data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
                         data.append(data_)
                         del dataset
                 except IOError:
