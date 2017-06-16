@@ -284,11 +284,17 @@ class nanomaxScan_stepscan_april2017(Scan):
             print "loading diffraction data..."
             path = os.path.split(os.path.abspath(self.fileName))[0]
             # check which detector was used
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
+            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr,0))):
+                filepattern = 'scan_%04d_merlin_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Merlin/data'
+                print "This is a Merlin scan"                
+            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
                 filepattern = 'scan_%04d_pil100k_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "This is a Pilatus 100k scan"
             elif os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
                 filepattern = 'scan_%04d_pil1m_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "This is a Pilatus 1M scan"
             else:
                 print "No 1M or 100k data found."
@@ -299,7 +305,7 @@ class nanomaxScan_stepscan_april2017(Scan):
                 try:
                     with h5py.File(os.path.join(path, filepattern%(self.scanNr, im)), 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, im)
-                        dataset = hf.get('entry_0000/measurement/Pilatus/data')
+                        dataset = hf.get(hdfDataPath)
                         # for the first file, determine center of mass
                         if len(data) == 0:
                             import scipy.ndimage.measurements
@@ -315,12 +321,14 @@ class nanomaxScan_stepscan_april2017(Scan):
                             data_ = fastBinPixels(data_, self.xrdBinning)
                         if self.xrdNormalize:
                             data_ = np.array(data_, dtype=float) / np.sum(self.xrdNormalize)
+                        if 'Merlin' in hdfDataPath: 
+                            data_ = np.flipud(data_) # Merlin images indexed from the bottom left...
                         data.append(data_)
                 except IOError:
                     # missing files -- this is ok
                     print "couldn't find expected file %s, returning"%(filepattern%(self.scanNr, im))
                     break
-            print "loaded %d Pilatus images"%len(data)
+            print "loaded %d images"%len(data)
             data = np.array(data)
 
         elif self.dataType == 'xrf':
