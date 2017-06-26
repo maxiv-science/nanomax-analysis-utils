@@ -162,6 +162,9 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
                 self.scan.addData(scannr=scannr, filename=filename, dataType='xrd', name='xrd', **opts)
                 print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
                 has_xrd = True
+            except MemoryError:
+                print "Out of memory! Consider cropping or binning your images"
+                has_xrd = False
             except:
                 print "no xrd data found"
                 has_xrd = False
