@@ -138,7 +138,7 @@ class nanomaxScan_flyscan_april2017(Scan):
                 hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "This is a Pilatus 1M scan"
             else:
-                print "No 1M or 100k data found."
+                print "No 1M, 100k or merlin data found."
                 return
 
             data = []
@@ -242,6 +242,11 @@ class nanomaxScan_stepscan_april2017(Scan):
             'type': bool,
             'doc': 'normalize XRD images by total intensity',
             },
+        'detectorPreference': {
+            'value': 'none',
+            'type': str,
+            'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -261,6 +266,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.xrdCropping = int(opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
         self.xrdNormalize = bool(opts['xrdNormalize']['value'])
+        self.detPreference = opts['detectorPreference']['value']
 
     def _readPositions(self):
         """ 
@@ -292,21 +298,41 @@ class nanomaxScan_stepscan_april2017(Scan):
         if self.dataType == 'xrd':
             print "loading diffraction data..."
             path = os.path.split(os.path.abspath(self.fileName))[0]
-            # check which detector was used
+
+            # check which detector data are available:
+            avail_dets = []
             if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('merlin')
+                print "Merlin data available"                
+            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('pil100k')
+                print "100k data available"
+            if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('pil1m')
+                print "1M data available"
+            if len(avail_dets) == 0:
+                print "No XRD data available"
+                return
+
+            # check which detector was used
+            if self.detPreference in avail_dets:
+                chosen_det = self.detPreference
+            else: 
+                chosen_det = avail_dets[0]
+            if chosen_det == 'merlin':
                 filepattern = 'scan_%04d_merlin_%04d.hdf5'
                 hdfDataPath = 'entry_0000/measurement/Merlin/data'
-                print "This is a Merlin scan"                
-            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
+                print "Using Merlin XRD data"
+            elif chosen_det == 'pil100k':
                 filepattern = 'scan_%04d_pil100k_%04d.hdf5'
                 hdfDataPath = 'entry_0000/measurement/Pilatus/data'
-                print "This is a Pilatus 100k scan"
-            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
+                print "Using Pilatus 100k data"
+            elif chosen_det == 'pil1m':
                 filepattern = 'scan_%04d_pil1m_%04d.hdf5'
                 hdfDataPath = 'entry_0000/measurement/Pilatus/data'
-                print "This is a Pilatus 1M scan"
+                print "Using Pilatus 1M data"
             else:
-                print "No 1M or 100k data found."
+                print "Something went really wrong in detector choice"
                 return
 
             data = []
