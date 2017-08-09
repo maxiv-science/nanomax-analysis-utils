@@ -20,7 +20,6 @@ try:
 except:
     raise Exception('This application requires silx >= 0.4.0')
 
-import PyQt4
 from silx.gui import qt
 from silx.gui.icons import getQIcon
 import sys
@@ -40,7 +39,7 @@ import time
 # 2) create an UI object from qt-designer and own it as self.ui
 # 3) run its setupUi method and pass the containing widget (self)
 #
-class ScanViewer(PyQt4.QtGui.QMainWindow):
+class ScanViewer(qt.QMainWindow):
 
     def __init__(self, filename=None):
 
@@ -68,7 +67,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
 
         # connect browse button
         def wrap():
-            self.ui.filenameBox.setText(PyQt4.QtGui.QFileDialog.getOpenFileName())
+            self.ui.filenameBox.setText(qt.QFileDialog.getOpenFileName())
         self.ui.browseButton.clicked.connect(wrap)
 
         # populate the options tab
@@ -84,9 +83,9 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
         # should return a dict of kwargs based on the options fields
         opts = {}
         for name, w in self.formWidgets.iteritems():
-            if isinstance(w, PyQt4.QtGui.QCheckBox):
+            if isinstance(w, qt.QCheckBox):
                 val = bool(w.isChecked())
-            elif isinstance(w, PyQt4.QtGui.QLineEdit):
+            elif isinstance(w, qt.QLineEdit):
                 val = str(w.text())
             else:
                 val = w.value()
@@ -111,20 +110,20 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
             # special: dataType should not have a field
             if name == 'dataType':
                 continue
-            grid.addWidget(PyQt4.QtGui.QLabel(name), i, 0)
-            grid.addWidget(PyQt4.QtGui.QLabel(opt['doc']), i, 2)
+            grid.addWidget(qt.QLabel(name), i, 0)
+            grid.addWidget(qt.QLabel(opt['doc']), i, 2)
             if opt['type'] == int:
-                w = PyQt4.QtGui.QSpinBox()
+                w = qt.QSpinBox()
                 w.setMaximum(9999)
                 w.setValue(opt['value'])
             elif opt['type'] == float:
-                w = PyQt4.QtGui.QDoubleSpinBox()
+                w = qt.QDoubleSpinBox()
                 w.setValue(opt['value'])
             elif opt['type'] == bool:
-                w = PyQt4.QtGui.QCheckBox()
+                w = qt.QCheckBox()
                 w.setChecked(opt['value'])
             else:
-                w = PyQt4.QtGui.QLineEdit()
+                w = qt.QLineEdit()
                 w.setText(opt['value'])
             grid.addWidget(w, i, 1)
             # save a dict of the options widgets, to parse when loading
@@ -193,7 +192,7 @@ class ScanViewer(PyQt4.QtGui.QMainWindow):
 
 if __name__ == '__main__':
     # you always need a qt app
-    app = PyQt4.QtGui.QApplication(sys.argv)
+    app = qt.QApplication(sys.argv)
     # for convenience, you can pass the filename as an argument
     fn = None
     if len(sys.argv) >= 2:

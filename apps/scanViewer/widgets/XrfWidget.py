@@ -1,7 +1,7 @@
 from silx.gui.plot import PlotWindow, Plot1D
 from silx.gui.plot.Profile import ProfileToolBar
-import PyQt4
 from silx.gui.icons import getQIcon
+from silx.gui import qt
 import numpy as np
 
 from XrdWidget import MapWidget
@@ -27,7 +27,7 @@ class SpectrumWidget(PlotWindow):
         self.setGraphTitle('Fluorescence emission')
         self.setYAxisLogarithmic(True)
 
-class XrfWidget(PyQt4.QtGui.QWidget):
+class XrfWidget(qt.QWidget):
     def __init__(self, parent=None):
         
         super(XrfWidget, self).__init__()

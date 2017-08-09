@@ -1,6 +1,6 @@
 from silx.gui.plot import PlotWindow
 from silx.gui.plot.Profile import ProfileToolBar
-import PyQt4
+from silx.gui import qt
 import scipy.ndimage.measurements
 import numpy as np
 
@@ -35,27 +35,27 @@ class MapWidget(PlotWindow):
 
         # add an interpolation toolbar
         self.interpolToolbar = self.addToolBar('Interpolation & COM')
-        self.interpolBox = PyQt4.QtGui.QSpinBox(
+        self.interpolBox = qt.QSpinBox(
             toolTip='Map oversampling relative to average step size')
         self.interpolBox.setRange(1, 50)
         self.interpolBox.setValue(5)
-        self.interpolMenu = PyQt4.QtGui.QComboBox(
+        self.interpolMenu = qt.QComboBox(
             toolTip='Type of interpolation between scan positions')
         self.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
         self.interpolToolbar.addWidget(self.interpolMenu)
-        self.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' N:'))
+        self.interpolToolbar.addWidget(qt.QLabel(' N:'))
         self.interpolToolbar.addWidget(self.interpolBox)
 
         # add a menu for COM type
         self.interpolToolbar.addSeparator()
-        self.comDirectionBox = PyQt4.QtGui.QComboBox(
+        self.comDirectionBox = qt.QComboBox(
             toolTip='Type of COM deviation calculated')
         self.comDirectionBox.insertItems(1, ['horizontal', 'vertical', 'magnitude'])
-        self.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' COM:'))
+        self.interpolToolbar.addWidget(qt.QLabel(' COM:'))
         self.interpolToolbar.addWidget(self.comDirectionBox)
 
         # add a button to toggle positions
-        self.positionsAction = PyQt4.QtGui.QAction('positions', self, checkable=True)
+        self.positionsAction = qt.QAction('positions', self, checkable=True)
         self.toolBar().addAction(self.positionsAction)
 
         # add a profile tool
@@ -132,7 +132,7 @@ class ImageWidget(PlotWindow):
                     return data[row, col]
         return '-'
 
-class ComWidget(PyQt4.QtGui.QWidget):
+class ComWidget(qt.QWidget):
     def __init__(self, parent=None):
 
         super(ComWidget, self).__init__()

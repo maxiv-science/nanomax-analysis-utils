@@ -1,7 +1,7 @@
 from silx.gui.plot import PlotWindow
 from silx.gui.plot.Profile import ProfileToolBar
-import PyQt4
 from silx.gui.icons import getQIcon
+from silx.gui import qt
 import numpy as np
 
 class MapWidget(PlotWindow):
@@ -35,15 +35,15 @@ class MapWidget(PlotWindow):
 
         # add an interpolation toolbar
         self.interpolToolbar = self.addToolBar('Interpolation')
-        self.interpolBox = PyQt4.QtGui.QSpinBox(
+        self.interpolBox = qt.QSpinBox(
             toolTip='Map oversampling relative to average step size')
         self.interpolBox.setRange(1, 50)
         self.interpolBox.setValue(5)
-        self.interpolMenu = PyQt4.QtGui.QComboBox(
+        self.interpolMenu = qt.QComboBox(
             toolTip='Type of interpolation between scan positions')
         self.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
         self.interpolToolbar.addWidget(self.interpolMenu)
-        self.interpolToolbar.addWidget(PyQt4.QtGui.QLabel(' N:'))
+        self.interpolToolbar.addWidget(qt.QLabel(' N:'))
         self.interpolToolbar.addWidget(self.interpolBox)
 
         # customize the mask tools for use as ROI selectors
@@ -53,13 +53,13 @@ class MapWidget(PlotWindow):
         self.getMaskAction().setIcon(getQIcon('image-select-box'))
 
         # add an index clicker
-        self.indexBox = PyQt4.QtGui.QSpinBox(
+        self.indexBox = qt.QSpinBox(
             toolTip='Select a specific position by index')
         self.indexBox.setMinimum(0)
         self.toolBar().addWidget(self.indexBox)
 
         # add a button to toggle positions
-        self.positionsAction = PyQt4.QtGui.QAction('positions', self, checkable=True)
+        self.positionsAction = qt.QAction('positions', self, checkable=True)
         self.toolBar().addAction(self.positionsAction)
 
         # add a profile tool
@@ -140,7 +140,7 @@ class ImageWidget(PlotWindow):
         return '-'
 
 
-class XrdWidget(PyQt4.QtGui.QWidget):
+class XrdWidget(qt.QWidget):
     # This widget defines a MapWidget and and ImageWidget and describes
     # how they are related by data operations.
     def __init__(self, parent=None):
