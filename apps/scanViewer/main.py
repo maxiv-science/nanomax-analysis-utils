@@ -12,10 +12,13 @@ try:
 except ImportError:
     print "hdf5plugin not found - won't be able to read compressed Eiger files"
 
-# temporarily suppress deprecation warnings from silx
-import logging
-deprecation_logger = logging.getLogger("DEPRECATION")
-deprecation_logger.setLevel(logging.ERROR)
+# make sure silx is not too old (API features have appeared)
+from distutils.version import LooseVersion
+try:
+    import silx
+    assert LooseVersion(silx.version) >= LooseVersion('0.4.0')
+except:
+    raise Exception('This application requires silx >= 0.4.0')
 
 import PyQt4
 from silx.gui import qt

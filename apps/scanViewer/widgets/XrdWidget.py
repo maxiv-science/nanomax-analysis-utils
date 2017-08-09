@@ -1,8 +1,5 @@
 from silx.gui.plot import PlotWindow
-try:
-    from silx.gui.plot.Profile import ProfileToolBar
-except ImportError:
-    from silx.gui.plot.PlotTools import ProfileToolBar
+from silx.gui.plot.Profile import ProfileToolBar
 import PyQt4
 from silx.gui.icons import getQIcon
 import numpy as np
@@ -51,9 +48,9 @@ class MapWidget(PlotWindow):
 
         # customize the mask tools for use as ROI selectors
         # unfortunately, tooltip and icon reset each other, so only changing the icon.
-        self.maskToolsDockWidget.setWindowTitle('scan map ROI')
-        self.maskAction.setToolTip('Select a scan map region of interest')
-        self.maskAction.setIcon(getQIcon('image-select-box'))
+        self.getMaskToolsDockWidget().setWindowTitle('scan map ROI')
+        self.getMaskAction().setToolTip('Select a scan map region of interest')
+        self.getMaskAction().setIcon(getQIcon('image-select-box'))
 
         # add an index clicker
         self.indexBox = PyQt4.QtGui.QSpinBox(
@@ -118,9 +115,9 @@ class ImageWidget(PlotWindow):
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
-        self.maskToolsDockWidget.setWindowTitle('diffraction ROI')
-        self.maskAction.setToolTip('Select a diffraction region of interest')
-        self.maskAction.setIcon(getQIcon('image-select-box'))
+        self.getMaskToolsDockWidget().setWindowTitle('diffraction ROI')
+        self.getMaskAction().setToolTip('Select a diffraction region of interest')
+        self.getMaskAction().setIcon(getQIcon('image-select-box'))
 
     def _getActiveImageValue(self, x, y):
         """Get value of active image at position (x, y)
@@ -168,8 +165,8 @@ class XrdWidget(PyQt4.QtGui.QWidget):
         self.map.positionsAction.triggered.connect(self.togglePositions)
 
         # connect the mask widget to the update
-        self.image.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateMap)
-        self.map.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateImage)
+        self.image.getMaskToolsDockWidget().widget()._mask.sigChanged.connect(self.updateMap)
+        self.map.getMaskToolsDockWidget().widget()._mask.sigChanged.connect(self.updateImage)
 
         # keep track of map selections by ROI or by index
         self.selectionMode = 'roi' # 'roi' or 'ind'
@@ -200,12 +197,12 @@ class XrdWidget(PyQt4.QtGui.QWidget):
             self.window().statusOutput('Building XRD map...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
-            self.map.maskToolsDockWidget.setVisible(False)
+            self.map.getMaskToolsDockWidget().setVisible(False)
             # store the limits to maintain zoom
             xlims = self.map.getGraphXLimits()
             ylims = self.map.getGraphYLimits()
             # get and check the mask array
-            mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
+            mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
             # if the mask is cleared, reset without wasting time
             if mask.sum() == 0:
                 print 'building XRD map by averaging all pixels'
@@ -232,14 +229,14 @@ class XrdWidget(PyQt4.QtGui.QWidget):
             self.window().statusOutput('Building diffraction pattern...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
-            self.image.maskToolsDockWidget.setVisible(False)
+            self.image.getMaskToolsDockWidget().setVisible(False)
             # get and check the mask array
             if self.selectionMode == 'ind':
                 index = self.map.indexBox.value()
                 data = self.scan.data['xrd'][index]
             elif self.selectionMode == 'roi':
                 self.indexMarkerOn(False)
-                mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
+                mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if mask.sum() == 0:
                     # the mask is empty, don't waste time with positions
                     print 'building diffraction pattern from all positions'
@@ -291,5 +288,5 @@ class XrdWidget(PyQt4.QtGui.QWidget):
         self.selectionMode = 'ind'
         self.indexMarkerOn(True)
         # clearing the mask also invokes self.updateImage():
-        self.map.maskToolsDockWidget.widget().resetSelectionMask()
+        self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
         self.selectionMode = 'roi'

@@ -1,8 +1,5 @@
 from silx.gui.plot import PlotWindow
-try:
-    from silx.gui.plot.Profile import ProfileToolBar
-except ImportError:
-    from silx.gui.plot.PlotTools import ProfileToolBar
+from silx.gui.plot.Profile import ProfileToolBar
 import PyQt4
 import scipy.ndimage.measurements
 import numpy as np
@@ -157,7 +154,7 @@ class ComWidget(PyQt4.QtGui.QWidget):
         self.map.positionsAction.triggered.connect(self.togglePositions)
 
         # connect the mask widget to the update
-        self.image.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateMap)
+        self.image.getMaskToolsDockWidget().widget()._mask.sigChanged.connect(self.updateMap)
 
     def setScan(self, scan):
         self.scan = scan
@@ -191,7 +188,7 @@ class ComWidget(PyQt4.QtGui.QWidget):
             ylims = self.map.getGraphYLimits()
             # calculate COM
             com = []
-            mask = self.image.maskToolsDockWidget.widget().getSelectionMask()
+            mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
             if np.prod(mask.shape) == 0:
                 mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
             for im in self.scan.data['xrd']:

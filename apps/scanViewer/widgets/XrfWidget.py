@@ -1,8 +1,5 @@
 from silx.gui.plot import PlotWindow, Plot1D
-try:
-    from silx.gui.plot.Profile import ProfileToolBar
-except ImportError:
-    from silx.gui.plot.PlotTools import ProfileToolBar
+from silx.gui.plot.Profile import ProfileToolBar
 import PyQt4
 from silx.gui.icons import getQIcon
 import numpy as np
@@ -53,8 +50,8 @@ class XrfWidget(PyQt4.QtGui.QWidget):
         self.map.indexBox.valueChanged.connect(self.selectByIndex)
 
         # connect the mask widget to the update
-        self.map.maskToolsDockWidget.widget()._mask.sigChanged.connect(self.updateSpectrum)
-        self.spectrum.curvesROIDockWidget.sigROISignal.connect(self.updateMap)
+        self.map.getMaskToolsDockWidget().widget()._mask.sigChanged.connect(self.updateSpectrum)
+        self.spectrum.getCurvesRoiDockWidget().sigROISignal.connect(self.updateMap)
 
         # keep track of map selections by ROI or by index
         self.selectionMode = 'roi' # 'roi' or 'ind'
@@ -85,17 +82,17 @@ class XrfWidget(PyQt4.QtGui.QWidget):
             self.window().statusOutput('Building XRF map...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
-            self.map.maskToolsDockWidget.setVisible(False)
+            self.map.getMaskToolsDockWidget().setVisible(False)
             # store the limits to maintain zoom
             xlims = self.map.getGraphXLimits()
             ylims = self.map.getGraphYLimits()
             # get ROI information
             try:
-                roiName = self.spectrum.curvesROIDockWidget.currentROI
+                roiName = self.spectrum.getCurvesRoiDockWidget().currentROI
                 # this doesn't update properly:
-                # roiDict = self.spectrum.curvesROIDockWidget.roidict
+                # roiDict = self.spectrum.getCurvesRoiDockWidget().roidict
                 # ... but this does:
-                roiList, roiDict = self.spectrum.curvesROIDockWidget.widget().getROIListAndDict()
+                roiList, roiDict = self.spectrum.getCurvesRoiDockWidget().widget().getROIListAndDict()
                 lower = int(np.floor(roiDict[roiName]['from']))
                 upper = int(np.ceil(roiDict[roiName]['to']))
                 print "building fluorescence map from channels %d to %d"%(lower, upper)
@@ -125,7 +122,7 @@ class XrfWidget(PyQt4.QtGui.QWidget):
                 data = self.scan.data['xrf'][index]
             elif self.selectionMode == 'roi':
                 self.indexMarkerOn(False)
-                mask = self.map.maskToolsDockWidget.widget().getSelectionMask()
+                mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if mask.sum() == 0:
                     # the mask is empty, don't waste time with positions
                     print 'building fluorescence spectrum from all positions'
@@ -180,5 +177,5 @@ class XrfWidget(PyQt4.QtGui.QWidget):
         self.selectionMode = 'ind'
         self.indexMarkerOn(True)
         # clearing the mask also invokes self.updateSpectrum():
-        self.map.maskToolsDockWidget.widget().resetSelectionMask()
+        self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
         self.selectionMode = 'roi'
