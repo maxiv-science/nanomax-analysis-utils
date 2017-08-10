@@ -46,6 +46,11 @@ class nanomaxScan_flyscan_april2017(Scan):
             'type': int,
             'doc': 'load at most N lines - 0 means load all',
             },
+        'detectorPreference': {
+            'value': 'none',
+            'type': str,
+            'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -71,6 +76,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         else:
             self.xrdNormalize = False
         self.nMaxLines = int(opts['nMaxLines']['value'])
+        self.detPreference = opts['detectorPreference']['value']
 
     def _readPositions(self):
         """ 
@@ -122,25 +128,44 @@ class nanomaxScan_flyscan_april2017(Scan):
 
         if self.dataType == 'xrd':
             print "loading diffraction data..."
-            print "selecting fluorescence channel %d"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
-            # check which detector was used
-            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr, 0))):
-                filepattern = 'scan_%04d_merlin_%04d.hdf5'
-                hdfDataPath = 'entry_0000/measurement/Merlin/data'
-                print "This is a Merlin scan"
-            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr, 0))):
-                filepattern = 'scan_%04d_pil100k_%04d.hdf5'
-                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
-                print "This is a Pilatus 100k scan"
-            elif os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr, 0))):
-                filepattern = 'scan_%04d_pil1m_%04d.hdf5'
-                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
-                print "This is a Pilatus 1M scan"
-            else:
-                print "No 1M, 100k or merlin data found."
+
+            # check which detector data are available:
+            avail_dets = []
+            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('merlin')
+                print "Merlin data available"                
+            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('pil100k')
+                print "100k data available"
+            if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
+                avail_dets.append('pil1m')
+                print "1M data available"
+            if len(avail_dets) == 0:
+                print "No XRD data available"
                 return
 
+            # check which detector was used
+            if self.detPreference in avail_dets:
+                chosen_det = self.detPreference
+            else: 
+                chosen_det = avail_dets[0]
+            if chosen_det == 'merlin':
+                filepattern = 'scan_%04d_merlin_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Merlin/data'
+                print "Using Merlin XRD data"
+            elif chosen_det == 'pil100k':
+                filepattern = 'scan_%04d_pil100k_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
+                print "Using Pilatus 100k data"
+            elif chosen_det == 'pil1m':
+                filepattern = 'scan_%04d_pil1m_%04d.hdf5'
+                hdfDataPath = 'entry_0000/measurement/Pilatus/data'
+                print "Using Pilatus 1M data"
+            else:
+                print "Something went really wrong in detector choice"
+                return
+                
             data = []
             print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
             for line in range(self.nlines):
@@ -180,6 +205,7 @@ class nanomaxScan_flyscan_april2017(Scan):
 
         elif self.dataType == 'xrf':
             print "loading flurescence data..."
+            print "selecting fluorescence channel %d"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filepattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filepattern%(self.scanNr)
