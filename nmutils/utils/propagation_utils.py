@@ -7,11 +7,6 @@ try:
 except:
     pass
 
-try:
-    import ptypy
-except:
-    pass
-
 # at this point, with a 300x300 image, FFTW is about twice as fast as numpy. Threading doesn't help at this point. 
 # FFTW can be improved using the pyfftw.FFTW class or the pyfftw.builders functions.
 def fft(a):
@@ -36,7 +31,9 @@ def propagateNearfield(A, psize, distances, energy):
 
     The underlying code is ptypy's Geo class, which is essentially
     wrapped here.
-    """     
+    """
+
+    import ptypy
 
     # check for square matrix
     try:

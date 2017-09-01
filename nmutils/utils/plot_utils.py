@@ -1,13 +1,10 @@
 """ This file contains isolated helper functions and constants related to plotting. """
 
 from matplotlib.colors import LinearSegmentedColormap
-try:
-    import ptypy
-except:
-    pass
 
 def complex2image(z):
     """ Wraps a ptypy util """
+    import ptypy
     rgb = ptypy.utils.complex2rgb(z)
     return rgb / rgb.max()
 
