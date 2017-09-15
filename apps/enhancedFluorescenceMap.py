@@ -16,7 +16,8 @@ myscan.addData(
 image, info = nmutils.utils.fmre.enhance(
     myscan, 
     'some_file.ptyr', 
-    lam=.2, )
+    lam=.2,
+    roi='500 1200')
 
 # Plot the image
 plt.imshow(image, interpolation='none')
