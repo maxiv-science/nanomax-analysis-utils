@@ -60,6 +60,7 @@ def landweber(self):
     lambd=self.reg_param/(sigma1*sigma1)
     self.residuals=[]
     for k in range(0,self.n_iter):
+        print("Iteration %d" % k)
         #Compute residual vector and check its norm
         r=p.forwardfluo(self).b-self.fluomap
         self.residuals=np.append(self.residuals,0.5*np.dot(r,r))
@@ -99,6 +100,7 @@ def CGM(self):
         fig=plt.figure(figsize=(17,5))
     #------------------------------------------------------------------------#
     for k in range(0,self.n_iter-1):
+        print("Iteration %d" % k)
         aux.EFM=pp
         App=p.forwardfluo(aux).b
                          
@@ -164,6 +166,7 @@ def SIRT(self):
     #START ITERATION LOOP
     self.residuals=[]
     for k in range(0,self.n_iter):
+        print("Iteration %d" % k)
         #Compute residual vector and check its norm
         r=self.fluomap-p.forwardfluo(self).b
         self.residuals=np.append(self.residuals,0.5*np.dot(r,r))
