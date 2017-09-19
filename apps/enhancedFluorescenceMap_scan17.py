@@ -16,6 +16,17 @@ myscan.addData(
 # CALL ENHANCEMENT ENGINES
 # HERE I call all the different types
 
+#### SIRT ####
+EFM_SIRT,residuals_SIRT,info_SIRT = nmutils.utils.fmre.enhance(
+    myscan, 
+    'C:/nanomax_deconv/scan17_DM_DM.ptyr', 
+    roi='1 1300',
+    method='SIRT',
+    non_neg=True,
+    iterations=20,
+    interp_method='None'#'nearest'
+    )
+
 #### TOTAL VARIATION ####
 EFM_TV,residuals_TV,info_TV = nmutils.utils.fmre.enhance(
     myscan, 
@@ -65,6 +76,8 @@ EFM_CGLS,residuals_CGLS,info_CGLS = nmutils.utils.fmre.enhance(
     interp_method='nearest',#'None'#'nearest'
     slowdown=2.5
     )
+
+
 
 fig1=plt.figure()
 asize=64

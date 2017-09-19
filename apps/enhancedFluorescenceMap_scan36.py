@@ -9,61 +9,73 @@ myscan = nmutils.core.nanomaxScan_stepscan_april2017()
 # Add data to the scan
 myscan.addData(
     dataType='xrf', 
-    filename="C:/nanomax_deconv/testing.h5", 
-    scannr=17,
+    filename="C:/nanomax_deconv/xspress3_tests.h5", 
+    scannr=36,
 )
 
 # CALL ENHANCEMENT ENGINES
 # HERE I call all the different types
 
+
+#### SIRT ####
+EFM_SIRT,residuals_SIRT,info_SIRT = nmutils.utils.fmre.enhance(
+    myscan, 
+    'C:/nanomax_deconv/scan36_ePIE_EPIE_0110.ptyr', 
+    roi='1 1300',
+    method='SIRT',
+    non_neg=True,
+    iterations=20,
+    interp_method='None'#'nearest'
+    )
+
 #### TOTAL VARIATION ####
 EFM_TV,residuals_TV,info_TV = nmutils.utils.fmre.enhance(
     myscan, 
-    'C:/nanomax_deconv/scan17_DM_DM.ptyr', 
+    'C:/nanomax_deconv/scan36_ePIE_EPIE_0110.ptyr', 
     lam=2e-6,
     roi='1 1300',
     method='TV',
-    non_neg=True,
-    iterations=50,
-    interp_method='nearest',#'None'#'nearest'
+    non_neg=False,
+    iterations=30,
+    interp_method='linear',#'None'#'nearest'
     slowdown=2.
     )
 
 #### LANDWEBER ####
 EFM_Landweber,residuals_Landweber,info_Landweber = nmutils.utils.fmre.enhance(
     myscan, 
-    'C:/nanomax_deconv/scan17_DM_DM.ptyr', 
-    lam=.5,
+    'C:/nanomax_deconv/scan36_ePIE_EPIE_0110.ptyr', 
+    lam=.9,
     roi='1 1300',
     method='Landweber',
     non_neg=True,
     iterations=20,
-    interp_method='nearest'
+    interp_method='linear'
     )
 
 #### TIKHONOV ####
 EFM_Tik,residuals_Tik,info_Tik = nmutils.utils.fmre.enhance(
     myscan, 
-    'C:/nanomax_deconv/scan17_DM_DM.ptyr', 
-    lam=.0002,
+    'C:/nanomax_deconv/scan36_ePIE_EPIE_0110.ptyr', 
+    lam=1e-5,
     roi='1 1300',
     method='Tikhonov',
-    non_neg=True,
+    non_neg=False,
     iterations=50,
-    interp_method='nearest',#'None'#'nearest'
-    slowdown=2.5
+    interp_method='linear',#'None'#'nearest'
+    slowdown=2.
     )
 
 #### CGLS ####
 EFM_CGLS,residuals_CGLS,info_CGLS = nmutils.utils.fmre.enhance(
     myscan, 
-    'C:/nanomax_deconv/scan17_DM_DM.ptyr', 
+    'C:/nanomax_deconv/scan36_ePIE_EPIE_0110.ptyr', 
     roi='1 1300',
     method='CGLS',
-    non_neg=True,
-    iterations=50,
-    interp_method='nearest',#'None'#'nearest'
-    slowdown=2.5
+    non_neg=False,
+    iterations=20,
+    interp_method='linear',#'None'#'nearest'
+    slowdown=2.
     )
 
 fig1=plt.figure()
@@ -80,6 +92,6 @@ ax4.imshow(EFM_CGLS[asize:-asize,asize:-asize])
 fig2=plt.figure()
 ax1=fig2.add_subplot(211)
 ax2=fig2.add_subplot(212)
-ax1.imshow(np.flipud(np.angle(info_Landweber['Pty_obj'][asize:-asize,asize:-asize])))#FLIP PTYPY ARRAY
+ax1.imshow((np.angle(info_Landweber['Pty_obj'][asize:-asize,asize:-asize])))#FLIP PTYPY ARRAY
 ax2.imshow(info_Landweber['interpolated_map'])
 
