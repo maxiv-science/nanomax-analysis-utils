@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import convolve2d
 
 def landweber(self):
+    print('Entering Landweber optimization')
     if self.initialized==0:
         self=p.initialize(self)
     #CALCULATE LARGEST SINGULAR VALUE - sigma1 - Power method for approximate sigma1
@@ -82,6 +83,7 @@ def landweber(self):
     return self
 
 def CGM(self):
+    print('Entering CGM optimization')
     #Please note that the conjugate gradient method does not solve Ax=b, but A'Ax=A'b
     #Initialize
     if self.initialized==0:
@@ -143,6 +145,7 @@ def regterm(EFM,method):
     return reg
 
 def SIRT(self):
+    print('Entering SIRT optimization')
     #USES THE SIRT ALGORITHM TO SOLVE THE SYSTEM OF EQUATIONS AX=b (minimizes |Ax-b|_R) which is a weighted norm
     #Initialize: Compute Weight matrices C and R (or equivalent operation)
     if self.initialized==0:

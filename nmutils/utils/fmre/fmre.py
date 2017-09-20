@@ -77,7 +77,7 @@ def enhance(scan, ptyr_file, **kwargs):
 
     #CHECK METHODS VALIDITY
     try:
-        assert opts['method']['value'] in opts['method']['alternatives']
+        assert opts['method']['value'].lower() in [s.lower() for s in opts['method']['alternatives']]
     except:
         raise RuntimeError('Invalid method specified! Options are: %s'%str(opts['method']['alternatives']))
     #Check valid interpolation method
@@ -136,9 +136,9 @@ def enhance(scan, ptyr_file, **kwargs):
 
   
     
-    if dat.method=='landweber':
+    if dat.method.lower() == 'landweber':
         solvers.landweber(dat)
-    elif dat.method=='SIRT':
+    elif dat.method.lower() == 'sirt':
         solvers.SIRT(dat)
     else:
         solvers.CGM(dat)
