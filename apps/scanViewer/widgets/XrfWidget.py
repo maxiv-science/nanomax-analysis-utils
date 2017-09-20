@@ -6,6 +6,16 @@ import numpy as np
 
 from XrdWidget import MapWidget
 
+class MapWidget_(MapWidget):
+    """ 
+    Slight modification to the imported MapWidget, we need an FMRE button.
+    """
+    def __init__(self, parent=None):
+        super(MapWidget_, self).__init__(parent=parent)
+        # add a button to toggle positions
+        self.fmreAction = qt.QAction('FMRE', self, checkable=False)
+        self.toolBar().addAction(self.fmreAction)
+
 class SpectrumWidget(PlotWindow):
     """
     Reimplementation of Plot1D, with custom tools.
@@ -31,7 +41,7 @@ class XrfWidget(qt.QWidget):
     def __init__(self, parent=None):
         
         super(XrfWidget, self).__init__()
-        self.map = MapWidget()
+        self.map = MapWidget_()
         self.spectrum = SpectrumWidget()
         parent.layout().addWidget(self.spectrum)
         parent.layout().addWidget(self.map)
@@ -42,6 +52,9 @@ class XrfWidget(qt.QWidget):
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
         self.map.interpolMenu.currentIndexChanged.connect(self.updateMap)
+
+        # connect the FMRE button
+        self.map.fmreAction.triggered.connect(self.launchFMRE)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)
@@ -161,6 +174,20 @@ class XrfWidget(qt.QWidget):
             self.map.addCurve([], [], legend='scan positions')
         self.map.setGraphXLimits(*xlims)
         self.map.setGraphYLimits(*ylims)
+
+    def launchFMRE(self):
+        # get ROI information (copied from above)
+        try:
+            roiName = self.spectrum.getCurvesRoiDockWidget().currentROI
+            roiList, roiDict = self.spectrum.getCurvesRoiDockWidget().widget().getROIListAndDict()
+            lower = int(np.floor(roiDict[roiName]['from']))
+            upper = int(np.ceil(roiDict[roiName]['to']))
+            roi = (lower, upper)
+        except:
+            roi = None
+        from fmre.FmreWindow import FmreWindow
+        f = FmreWindow(self.scan, roi=roi)
+        f.show()
 
     def indexMarkerOn(self, on):
         index = self.map.indexBox.value()

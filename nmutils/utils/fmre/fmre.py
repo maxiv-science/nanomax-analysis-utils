@@ -13,7 +13,7 @@ import nmutils
 # check box, drop down menu, etc.
 DEFAULTS = {
     'roi': {
-        'value': None,
+        'value': '1 1300',
         'doc': 'energy range to average over, in channel units',
         'type': str,
         },
@@ -27,11 +27,14 @@ DEFAULTS = {
         'value': .9,
         'doc': 'Weight coefficient for regularization terms',
         'type': float,
+        'max': 2,
+        'min': 0
         },
     'iterations': {
         'value': 20,
         'doc': 'Number of refinement iterations',
         'type': int,
+        'step': 10
         },
     'non_neg': {
             'value':True,
@@ -58,6 +61,9 @@ DEFAULTS = {
             'value':0.,
             'doc': "Distance (in meters) to propagate probe function",
             'type': float,
+            'max': 2e-3,
+            'min': -2e-3,
+            'step': 100e-6,
             }
 }
 
