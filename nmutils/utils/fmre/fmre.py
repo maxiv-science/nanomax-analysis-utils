@@ -7,6 +7,60 @@ import nmutils
 # Any functions/classes in this file are available globally as
 # nmutils.utils.fmre.something()
 
+# This is a complicated way of doing keyword arguments, but for GUI
+# applications it's handy because the GUI can learn what options to
+# expect, the doc strings for each, and whether to make a text box,
+# check box, drop down menu, etc.
+DEFAULTS = {
+    'roi': {
+        'value': None,
+        'doc': 'energy range to average over, in channel units',
+        'type': str,
+        },
+    'method': {
+        'value': 'Landweber',
+        'doc': 'Optimization algorithm',
+        'type': str,
+        'alternatives': ['CGLS', 'Landweber', 'Tikhonov', 'TV','SIRT'], # list the possibilities here
+        },
+    'lam': {
+        'value': .9,
+        'doc': 'Weight coefficient for regularization terms',
+        'type': float,
+        },
+    'iterations': {
+        'value': 20,
+        'doc': 'Number of refinement iterations',
+        'type': int,
+        },
+    'non_neg': {
+            'value':True,
+            'doc': 'Non-negativity constraint for the EFM',
+            'type': bool,
+        },
+    'slowdown': {
+            'value':2,
+            'doc': 'Factor to decrease step size in Conjugate Gradient Method',
+            'type': float,
+            },
+    'show': {
+            'value':True,
+            'doc': "Turn image at each iteration on/off",
+            'type': bool,
+                    },
+    'interp_method': {
+            'value':'linear',
+            'doc': "Interpolation method for backward operator",
+            'type': str,
+            'alternatives': ['nearest','linear','cubic','None'],
+            },
+    'propagate': {
+            'value':0.,
+            'doc': "Distance (in meters) to propagate probe function",
+            'type': float,
+            }
+}
+
 def enhance(scan, ptyr_file, **kwargs):
     """
     Wrapper function which enhances a fluorescence map from a Scan
@@ -16,64 +70,13 @@ def enhance(scan, ptyr_file, **kwargs):
     Returns: An enhanced image, and refinement information.
     """
 
-    # This is a complicated way of doing keyword arguments, but for GUI
-    # applications it's handy because the GUI can learn what options to
-    # expect, the doc strings for each, and whether to make a text box,
-    # check box, drop down menu, etc.
-    default_opts = {
-        'roi': {
-            'value': None,
-            'doc': 'energy range to average over, in channel units',
-            'type': str,
-            },
-        'method': {
-            'value': 'Landweber',
-            'doc': 'Optimization algorithm',
-            'type': str,
-            'alternatives': ['CGLS', 'Landweber', 'Tikhonov', 'TV','SIRT'], # list the possibilities here
-            },
-        'lam': {
-            'value': .9,
-            'doc': 'Weight coefficient for regularization terms',
-            'type': float,
-            },
-        'iterations': {
-            'value': 20,
-            'doc': 'Number of refinement iterations',
-            'type': int,
-            },
-        'non_neg': {
-                'value':True,
-                'doc': 'Non-negativity constraint for the EFM',
-                'type': bool,
-            },
-        'slowdown': {
-                'value':2,
-                'doc': 'Factor to decrease step size in Conjugate Gradient Method',
-                'type': float,
-                },
-        'show': {
-                'value':True,
-                'doc': "Turn image at each iteration on/off",
-                'type': bool,
-                        },
-        'interp_method': {
-                'value':'linear',
-                'doc': "Interpolation method for backward operator",
-                'type': str,
-                'alternatives': ['nearest','linear','cubic','None'],
-                },
-        'propagate': {
-                'value':0.,
-                'doc': "Distance (in meters) to propagate probe function",
-                'type': float,
-                }
-    }
-
     # COPY DEFAULT AND UPDATE WITH PASSED OPTIONS
-    opts = default_opts.copy()
+    opts = DEFAULTS.copy()
     opts = scan._updateOpts(opts, **kwargs) # the Scan class happens to have a handy helper function
-
+    print("\n****** enhancing with these options: ******")
+    for key, val in opts.iteritems():
+        print key, val['value']
+    print("*******************************************\n")
 
     #CHECK METHODS VALIDITY
     try:
