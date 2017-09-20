@@ -64,7 +64,7 @@ def landweber(self):
         #Compute residual vector and check its norm
         r=p.forwardfluo(self).b-self.fluomap
         self.residuals=np.append(self.residuals,0.5*np.dot(r,r))
-        if k<0 and self.residuals[k]>self.residuals[k-1]:
+        if k>0 and self.residuals[k]>self.residuals[k-1]:
             print('The residual became higher at this iteration. Stopping at current iteration :',k)
             self.EFM=self.EFM_previous
             break
@@ -170,7 +170,7 @@ def SIRT(self):
         #Compute residual vector and check its norm
         r=self.fluomap-p.forwardfluo(self).b
         self.residuals=np.append(self.residuals,0.5*np.dot(r,r))
-        if k<0 and self.residuals[k]>self.residuals[k-1]:
+        if k>0 and self.residuals[k]>self.residuals[k-1]:
             print('The residual became higher at this iteration. Stopping at current iteration :',k)
             self.EFM=self.EFM_previous
             break
