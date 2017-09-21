@@ -1,30 +1,60 @@
+"""
+A live viewer app which grabs 2D images from Lima and plots these in a silx widget.
+"""
+
+# to do:
+#   aspect ratio and log scale from start
+#   another class for spectra with a switch in main
+#   lima path as window title
+#   some way to avoid reading the same image more than once?
+
 import PyTango
 import time
-import matplotlib.pyplot as plt
+import sys
 import numpy as np
-plt.ion()
+from silx.gui.plot import ImageView
+from silx.gui import qt
 
-# set up the lima proxy
-limaPath = 'lima/limaccd/b-nanomax-mobile-ipc-01'
-lima = PyTango.DeviceProxy(limaPath)
 
-# learn about the shape and bit depth of the image
-ignore, bytes, w, h = lima.image_sizes
-dtype = {1: np.int8, 2: np.int16, 4:np.int32}[bytes]
+class LimaLiveViewer(ImageView):
 
-# get images and plot them
-while True:
-    last = lima.last_image_ready
-    if last > -1:
-        print "trying to grab image %d" % last
-        try:
-            image = np.frombuffer(lima.getImage(last), dtype=dtype)
-            image = image.reshape((h, w))
-            print "   got it! min=%d, max=%d"%(image.min(), image.max())
-            plt.imshow(image, vmin=0, vmax=3, interpolation='none')
-            plt.draw()
-        except:
-            print "   something went wrong in this iteration, continuing"
-    plt.pause(.1)
+    def __init__(self, limaPath, interval=.1):
+        # initialize the lima proxy
+        self.lima = PyTango.DeviceProxy(limaPath)
 
+        # learn about the shape and bit depth of the image
+        ignore, bytes, self.w, self.h = self.lima.image_sizes
+        self.dtype = {1: np.int8, 2: np.int16, 4:np.int32}[bytes]
+
+        # run the base class constructor
+        super(LimaLiveViewer, self).__init__()
+
+        # a periodic timer triggers the update
+        self.timer = qt.QTimer(self)
+        self.timer.setInterval(float(interval) * 1000.0)
+        self.timer.timeout.connect(self._update)
+        self.timer.start()
+
+    def _update(self):
+        """
+        gets and plots the last image
+        """
+        last = self.lima.last_image_ready
+        if last > -1:
+            try:
+                image = np.frombuffer(self.lima.getImage(last), dtype=self.dtype)
+                image = image.reshape((self.h, self.w))
+                self.setImage(image, reset=False)
+            except:
+                pass # sometimes you miss frames, no big deal
+
+
+if __name__ == '__main__':     # you always need a qt app     
+    app = qt.QApplication(sys.argv)
+    if len(sys.argv) == 1:
+        print "\nUsage: python limaLiveViewer.py <lima device> [<polling interval>=0.1]\n\n"
+        exit(0)
+    viewer = LimaLiveViewer(*sys.argv[1:])
+    viewer.show()
+    app.exec_()
 
