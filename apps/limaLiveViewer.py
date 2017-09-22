@@ -5,6 +5,8 @@ widget, either as 2d images or as spectra.
 
 # to do:
 #   aspect ratio and log scale from start
+#   limits of histograms are not right, set image limits perhaps
+#   don't reset zoom when updating
 #   some way to avoid reading the same image more than once?
 
 import PyTango
