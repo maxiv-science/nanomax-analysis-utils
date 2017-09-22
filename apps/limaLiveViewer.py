@@ -4,7 +4,6 @@ widget, either as 2d images or as spectra.
 """
 
 # to do:
-#   aspect ratio and log scale from start
 #   limits of histograms are not right, set image limits perhaps
 #   don't reset zoom when updating
 #   some way to avoid reading the same image more than once?
@@ -32,8 +31,10 @@ class LimaLiveViewer2D(ImageView):
         ignore, bytes, self.w, self.h = self.lima.image_sizes
         self.dtype = {1: np.int8, 2: np.int16, 4:np.int32}[bytes]
 
-        # set the window title
+        # set some properties
         self.setWindowTitle(limaPath)
+        self.setKeepDataAspectRatio(True)
+        self.setColormap(normalization='log')
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -74,8 +75,10 @@ class LimaLiveViewer1D(PlotWindow):
         # determine the x axis, in future perhaps a calibrated scale
         self.E = np.arange(self.n)
 
-        # set the window title
+        # set some properties
         self.setWindowTitle(limaPath)
+        self.setKeepDataAspectRatio(True)
+        self.setColormap(normalization='log')
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
