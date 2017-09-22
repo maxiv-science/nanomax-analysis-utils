@@ -35,6 +35,8 @@ class LimaLiveViewer2D(ImageView):
         self.setWindowTitle(limaPath)
         self.setKeepDataAspectRatio(True)
         self.setColormap(normalization='log')
+        self.setYAxisInverted(True)
+        self.hasImage = False
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -51,7 +53,8 @@ class LimaLiveViewer2D(ImageView):
             try:
                 image = np.frombuffer(self.lima.getImage(last), dtype=self.dtype)
                 image = image.reshape((self.h, self.w))
-                self.setImage(image, reset=False)
+                self.setImage(image, copy=False, reset=(not self.hasImage))
+                self.hasImage = True
             except:
                 pass # sometimes you miss frames, no big deal
 
@@ -77,8 +80,7 @@ class LimaLiveViewer1D(PlotWindow):
 
         # set some properties
         self.setWindowTitle(limaPath)
-        self.setKeepDataAspectRatio(True)
-        self.setColormap(normalization='log')
+        self.hasData = False
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -96,7 +98,8 @@ class LimaLiveViewer1D(PlotWindow):
                 data = np.frombuffer(self.lima.getImage(last), dtype=self.dtype)
                 data = data.reshape((self.N, self.n))
                 for i in range(self.N):
-                    self.addCurve(self.E, data[i, :], legend=str(i))
+                    self.addCurve(self.E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
+                    self.hasData = True
             except:
                 pass # sometimes you miss frames, no big deal
 
@@ -109,8 +112,8 @@ if __name__ == '__main__':
     known = {
         'pil100k': 'lima/limaccd/b-nanomax-mobile-ipc-01',
         'pil1m': 'lima/limaccd/b-nanomax-pilatus1m-ipc-01',
-        'merlin': 'lima/limaccd/b-v-nanomax-ec-2',
-        'xspress3': 'lima/limaccd/ec-i811/xspress3-0',
+        'merlin': 'lima/limaccd/test_merlin',
+        'xspress3': 'lima/limaccd/ec-i811-xspress3-0',
     }
     
     # parse arguments
