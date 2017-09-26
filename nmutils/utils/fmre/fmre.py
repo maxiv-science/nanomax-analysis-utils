@@ -98,10 +98,12 @@ def enhance(scan, ptyr_file, **kwargs):
     # IMOPRT PROBE ARRAY AND PIXEL SIZE FROM PTYPY RECONSTRUCTION
     with h5py.File(ptyr_file, 'r') as hf:
         probe = np.array(hf.get('content/probe/S00G00/data'))[0]
-        probe=np.rot90(probe,2) #CONFIRM THIS SHIT _HERE!!!!! LOOKS OK COMPARING EFM WITH PHASE MAP
+        probe=np.rot90(probe,2) 
+        #probe=np.flipud(probe)
         psize = np.array(hf.get('content/probe/S00G00/_psize'))[0]
         obj = np.array(hf.get('content/obj/S00G00/data'))[0]
-        obj=np.rot90(obj,2)
+        #obj=np.rot90(obj,2)
+        obj=flipud(obj)
         energy=np.array(hf.get('content/probe/S00G00/_energy'))
     print "Loaded probe %d x %d"%(probe.shape)
     print "Pixel size = %.1f nm"%(psize*1e9)
