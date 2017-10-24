@@ -87,6 +87,8 @@ class ScanViewer(qt.QMainWindow):
                 val = bool(w.isChecked())
             elif isinstance(w, qt.QLineEdit):
                 val = str(w.text())
+            elif isinstance(w, qt.QComboBox):
+                val = str(w.currentText())
             else:
                 val = w.value()
             opts[name] = val
@@ -122,6 +124,10 @@ class ScanViewer(qt.QMainWindow):
             elif opt['type'] == bool:
                 w = qt.QCheckBox()
                 w.setChecked(opt['value'])
+            elif type(opt['type']) in (list, tuple):
+                w = qt.QComboBox()
+                for item in opt['type']:
+                    w.addItem(item)
             else:
                 w = qt.QLineEdit()
                 w.setText(opt['value'])

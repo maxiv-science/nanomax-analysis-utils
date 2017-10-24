@@ -86,8 +86,12 @@ class Scan(object):
         opts = opts.copy()
         for key, val in kwargs.iteritems():
             if key in opts.keys():
-                if not (type(val) == opts[key]['type']):
+                # normal type specified
+                if type(opts[key]['type']) is type and not (type(val) == opts[key]['type']):
                     raise Exception('Data type for option %s should be %s, not %s'%(str(key), str(opts[key]['type']), str(type(val))))
+                # list or tuple in the type field means multiple choice
+                if type(opts[key]['type']) in (list, tuple) and val not in opts[key]['type']:
+                    raise Exception("Value %s isn't on the menu for option %s (%s)" % (str(val), str(key), str(opts[key]['type'])))
                 opts[key]['value'] = val
             else:
                 raise Exception('Unknown option %s' % str(key))
