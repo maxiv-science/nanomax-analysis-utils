@@ -51,6 +51,11 @@ class nanomaxScan_flyscan_april2017(Scan):
             'type': str,
             'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
             },
+        'nominalYPositions': {
+            'value': False,
+            'type': bool,
+            'doc': 'use nominal rather than sampled y positions',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -77,6 +82,7 @@ class nanomaxScan_flyscan_april2017(Scan):
             self.xrdNormalize = False
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
+        self.nominalYPositions = bool(opts['nominalYPositions']['value'])
 
     def _readPositions(self):
         """ 
@@ -103,8 +109,16 @@ class nanomaxScan_flyscan_april2017(Scan):
             x = xall[:, :Nx].flatten()
 
             # get slow y positions
-            ydataset = hf.get(entry + '/measurement/%s' % self.steppedMotor)
-            yall = np.array(ydataset)
+            if self.nominalYPositions:
+                title = str(hf.get(entry + '/title').value).split(' ')
+                yall = np.linspace(
+                    float(title[2]),
+                    float(title[3]),
+                    int(title[4])+1,
+                    endpoint=True)
+            else:
+                ydataset = hf.get(entry + '/measurement/%s' % self.steppedMotor)
+                yall = np.array(ydataset)
             if not (len(yall) == Ny): raise Exception('Something''s wrong with the positions')
             y = np.repeat(yall, Nx)
 
@@ -273,6 +287,11 @@ class nanomaxScan_stepscan_april2017(Scan):
             'type': str,
             'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
             },
+        'nominalPositions': {
+            'value': False,
+            'type': bool,
+            'doc': 'use nominal instead of recorded positions',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -293,6 +312,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.xrdBinning = int(opts['xrdBinning']['value'])
         self.xrdNormalize = bool(opts['xrdNormalize']['value'])
         self.detPreference = opts['detectorPreference']['value']
+        self.nominalPositions = bool(opts['nominalPositions']['value'])
 
     def _readPositions(self):
         """ 
@@ -300,8 +320,31 @@ class nanomaxScan_stepscan_april2017(Scan):
         """
 
         with h5py.File(self.fileName, 'r') as hf:
-            x = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.xMotor))
-            y = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.yMotor))
+            if self.nominalPositions:
+                title = str(hf.get('entry%d' % self.scanNr + '/title').value).split(' ')
+                xmotorInd = title.index(self.xMotor)
+                ymotorInd = title.index(self.yMotor)
+                x = np.linspace(float(title[xmotorInd+1]),
+                                float(title[xmotorInd+2]),
+                                int(title[xmotorInd+3]) + 1,
+                                endpoint=True)
+                y = np.linspace(float(title[ymotorInd+1]),
+                                float(title[ymotorInd+2]),
+                                int(title[ymotorInd+3]) + 1,
+                                endpoint=True)
+                nx = len(x)
+                ny = len(y)
+                if xmotorInd < ymotorInd:
+                    # x is the fast motor
+                    y = y.repeat(nx)
+                    x = np.tile(x, ny)
+                else:
+                    # y is the fast motor
+                    x = x.repeat(ny)
+                    y = np.tile(y, nx)
+            else:
+                x = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.xMotor))
+                y = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.yMotor))
 
         # allow 1d scans
         try:
