@@ -10,6 +10,8 @@ import sys
 This script visualizes the probe coverage of a reconstruction.
 """
 
+raise Exception('This script is currently broken. Try fixing it!')
+
 ### Parse input
 if len(sys.argv) < 3:
     print "\nUsage: reconstructionAnalysis.py <ptyd input file> <ptyr recons/dump file> \n"

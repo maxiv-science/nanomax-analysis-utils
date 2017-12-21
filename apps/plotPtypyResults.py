@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import nmutils
 import h5py
-import ptypy
 import matplotlib.gridspec as gridspec
 import argparse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -31,6 +30,9 @@ parser.add_argument('--backward', type=float, dest='bw',
 parser.add_argument('--forward', type=float, dest='fw',
                     default=1000.0,
                     help='forward propagation in microns')
+parser.add_argument('--positions', type=int, dest='steps',
+                    default=200,
+                    help='number of planes along the optical axis')
 args = parser.parse_args()
 
 if args.title is None:
@@ -41,6 +43,7 @@ outputFile = args.output
 inputFile = args.ptyr_file
 title = args.title
 interactive = not args.not_interactive
+steps = args.steps
 
 if outputFile is not None:
     outputPrefix = outputFile.split('.')[0]
@@ -66,10 +69,13 @@ except IndexError:
 print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
 
 ### define distances and propagate
-dist = np.linspace(backProp, forwProp, 200) * 1e-6
+dist = np.linspace(backProp, forwProp, steps) * 1e-6
 dx = dist[1] - dist[0]
-print "propagating to %d positions..."%len(dist)
-field3d = nmutils.utils.propagateNearfield(probe, psize, dist, energy)
+print "propagating to %d positions separated by %.1f um..."\
+    % (len(dist), dx*1e6)
+### not sure why, but the propagation goes in the other direction here!
+### it could be a misunderstanding about motors at nanomax...
+field3d = nmutils.utils.propagateNearfield(probe, psize, -dist, energy)
 
 ### get intensities and focii
 power3d = np.abs(field3d)**2
@@ -126,19 +132,44 @@ b = spot_subplot(outer_grid[0,1], focus, shareax=a, title='Focal plane')
 subgrid = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=outer_grid[1,:], hspace=.05)
 ax_vertical = plt.subplot(subgrid[0])
 ax_horizontal = plt.subplot(subgrid[1], sharex=ax_vertical, sharey=ax_vertical)
-ax_vertical.imshow(power_vertical, cmap='gray', extent=[1e6*dist[0], 1e6*dist[-1], -1e6*psize*probe.shape[0]/2, 1e6*psize*probe.shape[1]/2])
+ax_vertical.imshow(power_vertical, cmap='gray', extent=[1e6*dist[0], 1e6*dist[-1], -1e6*psize*probe.shape[0]/2, 1e6*psize*probe.shape[1]/2], interpolation='none')
 ax_vertical.axvline(x=focus_vertical_x*1e6, lw=1, ls='--', color='r')
-ax_vertical.text(1e6*focus_vertical_x, ax_vertical.get_ylim()[0] + .2*np.diff(ax_vertical.get_ylim())[0], '%.0f um '%(1e6*focus_vertical_x), color='red', ha='right')
+ax_vertical.text(1e6*focus_vertical_x, ax_vertical.get_ylim()[0] + .2*np.diff(ax_vertical.get_ylim())[0], 
+    ' %.0f um '%(1e6*focus_vertical_x), color='red', 
+    ha=('right' if focus_vertical_x<focus_x else 'left'))
 ax_vertical.axvline(x=focus_x*1e6, lw=2, ls='-', color='r')
-ax_vertical.text(1e6*focus_x, ax_vertical.get_ylim()[0] + .2*np.diff(ax_vertical.get_ylim())[0], ' %.0f um'%(1e6*focus_x), color='red', ha='left')
+ax_vertical.text(1e6*focus_x, ax_vertical.get_ylim()[0] + .8*np.diff(ax_vertical.get_ylim())[0],
+    ' %.0f um '%(1e6*focus_x), color='red', va='top',
+    ha=('right' if focus_vertical_x>focus_x else 'left'))
 ax_vertical.set_aspect('auto')
-ax_horizontal.imshow(power_horizontal, cmap='gray', extent=[1e6*dist[0], 1e6*dist[-1], -1e6*psize*probe.shape[0]/2, 1e6*psize*probe.shape[1]/2])
+ax_horizontal.imshow(power_horizontal, cmap='gray', extent=[1e6*dist[0], 1e6*dist[-1], -1e6*psize*probe.shape[0]/2, 1e6*psize*probe.shape[1]/2], interpolation='none')
 ax_horizontal.axvline(x=focus_horizontal_x*1e6, lw=1, ls='--', color='r')
-ax_horizontal.text(1e6*focus_horizontal_x, ax_horizontal.get_ylim()[0] + .2*np.diff(ax_horizontal.get_ylim())[0], ' %.0f um'%(1e6*focus_horizontal_x), color='red')
+ax_horizontal.text(1e6*focus_horizontal_x, ax_horizontal.get_ylim()[0] + .2*np.diff(ax_horizontal.get_ylim())[0],
+    ' %.0f um '%(1e6*focus_horizontal_x), color='red',
+    ha=('right' if focus_horizontal_x<focus_x else 'left'))
 ax_horizontal.axvline(x=focus_x*1e6, lw=2, ls='-', color='r')
 ax_horizontal.set_aspect('auto')
 ax_horizontal.set_ylabel('$\mu$m', y=1.05)
 for tk in ax_vertical.get_xticklabels(): tk.set_visible(False)
+ax_horizontal.set_xlabel('beamline z axis ($\mu$m)', fontsize=16)
+
+lblue = (.3,.3,1.0)
+ax_vertical.axvline(x=0, lw=1, ls='--', color=lblue)
+ax_horizontal.axvline(x=0, lw=1, ls='--', color=lblue)
+ax_horizontal.text(0, ax_horizontal.get_ylim()[0] + .01*np.diff(ax_horizontal.get_ylim())[0], 
+    ' sample ', color=lblue, va='bottom',
+    ha=('left' if focus_x < 0 else 'right'))
+
+ax_horizontal.text(1.05, 0.5, 'horizontal focus (M2)',
+     horizontalalignment='center',
+     verticalalignment='center',
+     rotation=90,
+     transform = ax_horizontal.transAxes)
+ax_vertical.text(1.05, 0.5, 'vertical focus (M1)',
+     horizontalalignment='center',
+     verticalalignment='center',
+     rotation=90,
+     transform = ax_vertical.transAxes)
 
 plt.suptitle(title, fontsize=20)
 if outputFile is not None:
