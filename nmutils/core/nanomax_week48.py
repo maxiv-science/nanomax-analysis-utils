@@ -9,18 +9,37 @@ class nanomaxScan_flyscan_week48(Scan):
     # up in a very temporary way. Uses the addData opts list for the
     # scan number and optionally for the amount of data around the
     # diffraction center of mass to load:
-    #
-    # opts = [datatype scannr (ROI size)], where datatype is 'xrf' or 'xrd'
 
-    def _readPositions(self, fileName, opts=None):
+    default_opts = {
+        # the dataType option is mandatory for use with scanViewer
+        'dataType': {
+            'value': 'xrd',
+            'type': str,
+            'doc': "type of data, 'xrd' or 'xrf'",
+            },
+        'roiSize': {
+            'value': 0,
+            'type': int,
+            'doc': 'Region of interest',
+            },
+    }
+
+    def _prepareData(self, **kwargs):
+        # copy defaults, then update with kwarg options
+        opts = self.default_opts.copy()
+        opts = self._updateOpts(opts, **kwargs)
+        
+        # parse options
+        self.dataType = opts['dataType']['value']
+        self.delta = opts['roiSize']['value']
+
+    def _readPositions(self):
         """ 
         Override position reading.
         """
-        if not (len(opts) >= 2):
-            raise RuntimeError('The addData opts list is insufficient for this Scan subclass.')
-
         skipX = 1
-        entry = 'entry%d' % int(opts[1])
+        entry = 'entry%d' % self.scanNr
+        fileName = self.fileName
 
         x, y = None, None
         with h5py.File(fileName, 'r') as hf:
@@ -45,19 +64,15 @@ class nanomaxScan_flyscan_week48(Scan):
 
         return np.vstack((x, y)).T
 
-    def _readData(self, fileName, opts=None):
+    def _readData(self):
         """ 
         Override data reading.
         """
 
-        datatype = opts[0]
-
-        if len(opts) == 3:
-            delta = int(opts[2]) / 2
-        else:
-            delta = None
-
-        scannr = int(opts[1])
+        datatype = self.dataType
+        delta = self.delta
+        scannr = self.scanNr
+        fileName = self.fileName
         
         if datatype == 'xrd':
             print 'loading diffraction data'
@@ -110,17 +125,22 @@ class nanomaxScan_stepscan_week48(Scan):
     # Class representing late November 2016, when step-scanning was set
     # up in a very temporary way. Uses the addData opts list for the
     # scan number:
-    #
-    # opts = [datatype, scannr], where datatype is 'xrf' or 'xrd'
 
-    def _readPositions(self, fileName, opts=None):
+    def _prepareData(self, **kwargs):
+        # copy defaults, then update with kwarg options
+        opts = self.default_opts.copy()
+        opts = self._updateOpts(opts, **kwargs)
+        
+        # parse options
+        self.dataType = opts['dataType']['value']
+
+    def _readPositions(self):
         """ 
         Override position reading.
         """
-        if not (len(opts) >= 2):
-            raise RuntimeError('The addData opts list is insufficient for this Scan subclass.')
 
-        entry = 'entry%d' % int(opts[1])
+        entry = 'entry%d' % self.scanNr
+        fileName = self.fileName
 
         with h5py.File(fileName, 'r') as hf:
             x = np.array(hf.get(entry + '/measurement/samx'))
@@ -128,13 +148,14 @@ class nanomaxScan_stepscan_week48(Scan):
 
         return np.vstack((x, y)).T
 
-    def _readData(self, fileName, opts=None):
+    def _readData(self):
         """ 
         Override data reading.
         """
 
-        datatype = opts[0]
-        scannr = int(opts[1])
+        datatype = self.dataType
+        scannr = self.scanNr
+        fileName = self.fileName
 
         if datatype == 'xrd':
             path = os.path.split(os.path.abspath(fileName))[0]
