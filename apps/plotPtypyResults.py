@@ -4,37 +4,50 @@ import nmutils
 import h5py
 import ptypy
 import matplotlib.gridspec as gridspec
-import sys
+import argparse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 """
-This script visualizes the output of a ptypy run, by loading a ptyr or ptyd file.
+This script visualizes the output of a ptypy run, by loading a ptyr file.
 """
 
 ### Parse input
-if len(sys.argv) < 2 or len(sys.argv) > 6:
-    print "\nUsage: plotPtypyResults.py <ptyd file> [<title> <output file>"
-    print   "                                 <back propagation um> <forward propagation um>] \n"
-    print "If an output file isn't specified or is 'None', the plot will be interactive.\n"
-    exit()
-inputFile = sys.argv[1]
-title = ''
-outputFile = None
-backProp = -1000
-forwProp = 1000
-if len(sys.argv) >= 3:
-    title = sys.argv[2]
-if len(sys.argv) >= 4:
-    outputFile = sys.argv[3]
+parser = argparse.ArgumentParser(
+    description='This script visualizes the output of a ptypy run, by loading a ptyr file.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('ptyr_file', type=str,
+                    help='a ptypy reconstruction file')
+parser.add_argument('--no-window',
+                    action='store_const', const=True,
+                    dest='not_interactive',
+                    help='switches on or off live plotting')
+parser.add_argument('--title', type=str, dest='title',
+                    help='the plot title')
+parser.add_argument('--output', type=str, dest='output',
+                    help='image file name for saving')
+parser.add_argument('--backward', type=float, dest='bw',
+                    default=1000.0,
+                    help='backward propagation in microns, defaults to ')
+parser.add_argument('--forward', type=float, dest='fw',
+                    default=1000.0,
+                    help='forward propagation in microns')
+args = parser.parse_args()
+
+if args.title is None:
+    args.title = args.ptyr_file if '/' not in args.ptyr_file else args.ptyr_file.split('/')[-1]
+
+backProp, forwProp = -args.bw, args.fw
+outputFile = args.output
+inputFile = args.ptyr_file
+title = args.title
+interactive = not args.not_interactive
+
+if outputFile is not None:
     outputPrefix = outputFile.split('.')[0]
     try:
         outputSuffix = outputFile.split('.')[1]
     except IndexError:
         outputSuffix = 'png'
-if len(sys.argv) >= 5:
-    backProp = float(sys.argv[4])
-if len(sys.argv) >= 6:
-    forwProp = float(sys.argv[5])
 
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
@@ -121,7 +134,7 @@ ax_horizontal.set_ylabel('$\mu$m', y=1.05)
 for tk in ax_vertical.get_xticklabels(): tk.set_visible(False)
 
 plt.suptitle(title, fontsize=20)
-if outputFile and (not outputFile.lower() == 'none'):
+if outputFile is not None:
     fn = outputPrefix + '_probe.' + outputSuffix
     plt.savefig(fn)
     print 'Saved to %s'%fn
@@ -157,10 +170,10 @@ cb = plt.colorbar(img, cax=cax, ticks=(-np.pi, -np.pi/2, 0, np.pi/2, np.pi))
 cb.ax.set_yticklabels(['-$\pi$', '-$\pi/2$', '0', '$\pi/2$', '$\pi$'])
 ax[1].set_title('Phase')
 
-if outputFile and (not outputFile.lower() == 'none'):
+if outputFile is not None:
     fn = outputPrefix + '_object.' + outputSuffix
     plt.savefig(fn)
     print "Saved to %s"%fn
 
-if (not outputFile) or (outputFile.lower() == 'none'):
+if interactive:
     plt.show()

@@ -58,7 +58,9 @@ class dataGrabber():
 if __name__ == '__main__':
 
     # parsing arguments
-    parser = argparse.ArgumentParser(description='Live plotting of Sardana output. By default plots the second-last column (usually a channel) vs. the second column (usually a motor). The default door is NanomaxEH3/DOOR/01.')
+    parser = argparse.ArgumentParser(
+        description='Live plotting of Sardana output. By default plots the second-last column (usually a channel) vs. the second column (usually a motor).',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--xaxis', type=str, dest='xaxis',
                         default=None,
                         help='the channel/motor to plot on the x axis')
