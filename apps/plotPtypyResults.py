@@ -51,11 +51,18 @@ if outputFile is not None:
 
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
-    probe = np.array(hf.get('content/probe/S00G00/data'))[0]
-    obj = np.array(hf.get('content/obj/S00G00/data'))[0]
-    psize = np.array(hf.get('content/probe/S00G00/_psize'))[0]
+    probe = np.array(hf.get('content/probe/S00G00/data'))
+    obj = np.array(hf.get('content/obj/S00G00/data'))
+    psize = np.array(hf.get('content/probe/S00G00/_psize'))
     energy = np.array(hf.get('content/probe/S00G00/_energy'))
     origin = np.array(hf.get('content/probe/S00G00/_origin'))
+
+try:
+    probe = probe[0]
+    obj = obj[0]
+    psize = psize[0]
+except IndexError:
+    raise IOError('That doesn''t look like a valid reconstruction file!')
 print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
 
 ### define distances and propagate
