@@ -110,7 +110,7 @@ class Scan(object):
         if not name:
             name = 'data%u' % self.nDataSets
 
-        if (not scannr) or (not filename):
+        if (scannr is None) or (filename is None):
             raise Exception('Scan.addData needs a filename and a scan number!')
 
         self.scanNr = scannr
