@@ -10,7 +10,7 @@ addition, they can have whatever options they want.
 try:
     import hdf5plugin 
 except ImportError:
-    print "hdf5plugin not found - won't be able to read compressed Eiger files"
+    print "hdf5plugin not found - may not be able to read compressed Eiger files"
 
 # make sure silx is not too old (API features have appeared)
 from distutils.version import LooseVersion
