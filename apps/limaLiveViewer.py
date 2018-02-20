@@ -113,6 +113,7 @@ if __name__ == '__main__':
         'pil100k': 'lima/limaccd/b-nanomax-mobile-ipc-01',
         'pil1m': 'lima/limaccd/b-nanomax-pilatus1m-ipc-01',
         'merlin': 'lima/limaccd/test_merlin',
+        'eiger': 'lima/limaccds/eiger',
         'xspress3': 'lima/limaccd/ec-i811-xspress3-0',
     }
     
