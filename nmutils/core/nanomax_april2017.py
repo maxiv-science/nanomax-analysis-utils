@@ -155,10 +155,16 @@ class nanomaxScan_flyscan_april2017(Scan):
             if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
                 avail_dets.append('pil1m')
                 print "1M data available"
+            if os.path.isfile(os.path.join(path, 'scan_%04d_eiger1m_%04d.edf'%(self.scanNr,0))):
+                avail_dets.append('eiger1m-edf')
+                print "Eiger1M (edf) data available"
             if len(avail_dets) == 0:
                 print "No XRD data available"
                 return
 
+            # default file format
+            fileFormat = 'hdf'
+            
             # check which detector was used
             if self.detPreference in avail_dets:
                 chosen_det = self.detPreference
@@ -176,45 +182,31 @@ class nanomaxScan_flyscan_april2017(Scan):
                 filepattern = 'scan_%04d_pil1m_%04d.hdf5'
                 hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "Using Pilatus 1M data"
+            elif chosen_det == 'eiger1m-edf':
+                filepattern = 'scan_%04d_eiger1m_%04d.edf'
+                hdfDataPath = ''
+                fileFormat = 'edf'
+                print "Using Eiger 1M (edf) data"
             else:
                 print "Something went really wrong in detector choice"
                 return
-                
+
             data = []
             print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
             for line in range(self.nlines):
                 try:
-                    with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
-                        print 'loading data: ' + filepattern%(self.scanNr, line)
-                        dataset = hf.get(hdfDataPath)
-                        if isinstance(self.xrdCropping, list):
-                            i0, i1, j0, j1 = self.xrdCropping
-                            data_ = np.array(dataset[:, i0 : i1, j0 : j1])
-                        else:
-                            data_ = np.array(dataset)
-                        if self.xrdBinning > 1:
-                            shape = fastBinPixels(data_[0], self.xrdBinning).shape
-                            new_data_ = np.zeros((data_.shape[0],) + shape)
-                            for ii in range(data_.shape[0]):
-                                new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
-                            data_ = new_data_
-                        if isinstance(self.xrdNormalize, list):
-                            i0, i1, j0, j1 = self.xrdNormalize
-                            data_ = np.array(data_, dtype=float)
-                            for i in range(data_.shape[0]):
-                                norm = float(np.sum(np.array(dataset[i, i0 : i1, j0 : j1])))
-                                data_[i] /= norm
-                        if 'Merlin' in hdfDataPath:
-                            for i in range(data_.shape[0]):
-                                data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
-                        data.append(data_)
-                        del dataset
+                    if fileFormat == 'hdf':
+                        data.append(self._readLineXrdDataHdf5(line,path,filepattern,hdfDataPath))
+                    elif fileFormat == 'edf':
+                        data.append(self._readLineXrdDataEdf(line,path,filepattern))
+                    else:
+                        raise Exception("Unknown file-format: %s" % (fileformat,))
                 except IOError:
                     # fewer hdf5 files than positions -- this is ok
                     print "couldn't find expected file %s, returning"%(filepattern%(self.scanNr, line))
                     break
 
-            print "loaded %d lines of Pilatus data"%len(data)
+            print "loaded %d lines of diffraction data"%len(data)
             data = np.concatenate(data, axis=0)
 
         elif self.dataType == 'xrf':
@@ -234,13 +226,73 @@ class nanomaxScan_flyscan_april2017(Scan):
                         break
                     data.append(np.array(dataset)[:, self.xrfChannel, :])
                     line += 1
-            print "loaded %d lines of xspress3 data"%len(data)
+            print "loaded %d lines of flurescence data"%len(data)
             data = np.vstack(data)
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
         return data
 
+    def _readLineXrdDataHdf5(self,line,path,filepattern,hdfDataPath):
+        data_ = []
+        with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
+            print 'loading data: ' + filepattern%(self.scanNr, line)
+            dataset = hf.get(hdfDataPath)
+            if isinstance(self.xrdCropping, list):
+                i0, i1, j0, j1 = self.xrdCropping
+                data_ = np.array(dataset[:, i0 : i1, j0 : j1])
+            else:
+                data_ = np.array(dataset)
+            if self.xrdBinning > 1:
+                shape = fastBinPixels(data_[0], self.xrdBinning).shape
+                new_data_ = np.zeros((data_.shape[0],) + shape)
+                for ii in range(data_.shape[0]):
+                    new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
+                data_ = new_data_
+            if isinstance(self.xrdNormalize, list):
+                i0, i1, j0, j1 = self.xrdNormalize
+                data_ = np.array(data_, dtype=float)
+                for i in range(data_.shape[0]):
+                    norm = float(np.sum(np.array(dataset[i, i0 : i1, j0 : j1])))
+                    data_[i] /= norm
+            if 'Merlin' in hdfDataPath:
+                for i in range(data_.shape[0]):
+                    data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
+            del dataset
+        return data_
 
+    def _readLineXrdDataEdf(self,line,path,filepattern):
+        import fabio
+        data_ = []
+        print 'loading data: ' + filepattern%(self.scanNr, line)
+        imgf = fabio.open(os.path.join(path, filepattern%(self.scanNr, line)))
+        dtp = np.int32 # imgf.data.dtype
+        if isinstance(self.xrdCropping, list):
+            i0, i1, j0, j1 = self.xrdCropping
+            data_ = np.ndarray((imgf.nframes,i1-i0,j1-j0),dtp)
+            for iframe in range(imgf.nframes):
+                data_[iframe] = imgf.data[i0 : i1, j0 : j1]
+                imgf.next()
+        else:
+            data_ = np.ndarray((imgf.nframes,)+imgf.data.shape,dtp)
+            for iframe in range(imgf.nframes):
+                data_[iframe] = imgf.data
+                imgf.next()
+        if self.xrdBinning > 1:
+            shape = fastBinPixels(data_[0], self.xrdBinning).shape
+            new_data_ = np.zeros((data_.shape[0],) + shape)
+            for ii in range(data_.shape[0]):
+                new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
+            data_ = new_data_
+        if isinstance(self.xrdNormalize, list):
+            i0, i1, j0, j1 = self.xrdNormalize
+            data_ = np.array(data_, dtype=float)
+            imgf.getframe(0)
+            for i in range(data_.shape[0]):
+                norm = float(np.sum(np.array(imgf.data[i, i0 : i1, j0 : j1])))
+                data_[i] /= norm
+                imgf.next()
+        return data_
+        
 class nanomaxScan_stepscan_april2017(Scan):
     # Class representing April 2017, with the beamline still temporarily
     # set up for commissioning and user runs.
@@ -379,9 +431,15 @@ class nanomaxScan_stepscan_april2017(Scan):
             if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
                 avail_dets.append('pil1m')
                 print "1M data available"
+            if os.path.isfile(os.path.join(path, 'scan_%04d_eiger1m_%04d.edf'%(self.scanNr,0))):
+                avail_dets.append('eiger1m-edf')
+                print "Eiger1M (edf) data available"
             if len(avail_dets) == 0:
                 print "No XRD data available"
                 return
+
+            # default file format
+            fileFormat = 'hdf'
 
             # check which detector was used
             if self.detPreference in avail_dets:
@@ -400,34 +458,27 @@ class nanomaxScan_stepscan_april2017(Scan):
                 filepattern = 'scan_%04d_pil1m_%04d.hdf5'
                 hdfDataPath = 'entry_0000/measurement/Pilatus/data'
                 print "Using Pilatus 1M data"
+            elif chosen_det == 'eiger1m-edf':
+                filepattern = 'scan_%04d_eiger1m_%04d.edf'
+                hdfDataPath = ''
+                fileFormat = 'edf'
+                print "Using Eiger 1M (edf) data"
             else:
                 print "Something went really wrong in detector choice"
                 return
 
             data = []
+            ic = None; jc = None # center of mass
             for im in range(self.positions.shape[0]):
                 try:
-                    with h5py.File(os.path.join(path, filepattern%(self.scanNr, im)), 'r') as hf:
-                        print 'loading data: ' + filepattern%(self.scanNr, im)
-                        dataset = hf.get(hdfDataPath)
-                        # for the first file, determine center of mass
-                        if len(data) == 0:
-                            import scipy.ndimage.measurements
-                            im = np.array(dataset[0])
-                            ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(im))
-                            print "Estimated center of mass to (%d, %d)"%(ic, jc)
-                        if self.xrdCropping:
-                            delta = self.xrdCropping / 2
-                            data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
-                        else:
-                            data_ = np.array(dataset[0])
-                        if self.xrdBinning > 1:
-                            data_ = fastBinPixels(data_, self.xrdBinning)
-                        if self.xrdNormalize:
-                            data_ = np.array(data_, dtype=float) / np.sum(self.xrdNormalize)
-                        if 'Merlin' in hdfDataPath: 
-                            data_ = np.flipud(data_) # Merlin images indexed from the bottom left...
+                    if fileFormat == 'hdf':
+                        data_, ic, jc = self._readLineXrdDataHdf5(im,path,filepattern,hdfDataPath,ic,jc)
                         data.append(data_)
+                    elif fileFormat == 'edf':
+                        data_, ic, jc = self._readLineXrdDataEdf(im,path,filepattern,ic,jc) 
+                        data.append(data_)
+                    else:
+                        raise Exception("Unknown file-format: %s" % (fileformat,))
                 except IOError:
                     # missing files -- this is ok
                     print "couldn't find expected file %s, returning"%(filepattern%(self.scanNr, im))
@@ -454,3 +505,50 @@ class nanomaxScan_stepscan_april2017(Scan):
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
 
         return data
+
+    def _readLineXrdDataHdf5(self,im,path,filepattern,hdfDataPath,ic=None,jc=None):
+        data_ = []
+        with h5py.File(os.path.join(path, filepattern%(self.scanNr, im)), 'r') as hf:
+            print 'loading data: ' + filepattern%(self.scanNr, im)
+            dataset = hf.get(hdfDataPath)
+            # for the first file, determine center of mass
+            if ic is None or jc is None == 0:
+                import scipy.ndimage.measurements
+                img = np.array(dataset[0])
+                ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(img))
+                print "Estimated center of mass to (%d, %d)"%(ic, jc)
+            if self.xrdCropping:
+                delta = self.xrdCropping / 2
+                data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
+            else:
+                data_ = np.array(dataset[0])
+            if self.xrdBinning > 1:
+                data_ = fastBinPixels(data_, self.xrdBinning)
+            if self.xrdNormalize:
+                data_ = np.array(data_, dtype=float) / np.sum(self.xrdNormalize)
+            if 'Merlin' in hdfDataPath: 
+                data_ = np.flipud(data_) # Merlin images indexed from the bottom left...
+        return data_, ic, jc
+
+    def _readLineXrdDataEdf(self,im,path,filepattern,ic=None,jc=None):
+        import fabio
+        data_ = []
+        print 'loading data: ' + filepattern%(self.scanNr, im)
+        imgf = fabio.open(os.path.join(path, filepattern%(self.scanNr, im)))
+        # for the first file, determine center of mass
+        if ic is None or jc is None == 0:
+            import scipy.ndimage.measurements
+            ##img = np.ndarray(sz,dtype)
+            img = np.array(imgf.data)
+            ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(img))
+            print "Estimated center of mass to (%d, %d)"%(ic, jc)
+        if self.xrdCropping:
+            delta = self.xrdCropping / 2
+            data_ = np.array(imgf.data[ic-delta:ic+delta, jc-delta:jc+delta])
+        else:
+            data_ = np.array(imgf.data)
+        if self.xrdBinning > 1:
+            data_ = fastBinPixels(data_, self.xrdBinning)
+        if self.xrdNormalize:
+            data_ = np.array(data_, dtype=float) / np.sum(self.xrdNormalize)
+        return data_, ic, jc
