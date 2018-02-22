@@ -152,7 +152,7 @@ class Scan(object):
 
         self.data[name] = data
         self.nDataSets += 1
-
+        
     def removeData(self, name):
         if name in self.data.keys():
             self.data.pop(name, None)
@@ -298,3 +298,50 @@ class Scan(object):
             z = np.fliplr(z)
 
         return x, y, z
+    
+    def export(self, filepath):
+        """ 
+        Dumps data into a single HDF5 file in order to allow export into other software
+        or reload later.
+
+        filepath: full path and name of the output file
+        """
+        with h5py.File(filepath,'w-',libver='earliest') as h5f:
+            # create entry
+            grp_path = "/entry0"
+            grp = h5f.create_group(grp_path)
+            # set metdata
+            import datetime
+            import getpass
+            grp.attrs["author"] = unicode(getpass.getuser(), 'utf-8')
+            grp.attrs["date"] = unicode(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 'utf-8')
+            grp.attrs["version"] = u"0.1"
+            # save positions
+            dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=(self.nPositions,), dtype=np.float, compression="lzf")
+            dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=(self.nPositions,), dtype=np.float, compression="lzf")
+            # create datasets
+            for dsetname in self.data.keys():
+                shp = self.data[dsetname].shape
+                dt = self.data[dsetname].dtype
+                dims = len(shp)
+                # determine chunk dimensions
+                chunk = None
+                if dims>2:
+                    # by default the last two slicing dimensions form a chunk
+                    chunk = np.array(shp)
+                    chunk[:-2] = 1
+                    chunk = tuple(chunk)
+                elif dims==2:
+                    maxChunkSz = 1 << 22;
+                    # start with a single row
+                    rows = 1
+                    sz = shp[1]*dt.itemsize
+                    while sz<maxChunkSz and rows<shp[0]:
+                        rows = rows*2
+                        sz = sz*2
+                    chunk = (rows,shp[1])
+                if chunk not in [None,[]]:
+                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, chunks=chunk, dtype=dt, compression="lzf")
+                else:
+                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, dtype=dt, compression="lzf")
+            print("Scan data were exported to %s:%s" % (filepath,grp_path,))
