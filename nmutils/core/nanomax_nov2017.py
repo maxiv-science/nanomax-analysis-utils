@@ -40,6 +40,11 @@ class nanomaxScan_flyscan_nov2017(Scan):
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },
+        'xrfCropping': {
+                'value': 'none',
+                'type': str,
+                'doc': 'energy channel range to load, "ch0 ch1" - none means load all',
+                },
         'xrdCropping': {
             'value': 'none',
             'type': str,
@@ -82,6 +87,10 @@ class nanomaxScan_flyscan_nov2017(Scan):
         self.yMotor = opts['yMotor']['value']
         # self.fastAxis = opts['fastAxis']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
+        if len(opts['xrfCropping']['value'].split()) == 2:
+            self.xrfCropping = map(int, opts['xrfCropping']['value'].split())
+        else:
+            self.xrfCropping = False
         if len(opts['xrdCropping']['value'].split()) == 4:
             self.xrdCropping = map(int, opts['xrdCropping']['value'].split())
         else:
@@ -275,7 +284,11 @@ class nanomaxScan_flyscan_nov2017(Scan):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
                     if not dataset:
                         break
-                    data.append(np.array(dataset)[:, self.xrfChannel, :])
+                    if isinstance(self.xrfCropping, list):
+                        ch0, ch1 = self.xrfCropping
+                        data.append(np.array(dataset)[:, self.xrfChannel, ch0:ch1])
+                    else:
+                        data.append(np.array(dataset)[:, self.xrfChannel, :])
                     line += 1
             print "loaded %d lines of xspress3 data"%len(data)
             data = np.vstack(data)
