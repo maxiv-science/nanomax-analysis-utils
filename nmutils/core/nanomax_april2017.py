@@ -22,7 +22,7 @@ class nanomaxScan_flyscan_april2017(Scan):
             'doc': 'the second motor, stepped for each flyscan line',
             },
         'xrfChannel': {
-            'value': 2,
+            'value': 3,
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },
@@ -315,7 +315,7 @@ class nanomaxScan_stepscan_april2017(Scan):
             'doc': 'scanned motor to plot on the y axis',
             },
         'xrfChannel': {
-            'value': 2,
+            'value': 3,
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },

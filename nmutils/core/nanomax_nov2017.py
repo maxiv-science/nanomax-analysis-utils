@@ -36,7 +36,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
 #            'doc': 'the fly scanned motor, must be the same as xMotor or yMotor',
 #            },
         'xrfChannel': {
-            'value': 2,
+            'value': 3,
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },
