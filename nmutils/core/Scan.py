@@ -316,6 +316,9 @@ class Scan(object):
             grp.attrs["author"] = unicode(getpass.getuser(), 'utf-8')
             grp.attrs["date"] = unicode(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 'utf-8')
             grp.attrs["version"] = u"0.1"
+            # create data group
+            grp_path = "/entry0/data"
+            grp = h5f.create_group(grp_path)
             # save positions
             dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=(self.nPositions,), dtype=np.float, compression="lzf")
             dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=(self.nPositions,), dtype=np.float, compression="lzf")
