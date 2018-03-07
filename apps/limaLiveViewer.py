@@ -114,7 +114,7 @@ if __name__ == '__main__':
         'pil1m': 'lima/limaccd/b-nanomax-pilatus1m-ipc-01',
         'merlin': 'lima/limaccd/test_merlin',
         'eiger': 'lima/limaccds/eiger',
-        'xspress3': 'lima/limaccd/ec-i811-xspress3-0',
+        'xspress3': 'lima/limaccd/b303a-a100380-dia-detxfcu-01',
     }
     
     # parse arguments
