@@ -299,13 +299,26 @@ class Scan(object):
 
         return x, y, z
     
-    def export(self, filepath):
+    def export(self, filepath, meshgrid=True, shape=""):
         """ 
         Dumps data into a single HDF5 file in order to allow export into other software
         or reload later.
 
         filepath: full path and name of the output file
+        meshgrid: flag to cast data into the scan measurement grid (default=False)
+        shape: string defining shape of the scan measurement grid as "lines points" (default="") ,
+               the fast axis is the last dimension (i.e. points)   
         """
+        # check input arguments
+        if shape:
+            meshgrid = True
+            shape = tuple( map(int, shape.split()) )
+        if meshgrid and not shape:
+            shape, fast_axis_label = self._shapeFromPositions2D(self.positions[:,0],self.positions[:,1])
+            print("Fast axis detectected to be: %s" % (fast_axis_label,))
+        if meshgrid:
+            print("Data will be exported assuming the scan grid dims: %s points" % (shape,))
+        # export to hdf5 file
         with h5py.File(filepath,'w-',libver='earliest') as h5f:
             # create entry
             grp_path = "/entry0"
@@ -320,31 +333,87 @@ class Scan(object):
             grp_path = "/entry0/data"
             grp = h5f.create_group(grp_path)
             # save positions
-            dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=(self.nPositions,), dtype=np.float, compression="lzf")
-            dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=(self.nPositions,), dtype=np.float, compression="lzf")
+            shp = shape if meshgrid else (self.nPositions,) 
+            dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=shp, dtype=np.float, compression="lzf")
+            dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=shp, dtype=np.float, compression="lzf")
             # create datasets
             for dsetname in self.data.keys():
-                shp = self.data[dsetname].shape
+                shp = shape + self.data[dsetname].shape[1:] if meshgrid else self.data[dsetname].shape
                 dt = self.data[dsetname].dtype
                 dims = len(shp)
-                # determine chunk dimensions
-                chunk = None
-                if dims>2:
-                    # by default the last two slicing dimensions form a chunk
-                    chunk = np.array(shp)
-                    chunk[:-2] = 1
-                    chunk = tuple(chunk)
-                elif dims==2:
-                    maxChunkSz = 1 << 22;
-                    # start with a single row
-                    rows = 1
-                    sz = shp[1]*dt.itemsize
-                    while sz<maxChunkSz and rows<shp[0]:
-                        rows = rows*2
-                        sz = sz*2
-                    chunk = (rows,shp[1])
+                chunk = self._calcChunkSize(shp,dt.itemsize)
+                print("%s, shape: %s, chunk: %s" % (dsetname, shp, chunk,))
                 if chunk not in [None,[]]:
                     dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, chunks=chunk, dtype=dt, compression="lzf")
                 else:
                     dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, dtype=dt, compression="lzf")
             print("Scan data were exported to %s:%s" % (filepath,grp_path,))
+
+    def _calcChunkSize(self,shape,dsize):
+        """ 
+        Returns optimal shape of chunks for this type of data. Returns none if chunking is discouraged.
+        """
+        maxChunkSz = 1 << 22 # 22 ... 4Mib, 20 ... 1MiB, 10 ... 1kiB
+        # determine chunk dimensions
+        dims = len(shape)
+        if dims==0:
+            # no chunking
+            return None
+        elif dims==1:
+            # calc chunk size directly
+            if dsize*shape[0]<=maxChunkSz:
+                # no sense for chunking for this dimension
+                return None
+            else:
+                return (int(maxChunkSz/dsize),) 
+        else:
+            # try chunking just on the last dimension
+            chunk = self._calcChunkSize(shape[-1:], dsize)
+            if chunk:
+                # chunking here is adviced, just do it
+                return shape[:-1] + chunk 
+            else:
+                # chunking on the last dim is not adviced (too small), try next
+                dsz = shape[-1]*dsize
+                chunk = self._calcChunkSize(shape[:-1], dsz)
+                if chunk:
+                    # use chunking
+                    return chunk + (shape[-1],)
+                else:
+                    # chunking was not adviced
+                    from operator import mul
+                    if dsize*reduce(mul,shape)>maxChunkSz:
+                        # chunk everything
+                        return shape
+                    else:
+                        return None
+
+    def _shapeFromPositions2D(self,x,y):
+        """ 
+        Returns shape of 2D scan grid calculated from axes positions and the fast axis label.
+        The fast axis is the last dimension.
+        """
+        adx = np.abs(np.diff(x))
+        ady = np.abs(np.diff(y))
+
+        if np.median(adx) > np.median(ady):
+            fast_axis = x
+            fast_axis_adiff = adx
+            fast_axis_label = 'x'
+        else:
+            print("y is the fast axis")
+            fast_axis = y
+            fast_axis_adiff = ady
+            fast_axis_label = 'y'
+
+        fast_axis_total_diff = np.max(fast_axis)-np.min(fast_axis)
+
+        idx_breaks = np.where(fast_axis_adiff>fast_axis_total_diff/2.)
+        dim = np.diff(np.insert(idx_breaks,0,-1))
+        fast_axis_dim = np.mean(dim,dtype=np.int)
+        if np.all(dim!=fast_axis_dim):
+            print("Warning: something wrong in fast axis length calculation")
+        slow_axis_dim = fast_axis.size / fast_axis_dim
+        if slow_axis_dim*fast_axis_dim != fast_axis.size:
+            print("Error: auto-detection of scanning grid failed")
+        return (slow_axis_dim, fast_axis_dim), fast_axis_label
