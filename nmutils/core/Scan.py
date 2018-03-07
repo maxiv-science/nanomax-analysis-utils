@@ -371,7 +371,7 @@ class Scan(object):
             chunk = self._calcChunkSize(shape[-1:], dsize)
             if chunk:
                 # chunking here is adviced, just do it
-                return shape[:-1] + chunk 
+                return (1,)*(dims-1) + chunk 
             else:
                 # chunking on the last dim is not adviced (too small), try next
                 dsz = shape[-1]*dsize
