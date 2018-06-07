@@ -205,6 +205,17 @@ class Scan(object):
 
         return new
 
+    def merge(self, scanobj):
+        """
+        Adds positions and data from another Scan object. The scans must
+        have the same datasets.
+        """
+        assert self.data.keys() == scanobj.data.keys()
+        self.positions = np.concatenate((self.positions, scanobj.positions), axis=0)
+        self.nPositions = self.positions.shape[0]
+        for key in self.data.keys():
+            self.data[key] = np.concatenate((self.data[key], scanobj.data[key]), axis=0)
+
     def subset(self, posRange, closest=False):
         """ 
         Returns a Scan instance containing only the scan positions which
