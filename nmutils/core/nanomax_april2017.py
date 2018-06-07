@@ -469,6 +469,7 @@ class nanomaxScan_stepscan_april2017(Scan):
 
             data = []
             ic = None; jc = None # center of mass
+            missing = 0
             for im in range(self.positions.shape[0]):
                 try:
                     if fileFormat == 'hdf':
@@ -481,9 +482,12 @@ class nanomaxScan_stepscan_april2017(Scan):
                         raise Exception("Unknown file-format: %s" % (fileformat,))
                 except IOError:
                     # missing files -- this is ok
-                    print "couldn't find expected file %s, returning"%(filepattern%(self.scanNr, im))
-                    break
+                    print "couldn't find expected file %s, filling with zeros"%(filepattern%(self.scanNr, im))
+                    data.append(np.zeros(data[-1].shape, dtype=data[-1].dtype))
+                    missing += 1
             print "loaded %d images"%len(data)
+            if missing:
+                print "there were %d missing images" % missing
             data = np.array(data)
 
         elif self.dataType == 'xrf':
