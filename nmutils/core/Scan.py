@@ -19,12 +19,13 @@ __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 class Scan(object):
 
     # An options structure, overridden in subclasses to allow passing 
-    # more kwargs to addData(). 
+    # more kwargs to addData(). This is just an illustration and should
+    # be overridden.
     default_opts = {
         'dataType': {
-            'value': 'xrd',
+            'value': 'my_parameter',
             'type': str,
-            'doc': "type of data, 'xrd' or 'xrf'",
+            'doc': "some meaningful values, maybe 'xrd' or 'xrf'",
             }
     }
 

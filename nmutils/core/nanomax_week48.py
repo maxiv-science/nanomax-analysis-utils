@@ -123,8 +123,15 @@ class nanomaxScan_flyscan_week48(Scan):
 
 class nanomaxScan_stepscan_week48(Scan):
     # Class representing late November 2016, when step-scanning was set
-    # up in a very temporary way. Uses the addData opts list for the
-    # scan number:
+    # up in a very temporary way.
+
+    default_opts = {
+        'dataType': {
+            'value': 'xrd',
+            'type': str,
+            'doc': "type of data, 'xrd' or 'xrf'",
+            }
+    }
 
     def _prepareData(self, **kwargs):
         # copy defaults, then update with kwarg options
