@@ -8,7 +8,6 @@ except ImportError:
     HAS_HDF5PLUGIN = False
     
 from Scan import *
-from nanomax_june2016 import *
 from ptypy import *
 from nanomax_week48 import *
 from nanomax_april2017 import *

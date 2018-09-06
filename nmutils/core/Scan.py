@@ -29,9 +29,9 @@ class Scan(object):
             }
     }
 
-    def __init__(self, options=None):
+    def __init__(self):
         """ 
-        Only initializes counters and options. Positions and data are
+        Only initializes counters. Parameters, positions and data are
         added later.
         """
         self.nDataSets = 0
