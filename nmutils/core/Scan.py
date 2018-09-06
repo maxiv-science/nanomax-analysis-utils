@@ -36,7 +36,6 @@ class Scan(object):
         self.nDataSets = 0
         self.nPositions = None
         self.nDimensions = None  # scan dimensions
-        self.options = None
 
     def _prepareData(self, **kwargs):
         """
