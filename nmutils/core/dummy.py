@@ -15,13 +15,13 @@ class dummyScan(Scan):
             'doc': "type of data, 'xrd' or 'xrf'",
             },
         'xrange': {
-            'value': '0 1024',
-            'type': str, # using a string here just for the GUI
+            'value': [0, 1024],
+            'type': list,
             'doc': "x range of the dummy scan",
             },
         'yrange': {
-            'value': '0 768',
-            'type': str, # and here too
+            'value': [0, 768],
+            'type': list,
             'doc': "y range of the dummy scan",
             },
         'stepsize': {
@@ -53,15 +53,9 @@ class dummyScan(Scan):
         opts = self._updateOpts(opts, **kwargs)
         
         self.dataType = opts['dataType']['value']
-        if len(opts['xrange']['value'].split()) == 2:
-            self.xrange = map(int, opts['xrange']['value'].split())
-        else:
-            self.xrange = self.default_opts['xrange']['value']
-        if len(opts['yrange']['value'].split()) == 2:
-            self.yrange = map(int, opts['yrange']['value'].split())
-        else:
-            self.yrange = self.default_opts['yrange']['value']
-        self.stepsize = opts['stepsize']['value']
+        self.xrange = map(int, opts['xrange']['value'])
+        self.yrange = map(int, opts['yrange']['value'])
+        self.stepsize = int(opts['stepsize']['value'])
         self.doFourier = opts['fourier']['value']
 
         self.image = face(gray=True)

@@ -85,10 +85,12 @@ class ScanViewer(qt.QMainWindow):
         for name, w in self.formWidgets.iteritems():
             if isinstance(w, qt.QCheckBox):
                 val = bool(w.isChecked())
-            elif isinstance(w, qt.QLineEdit):
-                val = str(w.text())
             elif isinstance(w, qt.QComboBox):
                 val = str(w.currentText())
+            elif isinstance(w, qt.QLineEdit) and not w.evaluate_me:
+                val = str(w.text())
+            elif isinstance(w, qt.QLineEdit) and w.evaluate_me:
+                val = eval(str(w.text()))
             else:
                 val = w.value()
             opts[name] = val
@@ -124,13 +126,22 @@ class ScanViewer(qt.QMainWindow):
             elif opt['type'] == bool:
                 w = qt.QCheckBox()
                 w.setChecked(opt['value'])
+            elif opt['type'] in (list, tuple):
+                w = qt.QLineEdit()
+                w.setText(str(opt['value']))
+                w.evaluate_me = True
             elif type(opt['type']) in (list, tuple):
                 w = qt.QComboBox()
-                for item in opt['type']:
+                defaultindex = 0
+                for j, item in enumerate(opt['type']):
                     w.addItem(item)
+                    if item == opt['value']:
+                        defaultindex = j
+                w.setCurrentIndex(defaultindex)
             else:
                 w = qt.QLineEdit()
                 w.setText(opt['value'])
+                w.evaluate_me = False
             grid.addWidget(w, i, 1)
             # save a dict of the options widgets, to parse when loading
             self.formWidgets[name] = w

@@ -20,7 +20,8 @@ class Scan(object):
 
     # An options structure, overridden in subclasses to allow passing 
     # more kwargs to addData(). This is just an illustration and should
-    # be overridden.
+    # be overridden. Tip: for multiple choice, give a list or tuple of
+    # possibilities in the 'type' field.
     default_opts = {
         'dataType': {
             'value': 'my_parameter',

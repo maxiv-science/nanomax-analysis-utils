@@ -41,14 +41,14 @@ class nanomaxScan_flyscan_nov2017(Scan):
             'doc': 'xspress3 channel from which to read XRF',
             },
         'xrfCropping': {
-                'value': 'none',
-                'type': str,
-                'doc': 'energy channel range to load, "ch0 ch1" - none means load all',
+                'value': [],
+                'type': list,
+                'doc': 'energy channel range to load, [ch0, ch1]',
                 },
         'xrdCropping': {
-            'value': 'none',
-            'type': str,
-            'doc': 'detector area to load, "i0 i1 j0 j1" - none means load all',
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
         'xrdBinning': {
             'value': 1,
@@ -56,9 +56,9 @@ class nanomaxScan_flyscan_nov2017(Scan):
             'doc': 'bin xrd pixels n-by-n (after cropping)',
             },
         'xrdNormalize': {
-            'value': 'none',
-            'type': str,
-            'doc': 'normalize XRD images by average over the ROI "i0 i1 j0 j1"',
+            'value': [],
+            'type': list,
+            'doc': 'normalize XRD images by average over the ROI [i0, i1, j0, j1]',
             },
         'nMaxLines': {
             'value': 0,
@@ -87,19 +87,10 @@ class nanomaxScan_flyscan_nov2017(Scan):
         self.yMotor = opts['yMotor']['value']
         # self.fastAxis = opts['fastAxis']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        if len(opts['xrfCropping']['value'].split()) == 2:
-            self.xrfCropping = map(int, opts['xrfCropping']['value'].split())
-        else:
-            self.xrfCropping = False
-        if len(opts['xrdCropping']['value'].split()) == 4:
-            self.xrdCropping = map(int, opts['xrdCropping']['value'].split())
-        else:
-            self.xrdCropping = False
+        self.xrfCropping = map(int, opts['xrfCropping']['value'])
+        self.xrdCropping = map(int, opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
-        if len(opts['xrdNormalize']['value'].split()) == 4:
-            self.xrdNormalize = map(int, opts['xrdNormalize']['value'].split())
-        else:
-            self.xrdNormalize = False
+        self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
 
@@ -239,7 +230,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
                     with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, line)
                         dataset = hf.get(hdfDataPath)
-                        if isinstance(self.xrdCropping, list):
+                        if self.xrdCropping:
                             i0, i1, j0, j1 = self.xrdCropping
                             data_ = np.array(dataset[:, i0 : i1, j0 : j1])
                         else:
@@ -250,7 +241,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
                             for ii in range(data_.shape[0]):
                                 new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
                             data_ = new_data_
-                        if isinstance(self.xrdNormalize, list):
+                        if self.xrdNormalize:
                             i0, i1, j0, j1 = self.xrdNormalize
                             data_ = np.array(data_, dtype=float)
                             for i in range(data_.shape[0]):
@@ -284,7 +275,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
                     if not dataset:
                         break
-                    if isinstance(self.xrfCropping, list):
+                    if self.xrfCropping:
                         ch0, ch1 = self.xrfCropping
                         data.append(np.array(dataset)[:, self.xrfChannel, ch0:ch1])
                     else:

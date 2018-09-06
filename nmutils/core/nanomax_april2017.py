@@ -22,14 +22,14 @@ class nanomaxScan_flyscan_april2017(Scan):
             'doc': 'the second motor, stepped for each flyscan line',
             },
         'xrfChannel': {
-            'value': 3,
+            'value': 2,
             'type': int,
             'doc': 'xspress3 channel from which to read XRF',
             },
         'xrdCropping': {
-            'value': 'none',
-            'type': str,
-            'doc': 'detector area to load, "i0 i1 j0 j1" - none means load all',
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
         'xrdBinning': {
             'value': 1,
@@ -37,9 +37,9 @@ class nanomaxScan_flyscan_april2017(Scan):
             'doc': 'bin xrd pixels n-by-n (after cropping)',
             },
         'xrdNormalize': {
-            'value': 'none',
-            'type': str,
-            'doc': 'normalize XRD images by average over the ROI "i0 i1 j0 j1"',
+            'value': [],
+            'type': list,
+            'doc': 'normalize XRD images by average over the ROI [i0, i1, j0, j1]',
             },
         'nMaxLines': {
             'value': 0,
@@ -47,9 +47,9 @@ class nanomaxScan_flyscan_april2017(Scan):
             'doc': 'load at most N lines - 0 means load all',
             },
         'detectorPreference': {
-            'value': 'none',
-            'type': str,
-            'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
+            'value': 'pil100k',
+            'type': ['pil100k', 'pil1m', 'merlin', 'eiger1m-edf'],
+            'doc': 'preferred XRD detector',
             },
         'nominalYPositions': {
             'value': False,
@@ -71,15 +71,9 @@ class nanomaxScan_flyscan_april2017(Scan):
         self.dataType = opts['dataType']['value']
         self.steppedMotor = opts['steppedMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        if len(opts['xrdCropping']['value'].split()) == 4:
-            self.xrdCropping = map(int, opts['xrdCropping']['value'].split())
-        else:
-            self.xrdCropping = False
+        self.xrdCropping = map(int, opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
-        if len(opts['xrdNormalize']['value'].split()) == 4:
-            self.xrdNormalize = map(int, opts['xrdNormalize']['value'].split())
-        else:
-            self.xrdNormalize = False
+        self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
         self.nominalYPositions = bool(opts['nominalYPositions']['value'])
@@ -237,7 +231,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
             print 'loading data: ' + filepattern%(self.scanNr, line)
             dataset = hf.get(hdfDataPath)
-            if isinstance(self.xrdCropping, list):
+            if self.xrdCropping:
                 i0, i1, j0, j1 = self.xrdCropping
                 data_ = np.array(dataset[:, i0 : i1, j0 : j1])
             else:
@@ -248,7 +242,7 @@ class nanomaxScan_flyscan_april2017(Scan):
                 for ii in range(data_.shape[0]):
                     new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
                 data_ = new_data_
-            if isinstance(self.xrdNormalize, list):
+            if self.xrdNormalize:
                 i0, i1, j0, j1 = self.xrdNormalize
                 data_ = np.array(data_, dtype=float)
                 for i in range(data_.shape[0]):
@@ -266,7 +260,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         print 'loading data: ' + filepattern%(self.scanNr, line)
         imgf = fabio.open(os.path.join(path, filepattern%(self.scanNr, line)))
         dtp = np.int32 # imgf.data.dtype
-        if isinstance(self.xrdCropping, list):
+        if self.xrdCropping:
             i0, i1, j0, j1 = self.xrdCropping
             data_ = np.ndarray((imgf.nframes,i1-i0,j1-j0),dtp)
             for iframe in range(imgf.nframes):
@@ -283,7 +277,7 @@ class nanomaxScan_flyscan_april2017(Scan):
             for ii in range(data_.shape[0]):
                 new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
             data_ = new_data_
-        if isinstance(self.xrdNormalize, list):
+        if self.xrdNormalize:
             i0, i1, j0, j1 = self.xrdNormalize
             data_ = np.array(data_, dtype=float)
             imgf.getframe(0)
@@ -335,9 +329,9 @@ class nanomaxScan_stepscan_april2017(Scan):
             'doc': 'normalize XRD images by total intensity',
             },
         'detectorPreference': {
-            'value': 'none',
-            'type': str,
-            'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
+            'value': 'pil100k',
+            'type': ['pil100k', 'pil1m', 'merlin', 'eiger1m-edf'],
+            'doc': 'preferred XRD detector',
             },
         'nominalPositions': {
             'value': False,
