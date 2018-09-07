@@ -154,20 +154,21 @@ class ScanViewer(qt.QMainWindow):
     def load(self):
         try:
             self.statusOutput("Loading data...")
-            if self.scan:
+            if self.scan and not self.ui.appendBox.isChecked():
                 print "Deleting previous scan from memory"
                 # These references have to go
                 self.ui.comWidget.setScan(None)
                 self.ui.xrdWidget.setScan(None)
                 self.ui.xrfWidget.setScan(None)
                 del(self.scan)
+                self.scan = None
                 # enforcing garbage collection for good measure
                 gc.collect()
 
             # construct a scan
             try:
                 subclass = str(self.ui.scanClassBox.currentText())
-                self.scan = getattr(nmutils.core, subclass)()
+                scan_ = getattr(nmutils.core, subclass)()
             except:
                 raise Exception("Invalid subclass")
 
@@ -178,8 +179,8 @@ class ScanViewer(qt.QMainWindow):
 
             # add xrd data:
             try:
-                self.scan.addData(scannr=scannr, filename=filename, dataType='xrd', name='xrd', **opts)
-                print "loaded xrd data: %d positions, %d x %d pixels"%(self.scan.data['xrd'].shape)
+                scan_.addData(scannr=scannr, filename=filename, dataType='xrd', name='xrd', **opts)
+                print "loaded xrd data: %d positions, %d x %d pixels"%(scan_.data['xrd'].shape)
                 has_xrd = True
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
@@ -190,13 +191,20 @@ class ScanViewer(qt.QMainWindow):
 
             # add xrf data:
             try:
-                self.scan.addData(scannr=scannr, filename=filename, dataType='xrf', name='xrf', **opts)
-                print "loaded xrf data: %d positions, %d channels"%(self.scan.data['xrf'].shape)
+                scan_.addData(scannr=scannr, filename=filename, dataType='xrf', name='xrf', **opts)
+                print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
                 has_xrf = True
             except:
                 print "no xrf data found"
                 has_xrf = False
 
+            # append or store loaded scan as it is
+            if not self.scan:
+                self.scan = scan_
+            else:
+                self.scan.merge(scan_)
+
+            # update the widgets
             if has_xrd:
                 self.ui.comWidget.setScan(self.scan)
                 self.ui.xrdWidget.setScan(self.scan)
