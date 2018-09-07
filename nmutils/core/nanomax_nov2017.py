@@ -70,6 +70,11 @@ class nanomaxScan_flyscan_nov2017(Scan):
             'type': str,
             'doc': 'preferred XRD detector: pil100k, pil1m, merlin, ...',
             },
+        'globalPositions': {
+                'value': False,
+                'type': bool,
+                'doc': 'attempt to assign global scanning positions',
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -93,6 +98,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
         self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
+        self.globalPositions = opts['globalPositions']['value']
 
     def _read_buffered(self, fp, entry):
         """
@@ -169,6 +175,16 @@ class nanomaxScan_flyscan_nov2017(Scan):
         else:
             y = fast
             x = slow
+
+        # optionally add coarse stage position
+        if self.globalPositions:
+            sams_x = fp.get(entry+'/measurement/sams_x').value * 1e3
+            sams_y = fp.get(entry+'/measurement/sams_y').value * 1e3
+            sams_z = fp.get(entry+'/measurement/sams_z').value * 1e3
+            offsets = {'samx': sams_x, 'samy': sams_y, 'samz': sams_z}
+            x += offsets[self.xMotor[:4]]
+            y += offsets[self.yMotor[:4]]
+            print '*** added rough position offsets!'
 
         print "loaded positions from %d lines, %d positions on each"%(self.nlines, lineLen)
 
