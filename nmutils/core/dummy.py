@@ -30,11 +30,16 @@ class dummyScan(Scan):
             'type': int,
             'doc': 'Step size of the dummy scan',
             },
+        'framesize': {
+            'value': 50,
+            'type': int,
+            'doc': 'Frame covered in every position',
+            },
         'fourier': {
             'value': False,
             'type': bool,
             'doc': "Whether or not to Fourier transform exposure",
-            }
+            },
         }
 
     def addData(self, name=None, filename=None, scannr=None, **kwargs):
@@ -57,9 +62,11 @@ class dummyScan(Scan):
         self.xrange = map(int, opts['xrange']['value'])
         self.yrange = map(int, opts['yrange']['value'])
         self.stepsize = int(opts['stepsize']['value'])
+        self.framesize = int(opts['framesize']['value'])
         self.doFourier = opts['fourier']['value']
 
         self.image = face(gray=True)
+
 
     def _readPositions(self):
         """ 
@@ -69,8 +76,9 @@ class dummyScan(Scan):
         x0, x1 = self.xrange
         y0, y1 = self.yrange
         step = self.stepsize
-        x = np.arange(x0+step/2, x1-step/2, step)
-        y = np.arange(y0+step/2, y1-step/2, step)
+        frame = self.framesize
+        x = np.arange(x0+frame/2, x1-frame/2, step)
+        y = np.arange(y0+frame/2, y1-frame/2, step)
         lenx = len(x)
         x = np.repeat(x, len(y))
         y = np.tile(y, lenx)
@@ -80,13 +88,13 @@ class dummyScan(Scan):
         """ 
         Override data reading.
         """
-        step = self.stepsize
+        frame = self.framesize
         data = []
         if self.dataType == 'xrd':
             for pos in self.positions:
-                frame = self.image[pos[1]-step/2:pos[1]+step/2,
-                                   pos[0]-step/2:pos[0]+step/2,]
+                dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
+                                   pos[0]-frame/2:pos[0]+frame/2,]
                 if self.doFourier:
-                    frame = np.abs(np.fft.fftshift(np.fft.fft2(frame)))**2
-                data.append(frame)
+                    dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
+                data.append(dataframe)
         return np.array(data)
