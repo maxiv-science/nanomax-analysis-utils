@@ -64,7 +64,7 @@ class nanomaxScan_flyscan_april2017(Scan):
         stores them for use during this data loading.
         """
         # copy defaults, then update with kwarg options
-        opts = self.default_opts.copy()
+        opts = cp.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
         
         # parse options
@@ -346,7 +346,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         stores them for use during this data loading.
         """
         # copy defaults, then update with kwarg options
-        opts = self.default_opts.copy()
+        opts = cp.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
         
         # parse options

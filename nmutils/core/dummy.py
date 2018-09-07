@@ -1,6 +1,7 @@
 import numpy as np
 from Scan import Scan
 from scipy.misc import face
+import copy
 
 class dummyScan(Scan):
     """
@@ -49,7 +50,7 @@ class dummyScan(Scan):
         stores them for use during this data loading.
         """
         # copy defaults, then update with kwarg options
-        opts = self.default_opts.copy()
+        opts = copy.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
         
         self.dataType = opts['dataType']['value']
