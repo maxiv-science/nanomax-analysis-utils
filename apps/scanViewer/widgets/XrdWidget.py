@@ -222,7 +222,6 @@ class XrdWidget(qt.QWidget):
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build XRD map. See terminal output.')
-            raise
 
     def updateImage(self):
         try:
@@ -263,7 +262,6 @@ class XrdWidget(qt.QWidget):
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')
-            raise
 
     def togglePositions(self):
         if self.map.positionsAction.isChecked():
