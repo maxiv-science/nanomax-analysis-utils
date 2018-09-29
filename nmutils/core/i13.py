@@ -25,19 +25,9 @@ class i13_stepscan(Scan):
             'doc': 'scanned motor to plot on the y axis',
             },
         'xrdCropping': {
-            'value': 0,
-            'type': int,
-            'doc': 'size of detector area to load, 0 means no cropping',
-            },
-        'xrdBinning': {
-            'value': 1,
-            'type': int,
-            'doc': 'bin xrd pixels n-by-n (after cropping)',
-            },
-        'xrdNormalize': {
-            'value': False,
-            'type': bool,
-            'doc': 'normalize XRD images by total intensity',
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
         'detector': {
             'value': 'excalibur',
@@ -59,9 +49,7 @@ class i13_stepscan(Scan):
         self.dataType = opts['dataType']['value']
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
-        self.xrdCropping = int(opts['xrdCropping']['value'])
-        self.xrdBinning = int(opts['xrdBinning']['value'])
-        self.xrdNormalize = bool(opts['xrdNormalize']['value'])
+        self.xrdCropping = map(int, opts['xrdCropping']['value'])
         self.detector = opts['detector']['value']
 
         self.fileName = os.path.join(self.fileName, str(self.scanNr)) + '.nxs'
@@ -95,11 +83,15 @@ class i13_stepscan(Scan):
 
         if self.dataType == 'xrd':
             print "loading diffraction data..."
-            
-            with h5py.File(self.fileName, 'r') as hf:
-                data = np.array(hf.get('entry1/instrument/%s/data' % self.detector))
-
+            with h5py.File(self.fileName, 'r') as fp:
+                d = fp.get('entry1/instrument/%s/data' % self.detector)
+                if self.xrdCropping:
+                    roi = self.xrdCropping
+                    data = np.array(d[:, roi[0]:roi[1], roi[2]:roi[3]])
+                else:
+                    data = np.array(d)
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
 
         return data
+
