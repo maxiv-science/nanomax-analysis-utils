@@ -222,6 +222,7 @@ class ComWidget(qt.QWidget):
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build COM map. See terminal output.')
+            raise
 
 
     def togglePositions(self):
