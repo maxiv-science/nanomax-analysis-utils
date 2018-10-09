@@ -12,15 +12,9 @@ try:
 except ImportError:
     print "hdf5plugin not found - may not be able to read compressed Eiger files"
 
-# import the GUI first to force silx to PyQt5
-try:
-    from PyQt5 import QtCore
-    import design_qt5 as design
-    print 'Using PyQt5'
-except ImportError:
-    from PyQt4 import QtCore
-    import design_qt4 as design
-    print 'Using PyQt4'
+# silx automatically chooses PyQt version. You can force it here
+# by first importing it explicitly.
+# #from PyQt5 import QtCore
 
 # make sure silx is not too old (API features have appeared)
 from distutils.version import LooseVersion
@@ -31,8 +25,9 @@ except:
     raise Exception('This application requires silx >= 0.4.0')
 
 from silx.gui import qt
-print 'silx uses', qt.BINDING
+print 'silx using', qt.BINDING
 from silx.gui.icons import getQIcon
+import design
 import sys
 import gc
 import numpy as np

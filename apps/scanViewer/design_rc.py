@@ -2,13 +2,14 @@
 
 # Resource object code
 #
-# Created by: The Resource Compiler for PyQt5 (Qt v5.5.1)
+# Created by: The Resource Compiler for PyQt4 (Qt v4.8.7)
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore
+# from PyQt4 import QtCore
+from silx.gui import qt as QtCore
 
-qt_resource_data = b"\
+qt_resource_data = "\
 \x00\x00\x0c\x7a\
 \x89\
 \x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\
@@ -1492,7 +1493,7 @@ qt_resource_data = b"\
 \x4e\x44\xae\x42\x60\x82\
 "
 
-qt_resource_name = b"\
+qt_resource_name = "\
 \x00\x05\
 \x00\x73\x5e\x63\
 \x00\x6c\
@@ -1507,7 +1508,7 @@ qt_resource_name = b"\
 \x00\x61\x00\x6e\x00\x6f\x00\x6d\x00\x61\x00\x78\x00\x2e\x00\x70\x00\x6e\x00\x67\
 "
 
-qt_resource_struct = b"\
+qt_resource_struct = "\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\
 \x00\x00\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\
 \x00\x00\x00\x10\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\

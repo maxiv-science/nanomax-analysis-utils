@@ -6,7 +6,10 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+#from PyQt4 import QtCore, QtGui
+from silx.gui import qt as QtCore
+QtGui = QtCore
+QtWidgets = QtCore
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -162,7 +165,7 @@ class Ui_MainWindow(object):
         self.browseButton.setText(_translate("MainWindow", "Browse...", None))
         self.appendBox.setText(_translate("MainWindow", "Append", None))
 
-import design_rc_qt4 as design_rc
 from widgets.ComWidget import ComWidget
 from widgets.XrdWidget import XrdWidget
 from widgets.XrfWidget import XrfWidget
+import design_rc
