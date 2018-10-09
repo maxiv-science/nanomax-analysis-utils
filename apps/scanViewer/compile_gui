@@ -1,0 +1,15 @@
+pyuic5 design.ui -o design_qt5.py
+pyrcc5 design.qrc -o design_rc_qt5.py
+pyuic4 design.ui -o design_qt4.py
+pyrcc4 design.qrc -o design_rc_qt4.py
+
+# and then adjust the imports at the end
+# 1) adjust design_rc to design_rc_qt4/5
+# 2) import design_rc_qtX before the silx widgets
+#
+# example:
+# import design_rc_qt5 as design_rc
+# from widgets.ComWidget import ComWidget
+# from widgets.XrdWidget import XrdWidget
+# from widgets.XrfWidget import XrfWidget
+#

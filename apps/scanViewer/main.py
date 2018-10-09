@@ -12,6 +12,16 @@ try:
 except ImportError:
     print "hdf5plugin not found - may not be able to read compressed Eiger files"
 
+# import the GUI first to force silx to PyQt5
+try:
+    from PyQt5 import QtCore
+    import design_qt5 as design
+    print 'Using PyQt5'
+except ImportError:
+    from PyQt4 import QtCore
+    import design_qt4 as design
+    print 'Using PyQt4'
+
 # make sure silx is not too old (API features have appeared)
 from distutils.version import LooseVersion
 try:
@@ -21,10 +31,10 @@ except:
     raise Exception('This application requires silx >= 0.4.0')
 
 from silx.gui import qt
+print 'silx uses', qt.BINDING
 from silx.gui.icons import getQIcon
 import sys
 import gc
-import design
 import numpy as np
 from scipy.interpolate import griddata
 import nmutils

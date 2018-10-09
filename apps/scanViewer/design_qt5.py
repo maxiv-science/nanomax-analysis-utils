@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'design.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -25,13 +25,11 @@ class Ui_MainWindow(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.optionsGrid = QtWidgets.QGridLayout(self.tab)
-        self.optionsGrid.setContentsMargins(0, 0, 0, 0)
         self.optionsGrid.setObjectName("optionsGrid")
         self.tabWidget.addTab(self.tab, "")
         self.roi = QtWidgets.QWidget()
         self.roi.setObjectName("roi")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.roi)
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.xrdWidget = XrdWidget(self.roi)
         self.xrdWidget.setObjectName("xrdWidget")
@@ -40,7 +38,6 @@ class Ui_MainWindow(object):
         self.com = QtWidgets.QWidget()
         self.com.setObjectName("com")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.com)
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.comWidget = ComWidget(self.com)
         self.comWidget.setObjectName("comWidget")
@@ -49,7 +46,6 @@ class Ui_MainWindow(object):
         self.xrf = QtWidgets.QWidget()
         self.xrf.setObjectName("xrf")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.xrf)
-        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.xrfWidget = XrfWidget(self.xrf)
         self.xrfWidget.setObjectName("xrfWidget")
@@ -153,7 +149,7 @@ class Ui_MainWindow(object):
         self.browseButton.setText(_translate("MainWindow", "Browse..."))
         self.appendBox.setText(_translate("MainWindow", "Append"))
 
+import design_rc_qt5 as design_rc
 from widgets.ComWidget import ComWidget
 from widgets.XrdWidget import XrdWidget
 from widgets.XrfWidget import XrfWidget
-import design_rc
