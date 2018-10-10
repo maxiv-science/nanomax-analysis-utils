@@ -72,10 +72,11 @@ class ScanViewer(qt.QMainWindow):
 
         # connect browse button
         def wrap():
-            try:
-                self.ui.filenameBox.setText(qt.QFileDialog.getOpenFileName())
-            except TypeError:
-                pass
+            result = qt.QFileDialog.getOpenFileName()
+            # PyQt5 gives a tuple here...
+            if type(result) == tuple:
+                result = result[0]
+            self.ui.filenameBox.setText(result)
         self.ui.browseButton.clicked.connect(wrap)
 
         # populate the options tab
