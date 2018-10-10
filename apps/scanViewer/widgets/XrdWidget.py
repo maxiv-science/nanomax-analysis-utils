@@ -204,7 +204,7 @@ class XrdWidget(qt.QWidget):
             # get and check the mask array
             mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
             # if the mask is cleared, reset without wasting time
-            if mask.sum() == 0:
+            if (mask is None) or (not np.sum(mask)):
                 print 'building XRD map by averaging all pixels'
                 average = np.mean(self.scan.data['xrd'], axis=(1,2))
             else:
@@ -237,7 +237,7 @@ class XrdWidget(qt.QWidget):
             elif self.selectionMode == 'roi':
                 self.indexMarkerOn(False)
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
-                if mask.sum() == 0:
+                if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
                     print 'building diffraction pattern from all positions'
                     data = np.mean(self.scan.data['xrd'], axis=0)

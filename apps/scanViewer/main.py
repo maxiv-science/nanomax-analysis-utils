@@ -20,12 +20,12 @@ except ImportError:
 from distutils.version import LooseVersion
 try:
     import silx
-    assert LooseVersion(silx.version) >= LooseVersion('0.4.0')
+    assert LooseVersion(silx.version) >= LooseVersion('0.8.0')
 except:
-    raise Exception('This application requires silx >= 0.4.0')
+    raise Exception('This application requires silx >= 0.8.0')
 
 from silx.gui import qt
-print 'silx using', qt.BINDING
+print 'silx %s using' % silx.version, qt.BINDING
 from silx.gui.icons import getQIcon
 import design
 import sys

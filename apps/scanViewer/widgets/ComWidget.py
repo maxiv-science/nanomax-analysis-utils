@@ -189,7 +189,7 @@ class ComWidget(qt.QWidget):
             # calculate COM
             com = []
             mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
-            if np.prod(mask.shape) == 0:
+            if (mask is None) or (not np.sum(mask)):
                 mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
             for im in self.scan.data['xrd']:
                 com_ = scipy.ndimage.measurements.center_of_mass(im * (1 - mask))

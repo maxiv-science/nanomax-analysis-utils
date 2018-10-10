@@ -88,13 +88,10 @@ class XrfWidget(qt.QWidget):
             ylims = self.map.getGraphYLimits()
             # get ROI information
             try:
-                roiName = self.spectrum.getCurvesRoiDockWidget().currentROI
-                # this doesn't update properly:
-                # roiDict = self.spectrum.getCurvesRoiDockWidget().roidict
-                # ... but this does:
-                roiList, roiDict = self.spectrum.getCurvesRoiDockWidget().widget().getROIListAndDict()
-                lower = int(np.floor(roiDict[roiName]['from']))
-                upper = int(np.ceil(roiDict[roiName]['to']))
+                rois = self.spectrum.getCurvesRoiWidget().getRois()
+                roiName = self.spectrum.getCurvesRoiWidget().currentROI
+                lower = int(np.floor(rois[roiName]['from']))
+                upper = int(np.ceil(rois[roiName]['to']))
                 print "building fluorescence map from channels %d to %d"%(lower, upper)
                 average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
             except:
@@ -123,7 +120,7 @@ class XrfWidget(qt.QWidget):
             elif self.selectionMode == 'roi':
                 self.indexMarkerOn(False)
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
-                if mask.sum() == 0:
+                if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
                     print 'building fluorescence spectrum from all positions'
                     data = np.mean(self.scan.data['xrf'], axis=0)
