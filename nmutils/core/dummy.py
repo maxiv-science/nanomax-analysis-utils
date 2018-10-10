@@ -97,4 +97,11 @@ class dummyScan(Scan):
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(dataframe)
+        elif self.dataType == 'xrf':
+            for pos in self.positions:
+                dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
+                                   pos[0]-frame/2:pos[0]+frame/2,]
+                if self.doFourier:
+                    dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
+                data.append(np.mean(dataframe, axis=0))
         return np.array(data)
