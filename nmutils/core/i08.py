@@ -34,21 +34,24 @@ class i08_scan(Scan):
         self.dataType = opts['dataType']['value']
         self.normalize = opts['normalizeI0']['value']
 
-        # check file name, we want the one called *_b.nxs
-        splt = self.fileName.split('.')
-        if not splt[-2][-2:] == '_b':
-            splt[-2] += '_b'
-        self.fileName = '.'.join(splt)
-        print 'going to load %s' % self.fileName
-
     def _readPositions(self):
         """
-        Override position reading.
+        Override position reading. A bit complicated since xrd (stxm)
+        and xrf data are written with different position formats.
         """
-
         with h5py.File(self.fileName, 'r') as hf:
-            x_ = np.array(hf.get('entry/xmapMca/SampleX'))
-            y_ = np.array(hf.get('entry/xmapMca/SampleY'))
+            x_ = np.array(hf.get('entry/I0_data/SampleX'))
+            y_ = np.array(hf.get('entry/I0_data/SampleY'))
+        if x_ is None or None in x_:
+            # ok we are reading one of these xrf files
+            fn = self.fileName[:-4] + '_b.nxs'
+            with h5py.File(fn, 'r') as hf:
+                x_ = np.array(hf.get('entry/xmapMca/SampleX'))
+                y_ = np.array(hf.get('entry/xmapMca/SampleY'))
+            print "took positions from", fn
+        else:
+            print "took positions from", self.fileName
+
         xx, yy = np.meshgrid(x_, y_)
         x = xx.flatten()
         y = yy.flatten()
@@ -61,15 +64,24 @@ class i08_scan(Scan):
 
         if self.dataType == 'xrf':
             print "loading fluorescence data..."
-            with h5py.File(self.fileName, 'r') as fp:
+            fn = self.fileName[:-4] + '_b.nxs'
+            with h5py.File(fn, 'r') as fp:
                 data = np.array(fp.get('entry/xmapMca/data'))
                 data = data.reshape(-1, data.shape[-1])
                 I0 = np.array(fp.get('entry/xmapMca/I0'))
                 I0 = I0.reshape(-1)
                 I0 = np.tile(I0, data.shape[1]).reshape(-1, I0.shape[0]).T
+            if self.normalize:
+                data = data / I0
+        elif self.dataType == 'xrd':
+            print "loading STXM data..."
+            with h5py.File(self.fileName, 'r') as fp:
+                data = np.array(fp.get('entry/I0_data/I0'))
+                if len(data.shape) == 5:
+                    data = data[0]
+                    print '*** NOTE: there seems to be many diode channels. Choosing the first.'
+                data = data.reshape(data.shape[0] * data.shape[1], 1, 1)
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrf''')
-        if self.normalize:
-            data = data / I0
+            raise RuntimeError('unknown datatype specified (should be ''xrf'' or ''xrd''')
         return data
 
