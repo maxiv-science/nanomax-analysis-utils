@@ -54,11 +54,13 @@ if outputFile is not None:
 
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
-    probe = np.array(hf.get('content/probe/S00G00/data'))
-    obj = np.array(hf.get('content/obj/S00G00/data'))
-    psize = np.array(hf.get('content/probe/S00G00/_psize'))
-    energy = np.array(hf.get('content/probe/S00G00/_energy'))
-    origin = np.array(hf.get('content/probe/S00G00/_origin'))
+    scanid = str(hf['content/probe'].keys()[0])
+    print 'loading entry %s' % scanid
+    probe = np.array(hf.get('content/probe/%s/data' % scanid))
+    obj = np.array(hf.get('content/obj/%s/data' % scanid))
+    psize = np.array(hf.get('content/probe/%s/_psize' % scanid))
+    energy = np.array(hf.get('content/probe/%s/_energy' % scanid))
+    origin = np.array(hf.get('content/probe/%s/_origin' % scanid))
 
 try:
     probe = probe[0]

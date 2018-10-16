@@ -8,6 +8,8 @@ import sys
 This script visualizes a ptypy input ptyd file.
 """
 
+raise Exception('This script is probably broken. Try fixing it!')
+
 ### Parse input
 if len(sys.argv) < 2 or len(sys.argv) > 2:
     print "\nUsage: plotPtypyInput.py <ptyd file>\n"

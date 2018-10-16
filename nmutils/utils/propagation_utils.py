@@ -35,8 +35,8 @@ def propagateNearfield(A, psize, distances, energy):
 
     import ptypy
     from distutils.version import LooseVersion
-    if LooseVersion(ptypy.version) > LooseVersion('0.2.0.dev'):
-        raise Exception('This script must be updated to work with ptypy > 0.2.0')
+    if LooseVersion(ptypy.version) < LooseVersion('0.3.0'):
+        raise Exception('This script requires ptypy 0.3.0 or newer')
 
     # check for square matrix
     try:
@@ -52,7 +52,7 @@ def propagateNearfield(A, psize, distances, energy):
         distances = [distances]
 
     # parameters for the propagator
-    geo_pars = ptypy.core.geometry.DEFAULT.copy(depth=10)
+    geo_pars = ptypy.core.geometry.Geo.DEFAULT.copy(depth=10)
     geo_pars.energy = energy
     geo_pars.distance = distances[0]
     geo_pars.resolution = psize
