@@ -162,6 +162,8 @@ class ComWidget(qt.QWidget):
             self.map.removeImage('data')
             self.image.removeImage('data')
             return
+        if scan.data['xrd'].shape[1:] == (1, 1):
+            return
         # avoid old position grids:
         if self.map.positionsAction.isChecked():
             self.togglePositions()

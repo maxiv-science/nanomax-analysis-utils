@@ -230,6 +230,8 @@ class XrdWidget(qt.QWidget):
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
             self.image.getMaskToolsDockWidget().setVisible(False)
+            if self.scan.data['xrd'].shape[1:] == (1, 1):
+                return
             # get and check the mask array
             if self.selectionMode == 'ind':
                 index = self.map.indexBox.value()
