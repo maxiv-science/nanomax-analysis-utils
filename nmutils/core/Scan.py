@@ -287,9 +287,11 @@ class Scan(object):
             margin = oversampling * stepsize / 2
             y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMin-(stepsize*oversampling*5)/2:xMin+(stepsize*oversampling*5)/2:stepsize]
         else:
-            stepsize = np.sqrt((xMax-xMin) * (yMax-yMin) / float(self.nPositions)) / oversampling
-            margin = oversampling * stepsize / 2
-            y, x = np.mgrid[yMax+margin:yMin-margin:-stepsize, xMax+margin:xMin-margin:-stepsize]
+            xstepsize = (xMax-xMin) / np.sqrt(self.nPositions) / oversampling
+            ystepsize = (yMax-yMin) / np.sqrt(self.nPositions) / oversampling
+            xmargin = oversampling * xstepsize / 2
+            ymargin = oversampling * ystepsize / 2
+            y, x = np.mgrid[yMax+ymargin:yMin-ymargin:-ystepsize, xMax+xmargin:xMin-xmargin:-xstepsize]
         z = griddata(self.positions, values, (x, y), method=method)
         
         # we've been assuming lower-right origin. adjust:
