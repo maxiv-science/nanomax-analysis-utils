@@ -219,6 +219,11 @@ class XrdWidget(qt.QWidget):
                 origin=[x.min(), y.min()], resetzoom=False)
             self.map.setGraphXLimits(*xlims)
             self.map.setGraphYLimits(*ylims)
+            aspect = (x.max() - x.min()) / (y.max() - y.min())
+            if aspect > 50 or aspect < 1./50:
+                self.map.setKeepDataAspectRatio(False)
+            else:
+                self.map.setKeepDataAspectRatio(True)
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build XRD map. See terminal output.')
