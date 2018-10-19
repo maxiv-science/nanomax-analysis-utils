@@ -18,9 +18,11 @@ from silx.gui import qt
 class LimaLiveViewer2D(ImageView):
     """
     Displays 2d detector images live from Lima.
+
+    alarm is the maximum photon flux per pixel allowed.
     """
 
-    def __init__(self, limaPath, interval=.1):
+    def __init__(self, limaPath, interval=.1, alarm=None):
         # run the base class constructor
         super(LimaLiveViewer2D, self).__init__()
 
@@ -37,6 +39,7 @@ class LimaLiveViewer2D(ImageView):
         self.setColormap(normalization='log')
         self.setYAxisInverted(True)
         self.hasImage = False
+        self.alarm = alarm
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -55,9 +58,14 @@ class LimaLiveViewer2D(ImageView):
                 image = image.reshape((self.h, self.w))
                 self.setImage(image, copy=False, reset=(not self.hasImage))
                 self.hasImage = True
+                exptime = self.lima.acq_expo_time
                 total = np.sum(image)
                 hottest = np.max(image)
-                self.setGraphTitle('Total %.1e, hottest %.1e' % (total, hottest))
+                if (self.alarm is not None) and (hottest/exptime > self.alarm):
+                    self.setStyleSheet('QMainWindow{background-color: red}')
+                else:
+                    self.setStyleSheet('QMainWindow{background-color: white}')
+                self.setGraphTitle('Total: %.1e (%.1e / s) \n Hottest: %.1e (%.1e / s)' % (total, total/exptime, hottest, hottest/exptime))
             except:
                 pass # sometimes you miss frames, no big deal
 
@@ -67,7 +75,7 @@ class LimaLiveViewer1D(PlotWindow):
     Displays a stack of 1D spectra live from Lima.
     """
 
-    def __init__(self, limaPath, interval=.1):
+    def __init__(self, limaPath, interval=.1, alarm=None):
         # run the base class constructor
         super(LimaLiveViewer1D, self).__init__()
 
@@ -119,10 +127,18 @@ if __name__ == '__main__':
         'eiger': 'lima/limaccds/eiger',
         'xspress3': 'lima/limaccd/b303a-a100380-dia-detxfcu-01',
     }
+
+    # alarm levels in photons per pixel per second
+    alarm_levels = {
+        'lima/limaccd/b-nanomax-mobile-ipc-01': 5e6,
+        'lima/limaccd/lima/limaccd/b-nanomax-pilatus1m-ipc-01': 5e6,
+        'lima/limaccd/test_merlin': 1e5,
+        }
     
     # parse arguments
     try:
         limaPath = known[sys.argv[1]] if sys.argv[1] in known.keys() else sys.argv[1] # parse shortcuts
+        alarm = alarm_levels[limaPath] if limaPath in alarm_levels.keys() else None
         Viewer = LimaLiveViewer2D   # default
         interval = 0.1              # default
         if len(sys.argv) >= 3 and sys.argv[2].lower() == '1d':
@@ -139,7 +155,7 @@ if __name__ == '__main__':
         exit(0)
 
     # instantiate the viewer and run
-    viewer = Viewer(limaPath, interval=interval)
+    viewer = Viewer(limaPath, interval=interval, alarm=alarm)
     viewer.show()
     app.exec_()
 
