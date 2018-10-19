@@ -55,6 +55,9 @@ class LimaLiveViewer2D(ImageView):
                 image = image.reshape((self.h, self.w))
                 self.setImage(image, copy=False, reset=(not self.hasImage))
                 self.hasImage = True
+                total = np.sum(image)
+                hottest = np.max(image)
+                self.setGraphTitle('Total %.1e, hottest %.1e' % (total, hottest))
             except:
                 pass # sometimes you miss frames, no big deal
 
