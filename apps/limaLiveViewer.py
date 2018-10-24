@@ -123,7 +123,7 @@ if __name__ == '__main__':
     known = {
         'pil100k': 'lima/limaccd/b-nanomax-mobile-ipc-01',
         'pil1m': 'lima/limaccd/b-nanomax-pilatus1m-ipc-01',
-        'merlin': 'lima/limaccd/test_merlin',
+        'merlin': 'lima/limaccd/b303a-a100384-dia-detpicu-02',
         'eiger': 'lima/limaccds/eiger',
         'xspress3': 'lima/limaccd/b303a-a100380-dia-detxfcu-01',
     }
