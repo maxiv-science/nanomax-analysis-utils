@@ -237,11 +237,12 @@ class ScanViewer(qt.QMainWindow):
                 self.scan.merge(scan_)
 
             # update the widgets
-            if has_xrd:
-                self.ui.comWidget.setScan(self.scan)
-                self.ui.xrdWidget.setScan(self.scan)
-            if has_xrf:
-                self.ui.xrfWidget.setScan(self.scan)
+            if self.scan.nPositions > 1:
+                if has_xrd:
+                    self.ui.comWidget.setScan(self.scan)
+                    self.ui.xrdWidget.setScan(self.scan)
+                if has_xrf:
+                    self.ui.xrfWidget.setScan(self.scan)
             self.statusOutput("")
         except:
             self.statusOutput("Loading failed. See terminal output for details.")
