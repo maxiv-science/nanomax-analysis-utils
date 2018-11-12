@@ -9,6 +9,11 @@ class i08_scan(Scan):
 
     default_opts = {
         # the dataType option is mandatory for use with scanViewer
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "name of the main data file",
+            },
         'dataType': {
             'value': 'xrd',
             'type': str,
@@ -31,6 +36,7 @@ class i08_scan(Scan):
         opts = self._updateOpts(opts, **kwargs)
 
         # parse options
+        self.fileName = opts['fileName']['value']
         self.dataType = opts['dataType']['value']
         self.normalize = opts['normalizeI0']['value']
 

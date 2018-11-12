@@ -42,12 +42,6 @@ class dummyScan(Scan):
             },
         }
 
-    def addData(self, name=None, filename=None, scannr=None, **kwargs):
-        """
-        Override that doesn't require filename and scannr.
-        """
-        super(dummyScan, self).addData(name=name, filename='dummy',
-                                       scannr=-1, **kwargs)
 
     def _prepareData(self, **kwargs):
         """ 

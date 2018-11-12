@@ -10,6 +10,16 @@ class nanomaxScan_flyscan_april2017(Scan):
     # in a temporary way. 
 
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -77,6 +87,8 @@ class nanomaxScan_flyscan_april2017(Scan):
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
         self.nominalYPositions = bool(opts['nominalYPositions']['value'])
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _readPositions(self):
         """ 
@@ -292,6 +304,16 @@ class nanomaxScan_stepscan_april2017(Scan):
     # set up for commissioning and user runs.
 
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -359,6 +381,8 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.xrdNormalize = bool(opts['xrdNormalize']['value'])
         self.detPreference = opts['detectorPreference']['value']
         self.nominalPositions = bool(opts['nominalPositions']['value'])
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _readPositions(self):
         """ 

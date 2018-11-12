@@ -8,6 +8,16 @@ import os.path
 class i13_stepscan(Scan):
 
     default_opts = {
+        'path': {
+            'value': None,
+            'type': str,
+            'doc': "path to the data folder",
+            },
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -51,8 +61,10 @@ class i13_stepscan(Scan):
         self.yMotor = opts['yMotor']['value']
         self.xrdCropping = map(int, opts['xrdCropping']['value'])
         self.detector = opts['detector']['value']
+        path = opts['path']['value']
+        scannr = opts['path']['value']
 
-        self.fileName = os.path.join(self.fileName, str(self.scanNr)) + '.nxs'
+        self.fileName = os.path.join(path, scannr) + '.nxs'
         print "going to use nexus file:", self.fileName
 
     def _readPositions(self):

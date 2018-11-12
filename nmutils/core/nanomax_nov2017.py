@@ -14,6 +14,16 @@ class nanomaxScan_flyscan_nov2017(Scan):
     """
 
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -99,6 +109,8 @@ class nanomaxScan_flyscan_nov2017(Scan):
         self.nMaxLines = int(opts['nMaxLines']['value'])
         self.detPreference = opts['detectorPreference']['value']
         self.globalPositions = opts['globalPositions']['value']
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _read_buffered(self, fp, entry):
         """

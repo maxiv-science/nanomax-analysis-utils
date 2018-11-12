@@ -9,11 +9,9 @@ except ImportError:
     
 from Scan import *
 from dummy import *
-from ptypy import *
 from i13 import *
 from i08 import *
 from nanomax_week48 import *
 from nanomax_april2017 import *
 from nanomax_nov2017 import *
 from nanomax_simple import nanomax_simple
-

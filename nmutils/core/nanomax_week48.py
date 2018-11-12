@@ -11,6 +11,16 @@ class nanomaxScan_flyscan_week48(Scan):
     # diffraction center of mass to load:
 
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -32,6 +42,8 @@ class nanomaxScan_flyscan_week48(Scan):
         # parse options
         self.dataType = opts['dataType']['value']
         self.delta = opts['roiSize']['value']
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _readPositions(self):
         """ 
@@ -126,6 +138,16 @@ class nanomaxScan_stepscan_week48(Scan):
     # up in a very temporary way.
 
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         'dataType': {
             'value': 'xrd',
             'type': str,
@@ -140,6 +162,8 @@ class nanomaxScan_stepscan_week48(Scan):
         
         # parse options
         self.dataType = opts['dataType']['value']
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _readPositions(self):
         """ 

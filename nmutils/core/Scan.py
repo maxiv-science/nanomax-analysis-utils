@@ -98,7 +98,7 @@ class Scan(object):
                 raise Exception('Unknown option %s' % str(key))
         return opts
 
-    def addData(self, name=None, filename=None, scannr=None, **kwargs):
+    def addData(self, name=None, **kwargs):
         """ 
         This method adds positions the first time data is loaded. Then,
         subsequent data additions should check for consistency and
@@ -111,11 +111,6 @@ class Scan(object):
         if not name:
             name = 'data%u' % self.nDataSets
 
-        if (scannr is None) or (filename is None):
-            raise Exception('Scan.addData needs a filename and a scan number!')
-
-        self.scanNr = scannr
-        self.fileName = filename
         self._prepareData(**kwargs)
 
         # Check if any data exists.

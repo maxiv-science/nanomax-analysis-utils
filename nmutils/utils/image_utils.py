@@ -18,7 +18,8 @@ def poisson(mean, k):
     
 def smoothImage(image, sigma):
     """ Returns a smoothened copy of the input image, which is convolved by a gaussian of standard deviation sigma. """
-    gaussian = gaussian2D(3*sigma, sigma)
+    size = max(3, 3 * int(round(sigma)))
+    gaussian = gaussian2D(size, sigma)
     # fftconvolve() is faster than convolve2d (tested)
     # a copy of the image is created (also tested)
     smoothImage = scipy.signal.fftconvolve(image, gaussian, mode='same')

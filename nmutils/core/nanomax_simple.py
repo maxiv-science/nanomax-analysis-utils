@@ -6,6 +6,16 @@ import copy as cp
 class nanomax_simple(Scan):
     # Simple loading of x y z data from sardana's h5 file.
     default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'fileName': {
+            'value': None,
+            'type': str,
+            'doc': "path to the main data file",
+            },
         # the dataType option is mandatory for use with scanViewer
         'dataType': {
             'value': 'xrd',
@@ -43,6 +53,8 @@ class nanomax_simple(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.scalarData = opts['scalarData']['value']
+        self.scanNr = int(opts['scanNr']['value'])
+        self.fileName = opts['fileName']['value']
 
     def _readPositions(self):
         """ 

@@ -88,8 +88,16 @@ class ScanViewer(qt.QMainWindow):
         # dummy scan
         self.scan = None
 
+    def _current_subclass_opts(self):
+        subclass_ = str(self.ui.scanClassBox.currentText())
+        try:
+            subclass = getattr(nmutils.core, subclass_)
+        except:
+            return
+        return subclass.default_opts.copy()
+
     def gatherOptions(self):
-        # should return a dict of kwargs based on the options fields
+        # collect options from the options tab:
         opts = {}
         for name, w in self.formWidgets.iteritems():
             if isinstance(w, qt.QCheckBox):
@@ -103,6 +111,16 @@ class ScanViewer(qt.QMainWindow):
             else:
                 val = w.value()
             opts[name] = val
+
+        # collect special options from the top of the GUI:
+        subclass_opts = self._current_subclass_opts()
+        if 'path' in subclass_opts.keys():
+            opts['path'] = str(self.ui.filenameBox.text())
+        if 'fileName' in subclass_opts.keys():
+            opts['fileName'] = str(self.ui.filenameBox.text())
+        if 'scanNr' in subclass_opts.keys():
+            opts['scanNr'] = self.ui.scanNumberBox.value()
+
         return opts
 
     def populateOptions(self):
@@ -110,18 +128,16 @@ class ScanViewer(qt.QMainWindow):
         # remove all old options
         for i in reversed(range(grid.count())): 
             grid.itemAt(i).widget().setParent(None)
+
         # add new ones
-        subclass_ = str(self.ui.scanClassBox.currentText())
-        try:
-            subclass = getattr(nmutils.core, subclass_)
-        except:
-            return
-        opts = subclass.default_opts.copy()
+        opts = self._current_subclass_opts()
         self.formWidgets = {}
         i = 0
         for name, opt in opts.iteritems():
-            # special: dataType should not have a field
-            if name == 'dataType':
+            # special: the options scanNr and fileName (or path) have their input
+            # widgets at the top of the GUI for convenience, while dataType is
+            # used by the viewer. Handled below.
+            if name in ('dataType', 'scanNr', 'path', 'fileName'):
                 continue
             grid.addWidget(qt.QLabel(name), i, 0)
             grid.addWidget(qt.QLabel(opt['doc']), i, 2)
@@ -156,6 +172,15 @@ class ScanViewer(qt.QMainWindow):
             self.formWidgets[name] = w
             i += 1
 
+        # special treatment
+        if 'path' in opts.keys():
+            self.ui.filenameBox.setText('<data path>')
+        elif 'fileName' in opts.keys():
+            self.ui.filenameBox.setText('<input file>')
+        self.ui.filenameBox.setDisabled(not ('path' in opts.keys() or 'fileName' in opts.keys()))
+        self.ui.browseButton.setDisabled(not ('path' in opts.keys() or 'fileName' in opts.keys()))
+        self.ui.scanNumberBox.setDisabled('scanNr' not in opts.keys())
+
     def statusOutput(self, msg):
         self.ui.statusbar.showMessage(msg)
         self.ui.statusbar.showMessage(msg)
@@ -182,13 +207,11 @@ class ScanViewer(qt.QMainWindow):
                 raise Exception("Invalid subclass")
 
             # get options
-            scannr = self.ui.scanNumberBox.value()
-            filename = str(self.ui.filenameBox.text())
             opts = self.gatherOptions()
 
             # add xrd data:
             try:
-                scan_.addData(scannr=scannr, filename=filename, dataType='xrd', name='xrd', **opts)
+                scan_.addData(dataType='xrd', name='xrd', **opts)
                 print "loaded xrd data: %d positions, %d x %d pixels"%(scan_.data['xrd'].shape)
                 has_xrd = True
             except MemoryError:
@@ -200,7 +223,7 @@ class ScanViewer(qt.QMainWindow):
 
             # add xrf data:
             try:
-                scan_.addData(scannr=scannr, filename=filename, dataType='xrf', name='xrf', **opts)
+                scan_.addData(dataType='xrf', name='xrf', **opts)
                 print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
                 has_xrf = True
             except:
