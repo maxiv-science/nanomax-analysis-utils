@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 import copy as cp
 
-class nanomax_simple(Scan):
+class nanomax_scalar(Scan):
     # Simple loading of x y z data from sardana's h5 file.
     default_opts = {
         'scanNr': {

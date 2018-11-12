@@ -14,4 +14,4 @@ from i08 import *
 from nanomax_week48 import *
 from nanomax_april2017 import *
 from nanomax_nov2017 import *
-from nanomax_simple import nanomax_simple
+from nanomax_scalar import nanomax_scalar
