@@ -78,6 +78,8 @@ class XrfWidget(qt.QWidget):
         self.spectrum.resetZoom()
 
     def updateMap(self):
+        if self.scan is None:
+            return
         try:
             self.window().statusOutput('Building XRF map...')
             # workaround to avoid the infinite loop which occurs when both
@@ -112,6 +114,8 @@ class XrfWidget(qt.QWidget):
             raise
 
     def updateSpectrum(self):
+        if self.scan is None:
+            return
         try:
             self.window().statusOutput('Building XRF spectrum...')
             if self.selectionMode == 'ind':
@@ -176,3 +180,4 @@ class XrfWidget(qt.QWidget):
         # clearing the mask also invokes self.updateSpectrum():
         self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
         self.selectionMode = 'roi'
+

@@ -173,9 +173,10 @@ class ScanViewer(qt.QMainWindow):
             i += 1
 
         # special treatment
-        if 'path' in opts.keys():
+        oldtext = str(self.ui.filenameBox.text())
+        if 'path' in opts.keys() and oldtext.startswith('<'):
             self.ui.filenameBox.setText('<data path>')
-        elif 'fileName' in opts.keys():
+        elif 'fileName' in opts.keys() and oldtext.startswith('<'):
             self.ui.filenameBox.setText('<input file>')
         self.ui.filenameBox.setDisabled(not ('path' in opts.keys() or 'fileName' in opts.keys()))
         self.ui.browseButton.setDisabled(not ('path' in opts.keys() or 'fileName' in opts.keys()))
@@ -244,9 +245,9 @@ class ScanViewer(qt.QMainWindow):
                 if has_xrf:
                     self.ui.xrfWidget.setScan(self.scan)
             self.statusOutput("")
-        except:
+        except Exception as e:
             self.statusOutput("Loading failed. See terminal output for details.")
-            raise
+            print 'The error was: ', e
 
 if __name__ == '__main__':
     # you always need a qt app

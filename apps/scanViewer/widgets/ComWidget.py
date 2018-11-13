@@ -182,6 +182,8 @@ class ComWidget(qt.QWidget):
         self.image.resetZoom()
 
     def updateMap(self):
+        if self.scan is None:
+            return
         try:
             print 'building COM map'
             self.window().statusOutput('Building COM map...')

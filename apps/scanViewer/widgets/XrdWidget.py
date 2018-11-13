@@ -193,6 +193,8 @@ class XrdWidget(qt.QWidget):
         self.image.resetZoom()
 
     def updateMap(self):
+        if self.scan is None:
+            return
         try:
             self.window().statusOutput('Building XRD map...')
             # workaround to avoid the infinite loop which occurs when both
@@ -230,6 +232,8 @@ class XrdWidget(qt.QWidget):
             raise
 
     def updateImage(self):
+        if self.scan is None:
+            return
         try:
             self.window().statusOutput('Building diffraction pattern...')
             # workaround to avoid the infinite loop which occurs when both
