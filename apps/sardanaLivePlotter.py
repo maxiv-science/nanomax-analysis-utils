@@ -68,7 +68,7 @@ if __name__ == '__main__':
                         default=None,
                         help='the channel/motor to plot on the y axis')
     parser.add_argument('--door', type=str, dest='door',
-                        default='NanomaxEH3/DOOR/01',
+                        default='NanomaxExpert/DOOR/01',
                         help='The Sardana door to use')
     args = parser.parse_args()
 
