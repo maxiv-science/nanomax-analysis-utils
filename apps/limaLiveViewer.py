@@ -141,7 +141,7 @@ if __name__ == '__main__':
         alarm = alarm_levels[limaPath] if limaPath in alarm_levels.keys() else None
         Viewer = LimaLiveViewer2D   # default
         interval = 0.1              # default
-        if len(sys.argv) >= 3 and sys.argv[2].lower() == '1d':
+        if (len(sys.argv) >= 3 and sys.argv[2].lower() == '1d') or ('xfcu' in limaPath):
             Viewer = LimaLiveViewer1D
         if len(sys.argv) >= 4:
             interval = float(sys.argv[3])
@@ -158,4 +158,3 @@ if __name__ == '__main__':
     viewer = Viewer(limaPath, interval=interval, alarm=alarm)
     viewer.show()
     app.exec_()
-
