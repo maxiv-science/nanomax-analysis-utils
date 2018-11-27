@@ -178,7 +178,6 @@ class nanomaxScan_flyscan_nov2017(Scan):
             self.nlines = self.nMaxLines
             fast = fast[:lineLen * self.nMaxLines]
             slow = slow[:lineLen * self.nMaxLines]
-            print "x and y shapes:", x.shape, y.shape
 
         # assign fast and slow positions
         if fastMotor == self.xMotor:
@@ -187,6 +186,8 @@ class nanomaxScan_flyscan_nov2017(Scan):
         else:
             y = fast
             x = slow
+
+        print "x and y shapes:", x.shape, y.shape
 
         # optionally add coarse stage position
         if self.globalPositions:
