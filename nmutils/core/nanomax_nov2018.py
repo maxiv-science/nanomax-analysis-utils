@@ -4,143 +4,35 @@ import numpy as np
 import h5py
 import copy as cp
 import os.path
+from nanomax_nov2017 import nanomaxScan_flyscan_nov2017
 
-class nanomaxScan_flyscan_nov2018(Scan):
+class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
     """
-    More mature flycan.
+    More mature fly scan format.
     """
 
-    default_opts = {
-        'scanNr': {
-            'value': 0,
-            'type': int,
-            'doc': "scan number",
-            },
-        'fileName': {
-            'value': None,
-            'type': str,
-            'doc': "path to the main data file",
-            },
-        # the dataType option is mandatory for use with scanViewer
-        'dataType': {
-            'value': 'xrd',
-            'type': str,
-            'doc': "type of data, 'xrd' or 'xrf'",
-            },
-        'steppedMotor': {
-            'value': 'samy',
-            'type': str,
-            'doc': 'the second motor, stepped for each flyscan line',
-            },
-        'xrfChannel': {
-            'value': 2,
-            'type': int,
-            'doc': 'xspress3 channel from which to read XRF',
-            },
-        'xrdCropping': {
-            'value': [],
-            'type': list,
-            'doc': 'detector area to load, [i0, i1, j0, j1]',
-            },
-        'xrdBinning': {
-            'value': 1,
-            'type': int,
-            'doc': 'bin xrd pixels n-by-n (after cropping)',
-            },
-        'I0': {
+    default_opts = cp.deepcopy(nanomaxScan_flyscan_nov2017.default_opts)
+    default_opts['I0'] = {
             'value': 'None',
             'type': ['Ni6602_buff', 'None'],
             'doc': 'channel vs which to normalize',
-            },
-        'nMaxLines': {
-            'value': 0,
-            'type': int,
-            'doc': 'load at most N lines - 0 means load all',
-            },
-        'detectorPreference': {
-            'value': 'pil100k',
-            'type': ['pil100k', 'pil1m', 'merlin'],
-            'doc': 'preferred XRD detector',
-            },
-        'nominalYPositions': {
-            'value': False,
-            'type': bool,
-            'doc': 'use nominal rather than sampled y positions',
-            },
-    }
+            }
+    default_opts['xrfChannel'] = {
+            'value': [0,1,2],
+            'type': list,
+            'doc': 'xspress3 channels from which to read XRF, averaged',
+            }
 
     def _prepareData(self, **kwargs):
         """ 
-        This method gets the kwargs passed to the addData() method, and
-        stores them for use during this data loading.
+        Parse the I0 option
         """
         # copy defaults, then update with kwarg options
+        super(flyscan_nov2018, self)._prepareData(**kwargs)
         opts = cp.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
-        
-        # parse options
-        self.dataType = opts['dataType']['value']
-        self.steppedMotor = opts['steppedMotor']['value']
-        self.xrfChannel = int(opts['xrfChannel']['value'])
-        self.xrdCropping = map(int, opts['xrdCropping']['value'])
-        self.xrdBinning = int(opts['xrdBinning']['value'])
-        self.I0 = (opts['I0']['value'])
-        self.nMaxLines = int(opts['nMaxLines']['value'])
-        self.detPreference = opts['detectorPreference']['value']
-        self.nominalYPositions = bool(opts['nominalYPositions']['value'])
-        self.scanNr = int(opts['scanNr']['value'])
-        self.fileName = opts['fileName']['value']
-
-    def _readPositions(self):
-        """ 
-        Override position reading.
-        """
-        
-        skipX = 0
-        entry = 'entry%d' % self.scanNr
-
-        x, y = None, None
-        with h5py.File(self.fileName, 'r') as hf:
-            # get fast x positions
-            xdataset = hf.get(entry + '/measurement/AdLinkAI_buff')
-            xall = np.array(xdataset)
-            # manually find shape by looking for zeros
-            Ny = xall.shape[0]
-            if skipX > 0:
-                print "Skipping %d position(s) at the end of each line"%skipX
-            for i in range(xall.shape[1]):
-                if xall[0,i+skipX] == 0:
-                    Nx = i
-                    break
-            x = xall[:, :Nx].flatten()
-
-            # get slow y positions
-            if self.nominalYPositions:
-                title = str(hf.get(entry + '/title').value).split(' ')
-                yall = np.linspace(
-                    float(title[2]),
-                    float(title[3]),
-                    int(title[4])+1,
-                    endpoint=True)
-            else:
-                ydataset = hf.get(entry + '/measurement/%s' % self.steppedMotor)
-                yall = np.array(ydataset)
-            if not (len(yall) == Ny): raise Exception('Something''s wrong with the positions')
-            y = np.repeat(yall, Nx)
-
-            # save number of lines etc for the _readData method
-            self.nlines = Ny
-            self.images_per_line = Nx
-
-            if self.nMaxLines:
-                self.nlines = self.nMaxLines
-                x = x[:Nx * self.nMaxLines]
-                y = y[:Nx * self.nMaxLines]
-                print "x and y shapes:", x.shape, y.shape
-
-            print "loaded positions from %d lines, %d positions on each"%(self.nlines, self.images_per_line)
-
-        return np.vstack((x, y)).T
+        self.I0 = opts['I0']['value']
+        self.xrfChannel = map(int, opts['xrfChannel']['value'])
 
     def _readData(self):
         """ 
@@ -152,7 +44,7 @@ class nanomaxScan_flyscan_nov2018(Scan):
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/%s'%self.I0])
                 I0_data = I0_data.astype(float) / I0_data.max()
-                print I0_data
+                I0_data = I0_data[:, :self.images_per_line]
 
         if self.dataType == 'xrd':
             print "loading diffraction data..."
@@ -218,7 +110,7 @@ class nanomaxScan_flyscan_nov2018(Scan):
                                 data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
                         del dataset
                         if not self.I0 == 'None':
-                            I0_line = I0_data[line, :self.images_per_line]
+                            I0_line = I0_data[line]
                             data_ = data_ / I0_line[:, None, None]
                         data.append(data_)
 
@@ -232,7 +124,7 @@ class nanomaxScan_flyscan_nov2018(Scan):
 
         elif self.dataType == 'xrf':
             print "loading flurescence data..."
-            print "selecting fluorescence channel %d"%self.xrfChannel
+            print "selecting fluorescence channels %s"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filename_pattern%(self.scanNr)
@@ -245,9 +137,9 @@ class nanomaxScan_flyscan_nov2018(Scan):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
                     if not dataset:
                         break
-                    data_ = np.array(dataset)[:, self.xrfChannel, :]
+                    data_ = np.mean(np.array(dataset)[:, self.xrfChannel, :], axis=1)
                     if not self.I0 == 'None':
-                        I0_line = I0_data[line, :self.images_per_line]
+                        I0_line = I0_data[line]
                         data_ = data_ / I0_line[:, None]
                     data.append(data_)
                     line += 1
@@ -258,7 +150,7 @@ class nanomaxScan_flyscan_nov2018(Scan):
         return data
 
        
-class nanomaxScan_stepscan_nov2018(Scan):
+class stepscan_nov2018(Scan):
     """
     More mature stepscan format.
     """
