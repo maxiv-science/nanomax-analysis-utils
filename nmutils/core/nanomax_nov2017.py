@@ -101,15 +101,15 @@ class nanomaxScan_flyscan_nov2017(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         # self.fastAxis = opts['fastAxis']['value']
-        self.xrfChannel = int(opts['xrfChannel']['value'])
+        self.xrfChannel = opts['xrfChannel']['value']
         self.xrfCropping = map(int, opts['xrfCropping']['value'])
         self.xrdCropping = map(int, opts['xrdCropping']['value'])
-        self.xrdBinning = int(opts['xrdBinning']['value'])
+        self.xrdBinning = opts['xrdBinning']['value']
         self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
-        self.nMaxLines = int(opts['nMaxLines']['value'])
+        self.nMaxLines = opts['nMaxLines']['value']
         self.detPreference = opts['detectorPreference']['value']
         self.globalPositions = opts['globalPositions']['value']
-        self.scanNr = int(opts['scanNr']['value'])
+        self.scanNr = opts['scanNr']['value']
         self.fileName = opts['fileName']['value']
 
     def _read_buffered(self, fp, entry):
@@ -165,6 +165,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
 
         # save number of lines for the _readData method
         self.nlines = nLines
+        self.images_per_line = lineLen
 
         # read the slow axis
         slow_is_buffered = len(fp.get(entry+'/measurement/%s'%slowMotor).shape) > 1
