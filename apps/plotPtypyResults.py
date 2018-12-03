@@ -33,6 +33,14 @@ parser.add_argument('--forward', type=float, dest='fw',
 parser.add_argument('--positions', type=int, dest='steps',
                     default=200,
                     help='number of planes along the optical axis')
+parser.add_argument('--flipx',
+                    action='store_const', const=True,
+                    dest='flipx',
+                    help='flips the x axis about the origin')
+parser.add_argument('--flipy',
+                    action='store_const', const=True,
+                    dest='flipy',
+                    help='flips the y axis about the origin')
 args = parser.parse_args()
 
 if args.title is None:
@@ -44,6 +52,8 @@ inputFile = args.ptyr_file
 title = args.title
 interactive = not args.not_interactive
 steps = args.steps
+flipx = args.flipx
+flipy = args.flipy
 
 if outputFile is not None:
     outputPrefix = outputFile.split('.')[0]
@@ -183,6 +193,11 @@ if outputFile is not None:
 fig, ax = plt.subplots(ncols=2, figsize=(10,6), sharex=True, sharey=True)
 plt.subplots_adjust(wspace=.3)
 fig.suptitle(title, fontsize=20)
+
+if flipx:
+    obj = np.fliplr(obj)
+if flipy:
+    obj = np.flipud(obj)
 extent = 1e6 * np.array([origin[0], origin[0]+(obj.shape[1]-1)*psize, origin[1], origin[1]+(obj.shape[0]-1)*psize])
 
 # amplitude
