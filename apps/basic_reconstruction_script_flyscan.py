@@ -63,7 +63,7 @@ p.scans.scan00.data.center = None
 # the merlin is usually flipped vertically. but now it's also rotated
 # 180 degrees, so that (vertical flip plus rotation) adds up to just
 # a horizontal flip
-p.scans.scan00.data.orientation = (False, False, True)
+p.scans.scan00.data.orientation = {'merlin':(False, False, True), 'pilatus':None}[detector]
 ##############
 p.scans.scan00.data.distance = distance
 p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6}[detector]
