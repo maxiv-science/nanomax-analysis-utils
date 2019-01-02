@@ -360,6 +360,11 @@ class nanomaxScan_stepscan_april2017(Scan):
             'type': bool,
             'doc': 'use nominal instead of recorded positions',
             },
+        'maxPositions': {
+            'value': 0,
+            'type': int,
+            'doc': 'max number of measurements to load, introduced to duck some corrupt data'
+            },
     }
 
     def _prepareData(self, **kwargs):
@@ -383,6 +388,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         self.nominalPositions = bool(opts['nominalPositions']['value'])
         self.scanNr = int(opts['scanNr']['value'])
         self.fileName = opts['fileName']['value']
+        self.maxPositions = opts['maxPositions']['value']
 
     def _readPositions(self):
         """ 
@@ -402,6 +408,9 @@ class nanomaxScan_stepscan_april2017(Scan):
                                 float(title[ymotorInd+2]),
                                 int(title[ymotorInd+3]) + 1,
                                 endpoint=True)
+                if self.maxPositions:
+                    x = x[:self.maxPositions]
+                    y = y[:self.maxPositions]
                 nx = len(x)
                 ny = len(y)
                 if xmotorInd < ymotorInd:
@@ -412,6 +421,9 @@ class nanomaxScan_stepscan_april2017(Scan):
                     # y is the fast motor
                     x = x.repeat(ny)
                     y = np.tile(y, nx)
+            elif self.maxPositions:
+                x = hf['entry%d' % self.scanNr + '/measurement/%s' % self.xMotor][:self.maxPositions]
+                y = hf['entry%d' % self.scanNr + '/measurement/%s' % self.yMotor][:self.maxPositions]
             else:
                 x = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.xMotor))
                 y = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.yMotor))
