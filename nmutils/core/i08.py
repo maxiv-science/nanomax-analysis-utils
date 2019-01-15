@@ -48,7 +48,7 @@ class i08_scan(Scan):
         with h5py.File(self.fileName, 'r') as hf:
             x_ = np.array(hf.get('entry/I0_data/SampleX'))
             y_ = np.array(hf.get('entry/I0_data/SampleY'))
-        if x_ is None or None in x_:
+        if x_ is None or None in x_ or x_ == np.array(None):
             # ok we are reading one of these xrf files
             fn = self.fileName[:-4] + '_b.nxs'
             with h5py.File(fn, 'r') as hf:
