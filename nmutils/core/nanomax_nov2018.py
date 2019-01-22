@@ -12,10 +12,10 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
     """
 
     default_opts = cp.deepcopy(nanomaxScan_flyscan_nov2017.default_opts)
-    default_opts['I0'] = {
-            'value': 'None',
-            'type': ['Ni6602_buff', 'None'],
-            'doc': 'channel vs which to normalize',
+    default_opts['normalize_by_I0'] = {
+            'value': False,
+            'type': bool,
+            'doc': 'whether or not to normalize against I0',
             }
     default_opts['xrfChannel'] = {
             'value': [0,1,2],
@@ -31,7 +31,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
         super(flyscan_nov2018, self)._prepareData(**kwargs)
         opts = cp.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
-        self.I0 = opts['I0']['value']
+        self.normalize_by_I0 = opts['normalize_by_I0']['value']
         self.xrfChannel = map(int, opts['xrfChannel']['value'])
 
     def _readData(self):
@@ -39,10 +39,10 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
         Override data reading.
         """
 
-        if not self.I0 == 'None':
+        if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = np.array(hf[entry+'/measurement/%s'%self.I0])
+                I0_data = np.array(hf[entry+'/measurement/Ni6602_buff'])
                 I0_data = I0_data.astype(float) / I0_data.max()
                 I0_data = I0_data[:, :self.images_per_line]
 
@@ -138,15 +138,24 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
                     if not dataset:
                         break
                     data_ = np.mean(np.array(dataset)[:, self.xrfChannel, :], axis=1)
-                    if not self.I0 == 'None':
+                    if self.normalize_by_I0:
                         I0_line = I0_data[line]
                         data_ = data_ / I0_line[:, None]
                     data.append(data_)
                     line += 1
             print "loaded %d lines of flurescence data"%len(data)
             data = np.vstack(data)
+
+        elif self.dataType == 'I0':
+            print "loading I0 data..."
+            entry = 'entry%d' % self.scanNr
+            with h5py.File(self.fileName, 'r') as hf:
+                data = np.array(hf[entry+'/measurement/Ni6602_buff'])
+                data = data.astype(float)
+                data = data[:, :self.images_per_line]
+                data = data.reshape(np.prod(data.shape), -1)
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
+            raise RuntimeError('unknown datatype specified (should be ''xrd'', ''xrf'' or ''I0''')
         return data
 
        
