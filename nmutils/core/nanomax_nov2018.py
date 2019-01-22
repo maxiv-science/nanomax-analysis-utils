@@ -25,7 +25,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
 
     def _prepareData(self, **kwargs):
         """ 
-        Parse the I0 option
+        Parse the derived options
         """
         # copy defaults, then update with kwarg options
         super(flyscan_nov2018, self)._prepareData(**kwargs)
@@ -43,7 +43,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             entry = 'entry%d' % self.scanNr
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/Ni6602_buff'])
-                I0_data = I0_data.astype(float) / I0_data.max()
+                I0_data = I0_data.astype(float) * 1e-5
                 I0_data = I0_data[:, :self.images_per_line]
 
         if self.dataType == 'xrd':
@@ -109,7 +109,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
                             for i in range(data_.shape[0]):
                                 data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
                         del dataset
-                        if not self.I0 == 'None':
+                        if self.normalize_by_I0:
                             I0_line = I0_data[line]
                             data_ = data_ / I0_line[:, None, None]
                         data.append(data_)
@@ -153,7 +153,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
                 data = np.array(hf[entry+'/measurement/Ni6602_buff'])
                 data = data.astype(float)
                 data = data[:, :self.images_per_line]
-                data = data.reshape(np.prod(data.shape), -1)
+                data = data.flatten()
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'', ''xrf'' or ''I0''')
         return data
@@ -206,10 +206,10 @@ class stepscan_nov2018(Scan):
             'type': int,
             'doc': 'bin xrd pixels n-by-n (after cropping)',
             },
-        'I0': {
-            'value': 'None',
-            'type': ['counter1', 'counter2', 'counter3', 'None'],
-            'doc': 'channel vs which to normalize',
+        'normalize_by_I0': {
+            'value': False,
+            'type': bool,
+            'doc': 'whether to normalize against I0 (counter1)',
             },
         'detectorPreference': {
             'value': 'pil100k',
@@ -239,7 +239,7 @@ class stepscan_nov2018(Scan):
         self.xrfChannel = int(opts['xrfChannel']['value'])
         self.xrdCropping = int(opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
-        self.I0 = (opts['I0']['value'])
+        self.normalize_by_I0 = (opts['normalize_by_I0']['value'])
         self.detPreference = opts['detectorPreference']['value']
         self.nominalPositions = bool(opts['nominalPositions']['value'])
         self.scanNr = int(opts['scanNr']['value'])
@@ -295,11 +295,11 @@ class stepscan_nov2018(Scan):
         path of the Lima hdf5 files.
         """
 
-        if not self.I0 == 'None':
+        if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = np.array(hf[entry+'/measurement/%s'%self.I0])
-                I0_data = I0_data.astype(float) / I0_data.max()
+                I0_data = np.array(hf[entry+'/measurement/counter1'])
+                I0_data = I0_data.astype(float) * 1e-5
                 print I0_data
 
         if self.dataType == 'xrd':
@@ -380,7 +380,7 @@ class stepscan_nov2018(Scan):
             if missing:
                 print "there were %d missing images" % missing
             data = np.array(data)
-            if not self.I0 == 'None':
+            if self.normalize_by_I0:
                 data = data / I0_data[:, None, None]
 
         elif self.dataType == 'xrf':
@@ -397,9 +397,15 @@ class stepscan_nov2018(Scan):
                         break
                     data.append(np.array(dataset)[0, self.xrfChannel])
             data = np.array(data)
-            if not self.I0 == 'None':
+            if self.normalize_by_I0:
                 data = data / I0_data[:, None]
 
+        elif self.dataType == 'I0':
+            entry = 'entry%d' % self.scanNr
+            with h5py.File(self.fileName, 'r') as hf:
+                I0_data = np.array(hf[entry+'/measurement/counter1'])
+                I0_data = I0_data.astype(float)
+                data = I0_data.flatten()
         else:
             raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
 
