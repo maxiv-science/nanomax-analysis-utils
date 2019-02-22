@@ -32,6 +32,7 @@ p.scans.scan00.name = 'Full'
 p.scans.scan00.data = u.Param()
 p.scans.scan00.data.name = 'NanomaxStepscanNov2018'
 p.scans.scan00.data.path = folder
+p.scans.scan00.data.detector = detector
 p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
 								'pilatus': None}[detector]
 p.scans.scan00.data.scanNumber = scannr
