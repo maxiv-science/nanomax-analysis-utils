@@ -53,7 +53,7 @@ p.scans.scan00.data.pilatusPath = p.scans.scan00.data.dataPath
 p.scans.scan00.data.pilatusPattern = 'scan_%%04u_%s_%%04u.hdf5' % {'pilatus': 'pil100k', 'merlin': 'merlin'}[detector]
 p.scans.scan00.data.datafile = folder.strip('/').split('/')[-1] + '.h5'
 p.scans.scan00.data.hdfPath = 'entry_%%04u/measurement/%s/data' % {'pilatus': 'Pilatus', 'merlin': 'Merlin'}[detector]
-p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/mask_merlin_combined.h5',
+p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
                             'pilatus': None}[detector]
 p.scans.scan00.data.scannr = scannr
 p.scans.scan00.data.shape = 128
