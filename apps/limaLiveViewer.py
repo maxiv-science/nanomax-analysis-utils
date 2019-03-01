@@ -75,7 +75,7 @@ class LimaLiveViewer1D(PlotWindow):
     Displays a stack of 1D spectra live from Lima.
     """
 
-    def __init__(self, limaPath, interval=.1, alarm=None):
+    def __init__(self, limaPath, interval=.1, alarm=None, truncate=None):
         # run the base class constructor
         super(LimaLiveViewer1D, self).__init__()
 
@@ -92,6 +92,9 @@ class LimaLiveViewer1D(PlotWindow):
         # set some properties
         self.setWindowTitle(limaPath)
         self.hasData = False
+        self.truncate = truncate
+        if alarm is not None:
+            raise NotImplementedError
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -108,9 +111,16 @@ class LimaLiveViewer1D(PlotWindow):
             try:
                 data = np.frombuffer(self.lima.getImage(last), dtype=self.dtype)
                 data = data.reshape((self.N, self.n))
+                if self.truncate:
+                    data = data[:, :self.truncate]
+                    self.E = self.E[:self.truncate]
+                sums = []
                 for i in range(self.N):
                     self.addCurve(self.E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
                     self.hasData = True
+                    sums.append(np.sum(data[i, :]))
+                exptime = self.lima.acq_expo_time
+                self.setGraphTitle('max(Channels 0,1,2): %.1e (%.1e / s)\nChannel 3: %.1e (%.1e / s)' % (np.max(sums[0:3]), np.max(sums[0:3])/exptime, sums[3], sums[3]/exptime))
             except:
                 pass # sometimes you miss frames, no big deal
 
@@ -137,12 +147,14 @@ if __name__ == '__main__':
     
     # parse arguments
     try:
+        kwargs = {}
         limaPath = known[sys.argv[1]] if sys.argv[1] in known.keys() else sys.argv[1] # parse shortcuts
         alarm = alarm_levels[limaPath] if limaPath in alarm_levels.keys() else None
         Viewer = LimaLiveViewer2D   # default
         interval = 0.1              # default
         if (len(sys.argv) >= 3 and sys.argv[2].lower() == '1d') or ('xfcu' in limaPath):
             Viewer = LimaLiveViewer1D
+            kwargs['truncate'] = 4096
         if len(sys.argv) >= 4:
             interval = float(sys.argv[3])
     except:
@@ -155,6 +167,6 @@ if __name__ == '__main__':
         exit(0)
 
     # instantiate the viewer and run
-    viewer = Viewer(limaPath, interval=interval, alarm=alarm)
+    viewer = Viewer(limaPath, interval=interval, alarm=alarm, **kwargs)
     viewer.show()
     app.exec_()
