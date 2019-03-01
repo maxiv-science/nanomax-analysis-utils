@@ -18,7 +18,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             'doc': 'whether or not to normalize against I0',
             }
     default_opts['xrfChannel'] = {
-            'value': [0,1,2],
+            'value': [3,],
             'type': list,
             'doc': 'xspress3 channels from which to read XRF, averaged',
             }
