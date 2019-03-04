@@ -19,38 +19,6 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="1" column="0">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="focusPolicy">
-       <enum>Qt::TabFocus</enum>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="object">
-       <attribute name="title">
-        <string>Object</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="ObjectView" name="objectWidget" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="probe">
-       <attribute name="title">
-        <string>Probe</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2"/>
-      </widget>
-      <widget class="QWidget" name="fourier">
-       <attribute name="title">
-        <string>Fourier shell correlation</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
-      </widget>
-     </widget>
-    </item>
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
@@ -133,6 +101,97 @@
       </item>
      </layout>
     </item>
+    <item row="1" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="focusPolicy">
+       <enum>Qt::TabFocus</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="object">
+       <attribute name="title">
+        <string>Object</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="ObjectView" name="objectWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="probe">
+       <attribute name="title">
+        <string>Probe</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="2">
+         <widget class="QSlider" name="focusSlider">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="focusButton">
+          <property name="text">
+           <string>Autofocus</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2" colspan="2">
+         <widget class="PropagationView" name="horizontalFocusView" native="true"/>
+        </item>
+        <item row="2" column="2" colspan="2">
+         <widget class="PropagationView" name="verticalFocusView" native="true"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="ProbeView" name="probePlot" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>600</width>
+            <height>16777214</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="ProbeView" name="probePlot2" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>600</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="fourier">
+       <attribute name="title">
+        <string>Fourier shell correlation</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+      </widget>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -152,6 +211,18 @@
    <class>ObjectView</class>
    <extends>QWidget</extends>
    <header>widgets/ObjectView.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PropagationView</class>
+   <extends>QWidget</extends>
+   <header>widgets/Probe.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ProbeView</class>
+   <extends>QWidget</extends>
+   <header>widgets/Probe.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

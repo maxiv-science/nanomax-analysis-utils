@@ -10,6 +10,7 @@ try:
 except:
     raise Exception('This application requires silx >= 0.8.0')
 
+from widgets.Probe import ProbeManager
 from silx.gui import qt
 print 'silx %s using' % silx.version, qt.BINDING
 from silx.gui.icons import getQIcon
@@ -37,6 +38,9 @@ class PtychoViewer(qt.QMainWindow):
         # instantiate the form class and set it up in the current QMainWindow
         self.ui = design.Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # keep a ProbeManager instance
+        self.probeManager = ProbeManager(self.ui)
 
         # possibly set initial values
         if filename:
@@ -85,6 +89,7 @@ class PtychoViewer(qt.QMainWindow):
             
             # give loaded data to the widgets
             self.ui.objectWidget.set_data(obj, origin, psize)
+            self.probeManager.set_data(probe, psize, energy)
 
             self.statusOutput("")
         except Exception as e:
