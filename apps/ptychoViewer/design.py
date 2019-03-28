@@ -6,11 +6,9 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-#from PyQt5 import QtCore, QtGui, QtWidgets
 from silx.gui import qt as QtCore
 QtGui = QtCore
 QtWidgets = QtCore
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -72,19 +70,17 @@ class Ui_MainWindow(object):
         self.probe.setObjectName("probe")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.probe)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.focusSlider = QtWidgets.QSlider(self.probe)
-        self.focusSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.focusSlider.setObjectName("focusSlider")
-        self.gridLayout_3.addWidget(self.focusSlider, 0, 2, 1, 1)
+        self.probePlot2 = ProbeView(self.probe)
+        self.probePlot2.setMinimumSize(QtCore.QSize(200, 0))
+        self.probePlot2.setMaximumSize(QtCore.QSize(600, 16777215))
+        self.probePlot2.setObjectName("probePlot2")
+        self.gridLayout_3.addWidget(self.probePlot2, 3, 0, 1, 1)
+        self.propagateButton = QtWidgets.QPushButton(self.probe)
+        self.propagateButton.setObjectName("propagateButton")
+        self.gridLayout_3.addWidget(self.propagateButton, 0, 5, 1, 1)
         self.focusButton = QtWidgets.QPushButton(self.probe)
         self.focusButton.setObjectName("focusButton")
-        self.gridLayout_3.addWidget(self.focusButton, 0, 3, 1, 1)
-        self.horizontalFocusView = PropagationView(self.probe)
-        self.horizontalFocusView.setObjectName("horizontalFocusView")
-        self.gridLayout_3.addWidget(self.horizontalFocusView, 3, 2, 1, 2)
-        self.verticalFocusView = PropagationView(self.probe)
-        self.verticalFocusView.setObjectName("verticalFocusView")
-        self.gridLayout_3.addWidget(self.verticalFocusView, 2, 2, 1, 2)
+        self.gridLayout_3.addWidget(self.focusButton, 1, 5, 1, 1)
         self.probePlot = ProbeView(self.probe)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -95,11 +91,35 @@ class Ui_MainWindow(object):
         self.probePlot.setMaximumSize(QtCore.QSize(600, 16777214))
         self.probePlot.setObjectName("probePlot")
         self.gridLayout_3.addWidget(self.probePlot, 2, 0, 1, 1)
-        self.probePlot2 = ProbeView(self.probe)
-        self.probePlot2.setMinimumSize(QtCore.QSize(200, 0))
-        self.probePlot2.setMaximumSize(QtCore.QSize(600, 16777215))
-        self.probePlot2.setObjectName("probePlot2")
-        self.gridLayout_3.addWidget(self.probePlot2, 3, 0, 1, 1)
+        self.verticalFocusView = PropagationView(self.probe)
+        self.verticalFocusView.setObjectName("verticalFocusView")
+        self.gridLayout_3.addWidget(self.verticalFocusView, 2, 1, 1, 5)
+        self.label = QtWidgets.QLabel(self.probe)
+        self.label.setObjectName("label")
+        self.gridLayout_3.addWidget(self.label, 0, 1, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.probe)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_3.addWidget(self.label_2, 1, 1, 1, 1)
+        self.label_3 = QtWidgets.QLabel(self.probe)
+        self.label_3.setObjectName("label_3")
+        self.gridLayout_3.addWidget(self.label_3, 0, 3, 1, 1)
+        self.backwardBox = QtWidgets.QSpinBox(self.probe)
+        self.backwardBox.setObjectName("backwardBox")
+        self.gridLayout_3.addWidget(self.backwardBox, 0, 2, 1, 1)
+        self.horizontalFocusView = PropagationView(self.probe)
+        self.horizontalFocusView.setObjectName("horizontalFocusView")
+        self.gridLayout_3.addWidget(self.horizontalFocusView, 3, 1, 1, 5)
+        self.forwardBox = QtWidgets.QSpinBox(self.probe)
+        self.forwardBox.setObjectName("forwardBox")
+        self.gridLayout_3.addWidget(self.forwardBox, 0, 4, 1, 1)
+        self.focusSlider = QtWidgets.QSlider(self.probe)
+        self.focusSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.focusSlider.setObjectName("focusSlider")
+        self.gridLayout_3.addWidget(self.focusSlider, 1, 2, 1, 3)
+        self.probeHist = Histogram(self.probe)
+        self.probeHist.setMinimumSize(QtCore.QSize(0, 100))
+        self.probeHist.setObjectName("probeHist")
+        self.gridLayout_3.addWidget(self.probeHist, 0, 0, 2, 1)
         self.tabWidget.addTab(self.probe, "")
         self.fourier = QtWidgets.QWidget()
         self.fourier.setObjectName("fourier")
@@ -117,7 +137,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.filenameBox, self.browseButton)
         MainWindow.setTabOrder(self.browseButton, self.loadButton)
@@ -132,10 +152,14 @@ class Ui_MainWindow(object):
         self.loadButton.setToolTip(_translate("MainWindow", "<html><head/><body><p>Go!</p></body></html>"))
         self.loadButton.setText(_translate("MainWindow", "Load"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.object), _translate("MainWindow", "Object"))
+        self.propagateButton.setText(_translate("MainWindow", "Propagate"))
         self.focusButton.setText(_translate("MainWindow", "Autofocus"))
+        self.label.setText(_translate("MainWindow", "Backward"))
+        self.label_2.setText(_translate("MainWindow", "Plane of interest"))
+        self.label_3.setText(_translate("MainWindow", "Forward"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourier), _translate("MainWindow", "Fourier shell correlation"))
 
 from widgets.ObjectView import ObjectView
-from widgets.Probe import ProbeView, PropagationView
+from widgets.Probe import Histogram, ProbeView, PropagationView
 import design_rc

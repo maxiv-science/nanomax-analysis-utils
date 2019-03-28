@@ -1,5 +1,5 @@
 import numpy as np
-from silx.gui.plot import PlotWidget
+from silx.gui.plot import PlotWidget, PlotWindow
 from silx.gui.plot.ComplexImageView import ComplexImageView
 from silx.gui import qt
 import nmutils
@@ -29,6 +29,8 @@ class ProbeManager(object):
         self.ui.probePlot.setScale(psize * 1e6)
         self.ui.probePlot2.setScale(psize * 1e6)
         self.ui.probePlot2.setData(self.probe2d, copy=False)
+        self.ui.verticalFocusView.addXMarker(0., legend='sample', text='sample', color='g')
+        self.ui.horizontalFocusView.addXMarker(0., legend='sample', text='', color='g')
         self.propagate()
 
     def updatePlane(self):
@@ -37,7 +39,7 @@ class ProbeManager(object):
             zslice = np.argmin(np.abs(self.zdist*1e6 - z))
             zz = self.zdist[zslice]*1e6
             self.ui.probePlot.setData(self.probe3d[zslice], copy=False)
-            self.ui.verticalFocusView.addXMarker(zz, legend='zslice', text='\n%d um'%int(np.round(zz)), color='m')
+            self.ui.verticalFocusView.addXMarker(zz, legend='zslice', text='\n\n %d um'%int(np.round(zz)), color='m')
             self.ui.horizontalFocusView.addXMarker(zz, legend='zslice', text='', color='m')
         except AttributeError:
             pass # no data yet
@@ -74,8 +76,8 @@ class ProbeManager(object):
 
         # indicate vertical and horizontal foci
         y = self.ui.verticalFocusView.getYAxis().getLimits()
-        self.ui.verticalFocusView.addXMarker(focus_vertical_x*1e6, legend='local', text='%d um'%int(np.round(focus_vertical_x*1e6)), color='c')
-        self.ui.horizontalFocusView.addXMarker(focus_horizontal_x*1e6, legend='local', text='%d um'%int(np.round(focus_horizontal_x*1e6)), color='c')
+        self.ui.verticalFocusView.addXMarker(focus_vertical_x*1e6, legend='local', text='\n %d um'%int(np.round(focus_vertical_x*1e6)), color='c')
+        self.ui.horizontalFocusView.addXMarker(focus_horizontal_x*1e6, legend='local', text='\n %d um'%int(np.round(focus_horizontal_x*1e6)), color='c')
 
         # autofocus
         focus_ind = np.argmax(np.sum(power3d**2, axis=(1,2)))
@@ -105,3 +107,6 @@ class ProbeView(ComplexImageView):
         self.setVisualizationMode(self.Mode.LOG10_AMPLITUDE_PHASE)
         self.setKeepDataAspectRatio(True)
         self.getPlot().getColorBarWidget().setVisible(False)
+
+class Histogram(PlotWidget):
+    pass
