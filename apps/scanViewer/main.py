@@ -20,9 +20,9 @@ except ImportError:
 from distutils.version import LooseVersion
 try:
     import silx
-    assert LooseVersion(silx.version) >= LooseVersion('0.8.0')
+    assert LooseVersion(silx.version) >= LooseVersion('0.10.1')
 except:
-    raise Exception('This application requires silx >= 0.8.0')
+    raise Exception('This application requires silx >= 0.10.1')
 
 from silx.gui import qt
 print 'silx %s using' % silx.version, qt.BINDING
@@ -218,7 +218,7 @@ class ScanViewer(qt.QMainWindow):
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
                 has_xrd = False
-            except:
+            except AttributeError:
                 print "no xrd data found"
                 has_xrd = False
 
@@ -227,7 +227,7 @@ class ScanViewer(qt.QMainWindow):
                 scan_.addData(dataType='xrf', name='xrf', **opts)
                 print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
                 has_xrf = True
-            except:
+            except AttributeError:
                 print "no xrf data found"
                 has_xrf = False
 

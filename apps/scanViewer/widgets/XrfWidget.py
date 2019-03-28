@@ -3,6 +3,7 @@ from silx.gui.plot.Profile import ProfileToolBar
 from silx.gui.icons import getQIcon
 from silx.gui import qt
 import numpy as np
+import time
 
 from XrdWidget import MapWidget
 
@@ -51,10 +52,13 @@ class XrfWidget(qt.QWidget):
 
         # connect the mask widget to the update
         self.map.getMaskToolsDockWidget().widget()._mask.sigChanged.connect(self.updateSpectrum)
-        self.spectrum.getCurvesRoiDockWidget().sigROISignal.connect(self.updateMap)
+        self.spectrum.getCurvesRoiWidget().sigROISignal.connect(self.updateMap)
 
         # keep track of map selections by ROI or by index
         self.selectionMode = 'roi' # 'roi' or 'ind'
+
+        # workaround to avoid multiple updates
+        self.last_map_update = 0.0
 
     def setScan(self, scan):
         self.scan = scan
@@ -80,6 +84,9 @@ class XrfWidget(qt.QWidget):
     def updateMap(self):
         if self.scan is None:
             return
+        elif time.time() - self.last_map_update < .05:
+            return
+
         try:
             self.window().statusOutput('Building XRF map...')
             # workaround to avoid the infinite loop which occurs when both
@@ -89,16 +96,16 @@ class XrfWidget(qt.QWidget):
             xlims = self.map.getGraphXLimits()
             ylims = self.map.getGraphYLimits()
             # get ROI information
-            try:
-                rois = self.spectrum.getCurvesRoiWidget().getRois()
-                roiName = self.spectrum.getCurvesRoiWidget().currentROI
-                lower = int(np.floor(rois[roiName]['from']))
-                upper = int(np.ceil(rois[roiName]['to']))
-                print "building fluorescence map from channels %d to %d"%(lower, upper)
-                average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
-            except:
+            roi = self.spectrum.getCurvesRoiWidget().currentRoi
+            if roi is None:
                 print "building fluorescence map from the whole spectrum"
                 average = np.mean(self.scan.data['xrf'], axis=1)
+            else:
+                lower = int(np.floor(roi.getFrom()))
+                upper = int(np.ceil(roi.getTo()))
+                print "building fluorescence map from channels %d to %d"%(lower, upper)
+                average = np.mean(self.scan.data['xrf'][:, lower:upper], axis=1)
+
             # interpolate and plot map
             method = self.map.interpolMenu.currentText()
             sampling = self.map.interpolBox.value()
@@ -109,6 +116,7 @@ class XrfWidget(qt.QWidget):
             self.map.setGraphXLimits(*xlims)
             self.map.setGraphYLimits(*ylims)
             self.window().statusOutput('')
+            self.last_map_update = time.time()
         except:
             self.window().statusOutput('Failed to build XRF map. See terminal output.')
             raise
