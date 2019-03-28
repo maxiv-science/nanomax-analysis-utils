@@ -148,7 +148,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
         fp = h5py.File(fileName, 'r')
 
         # infer which is the slow axis
-        slowMotorHint = fp.get(entry + '/title').value.split(' ')[1]
+        slowMotorHint = fp.get(entry + '/title')[()].split(' ')[1]
         if slowMotorHint in self.xMotor:
             fastMotor = self.yMotor
             slowMotor = self.xMotor
@@ -192,9 +192,9 @@ class nanomaxScan_flyscan_nov2017(Scan):
 
         # optionally add coarse stage position
         if self.globalPositions:
-            sams_x = fp.get(entry+'/measurement/sams_x').value * 1e3
-            sams_y = fp.get(entry+'/measurement/sams_y').value * 1e3
-            sams_z = fp.get(entry+'/measurement/sams_z').value * 1e3
+            sams_x = fp.get(entry+'/measurement/sams_x')[()] * 1e3
+            sams_y = fp.get(entry+'/measurement/sams_y')[()] * 1e3
+            sams_z = fp.get(entry+'/measurement/sams_z')[()] * 1e3
             offsets = {'samx': sams_x, 'samy': sams_y, 'samz': sams_z}
             x += offsets[self.xMotor[:4]]
             y += offsets[self.yMotor[:4]]

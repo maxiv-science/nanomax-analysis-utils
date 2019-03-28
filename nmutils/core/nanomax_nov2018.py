@@ -252,7 +252,7 @@ class stepscan_nov2018(Scan):
 
         with h5py.File(self.fileName, 'r') as hf:
             if self.nominalPositions:
-                title = str(hf.get('entry%d' % self.scanNr + '/title').value).split(' ')
+                title = str(hf.get('entry%d' % self.scanNr + '/title')[()]).split(' ')
                 xmotorInd = title.index(self.xMotor)
                 ymotorInd = title.index(self.yMotor)
                 x = np.linspace(float(title[xmotorInd+1]),
