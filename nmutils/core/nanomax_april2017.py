@@ -116,7 +116,7 @@ class nanomaxScan_flyscan_april2017(Scan):
 
             # get slow y positions
             if self.nominalYPositions:
-                title = str(hf.get(entry + '/title').value).split(' ')
+                title = str(hf.get(entry + '/title')[()]).split(' ')
                 yall = np.linspace(
                     float(title[2]),
                     float(title[3]),
@@ -397,7 +397,7 @@ class nanomaxScan_stepscan_april2017(Scan):
 
         with h5py.File(self.fileName, 'r') as hf:
             if self.nominalPositions:
-                title = str(hf.get('entry%d' % self.scanNr + '/title').value).split(' ')
+                title = str(hf.get('entry%d' % self.scanNr + '/title')[()]).split(' ')
                 xmotorInd = title.index(self.xMotor)
                 ymotorInd = title.index(self.yMotor)
                 x = np.linspace(float(title[xmotorInd+1]),
