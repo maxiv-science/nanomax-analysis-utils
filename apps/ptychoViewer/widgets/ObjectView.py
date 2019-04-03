@@ -6,6 +6,7 @@ import silx
 from silx.gui.plot.ComplexImageView import ComplexImageView
 from silx.gui import qt
 from distutils.version import LooseVersion
+import ptypy
 
 class ObjectView(ComplexImageView):
     """
@@ -26,6 +27,11 @@ class ObjectView(ComplexImageView):
         self.positionsAction = qt.QAction('positions', self, checkable=True)
         self.getPlot().toolBar().addAction(self.positionsAction)
 
+        # add a button to toggle phase ramp removal
+        self.rampAction = qt.QAction('ramp', self, checkable=True)
+        self.getPlot().toolBar().addAction(self.rampAction)
+        self.rampAction.triggered.connect(self._toggleRamp)
+
         # add a phase shift number
         self.phaseShiftBox = qt.QDoubleSpinBox(
             toolTip='Phase shift everything')
@@ -37,9 +43,26 @@ class ObjectView(ComplexImageView):
         self.getPlot().toolBar().addWidget(self.phaseShiftBox)
 
     def set_data(self, data, origin, psize):
-        self.data = data
+        self.original_data = data
+        self.data = self.original_data
+        if self.rampAction.isChecked():
+            self.data = self._deramped_data
         self.setScale(psize * 1e6)
         self.setOrigin(tuple(origin * 1e6))
+        self._update()
+
+    @property
+    def _deramped_data(self):
+        weights = np.zeros_like(self.original_data)
+        M, N = weights.shape
+        weights[M/3:M/3*2, N/3:N/3*2] = 1
+        return ptypy.utils.rmphaseramp(self.original_data, weights)
+
+    def _toggleRamp(self):
+        if self.rampAction.isChecked():
+            self.data = self._deramped_data
+        else:
+            self.data = self.original_data
         self._update()
 
     def _update(self):
