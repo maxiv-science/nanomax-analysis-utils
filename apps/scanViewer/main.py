@@ -218,7 +218,7 @@ class ScanViewer(qt.QMainWindow):
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
                 has_xrd = False
-            except AttributeError:
+            except (AttributeError, IOError):
                 print "no xrd data found"
                 has_xrd = False
 
@@ -227,7 +227,7 @@ class ScanViewer(qt.QMainWindow):
                 scan_.addData(dataType='xrf', name='xrf', **opts)
                 print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
                 has_xrf = True
-            except AttributeError:
+            except (AttributeError, IOError):
                 print "no xrf data found"
                 has_xrf = False
 
