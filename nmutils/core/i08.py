@@ -1,5 +1,6 @@
 from Scan import Scan
 from ..utils import fastBinPixels
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
@@ -45,12 +46,14 @@ class i08_scan(Scan):
         Override position reading. A bit complicated since xrd (stxm)
         and xrf data are written with different position formats.
         """
+        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as hf:
             x_ = np.array(hf.get('entry/I0_data/SampleX'))
             y_ = np.array(hf.get('entry/I0_data/SampleY'))
         if x_ is None or None in x_ or x_ == np.array(None):
             # ok we are reading one of these xrf files
             fn = self.fileName[:-4] + '_b.nxs'
+            if not os.path.exists(fn): raise NoDataException
             with h5py.File(fn, 'r') as hf:
                 x_ = np.array(hf.get('entry/xmapMca/SampleX'))
                 y_ = np.array(hf.get('entry/xmapMca/SampleY'))
@@ -71,6 +74,7 @@ class i08_scan(Scan):
         if self.dataType == 'xrf':
             print "loading fluorescence data..."
             fn = self.fileName[:-4] + '_b.nxs'
+            if not os.path.exists(fn): raise NoDataException
             with h5py.File(fn, 'r') as fp:
                 data = np.array(fp.get('entry/xmapMca/data'))
                 data = data.reshape(-1, data.shape[-1])

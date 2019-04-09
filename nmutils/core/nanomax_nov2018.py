@@ -1,5 +1,6 @@
 from Scan import Scan
 from ..utils import fastBinPixels
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
@@ -41,6 +42,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
 
         if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/Ni6602_buff'])
                 I0_data = I0_data.astype(float) * 1e-5
@@ -88,8 +90,10 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
 
             data = []
             print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
-                    
-            with h5py.File(os.path.join(path, filename_pattern%self.scanNr), 'r') as hf:
+                 
+            fn = os.path.join(path, filename_pattern%self.scanNr)
+            if not os.path.exists(fn): raise NoDataException   
+            with h5py.File(fn, 'r') as hf:
                 for line in range(self.nlines):
                     try:
                         print 'loading data: ' + filename_pattern%self.scanNr + ', line %d'%line
@@ -129,7 +133,9 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filename_pattern%(self.scanNr)
             data = []
-            with h5py.File(os.path.join(path, filename_pattern%(self.scanNr)), 'r') as hf:
+            fn = os.path.join(path, filename_pattern%(self.scanNr))
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as hf:
                 line = 0
                 while True:
                     if line >= self.nlines:
@@ -149,6 +155,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
         elif self.dataType == 'I0':
             print "loading I0 data..."
             entry = 'entry%d' % self.scanNr
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
                 data = np.array(hf[entry+'/measurement/Ni6602_buff'])
                 data = data.astype(float)
@@ -250,6 +257,7 @@ class stepscan_nov2018(Scan):
         Override position reading.
         """
 
+        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as hf:
             if self.nominalPositions:
                 title = str(hf.get('entry%d' % self.scanNr + '/title')[()]).split(' ')
@@ -297,6 +305,7 @@ class stepscan_nov2018(Scan):
 
         if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/counter1'])
                 I0_data = I0_data.astype(float) * 1e-5
@@ -346,8 +355,10 @@ class stepscan_nov2018(Scan):
             ic = None; jc = None # center of mass
             missing = 0
 
+            fn = os.path.join(path, filename_pattern%self.scanNr)
+            if not os.path.exists(fn): raise NoDataException
             try:
-                with h5py.File(os.path.join(path, filename_pattern%self.scanNr), 'r') as hf:
+                with h5py.File(fn, 'r') as hf:
                     print 'loading data: ' + os.path.join(path, filename_pattern%self.scanNr)
                     for im in range(self.positions.shape[0]):
                         dataset = hf.get(hdfpath_pattern%im)
@@ -390,7 +401,9 @@ class stepscan_nov2018(Scan):
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filename_pattern%(self.scanNr)
             data = []
-            with h5py.File(os.path.join(path, filename_pattern%(self.scanNr)), 'r') as hf:
+            fn = os.path.join(path, filename_pattern%(self.scanNr))
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as hf:
                 for im in range(self.positions.shape[0]):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
                     if not dataset:
@@ -402,6 +415,7 @@ class stepscan_nov2018(Scan):
 
         elif self.dataType == 'I0':
             entry = 'entry%d' % self.scanNr
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/counter1'])
                 I0_data = I0_data.astype(float)

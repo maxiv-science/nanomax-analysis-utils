@@ -1,5 +1,6 @@
 from Scan import Scan
 from ..utils import fastBinPixels
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
@@ -145,7 +146,10 @@ class nanomaxScan_flyscan_nov2017(Scan):
         fileName = self.fileName
 
         # open hdf5 file
-        fp = h5py.File(fileName, 'r')
+        try:
+            fp = h5py.File(fileName, 'r')
+        except IOError:
+            raise NoDataException
 
         # infer which is the slow axis
         slowMotorHint = fp.get(entry + '/title')[()].split(' ')[1]
@@ -158,7 +162,7 @@ class nanomaxScan_flyscan_nov2017(Scan):
             slowMotor = self.yMotor
             print "Loader inferred that %s is the fast axis" % self.xMotor
         else:
-            raise Exception("Couldn't determine which is the fast axis!")
+            raise NoDataException("Couldn't determine which is the fast axis!")
 
         # read the fast axis
         fast, nLines, lineLen = self._read_buffered(fp, entry+'/measurement/%s'%fastMotor)
@@ -257,7 +261,9 @@ class nanomaxScan_flyscan_nov2017(Scan):
             print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
             for line in range(self.nlines):
                 try:
-                    with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
+                    fn = os.path.join(path, filepattern%(self.scanNr, line))
+                    if not os.path.exists(fn): raise NoDataException
+                    with h5py.File(fn, 'r') as hf:
                         print 'loading data: ' + filepattern%(self.scanNr, line)
                         dataset = hf.get(hdfDataPath)
                         if self.xrdCropping:
@@ -297,7 +303,9 @@ class nanomaxScan_flyscan_nov2017(Scan):
             filepattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filepattern%(self.scanNr)
             data = []
-            with h5py.File(os.path.join(path, filepattern%(self.scanNr)), 'r') as hf:
+            fn = os.path.join(path, filepattern%(self.scanNr))
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as hf:
                 line = 0
                 while True:
                     if line >= self.nlines:

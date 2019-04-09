@@ -1,5 +1,6 @@
 from Scan import Scan
 from ..utils import fastBinPixels
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
@@ -100,9 +101,11 @@ class nanomaxScan_flyscan_april2017(Scan):
         fileName = self.fileName
 
         x, y = None, None
+        if not os.path.exists(fileName): raise NoDataException
         with h5py.File(fileName, 'r') as hf:
             # get fast x positions
             xdataset = hf.get(entry + '/measurement/AdLinkAI_buff')
+            if xdataset is None: raise NoDataException
             xall = np.array(xdataset)
             # manually find shape by looking for zeros
             Ny = xall.shape[0]
@@ -222,7 +225,9 @@ class nanomaxScan_flyscan_april2017(Scan):
             filepattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filepattern%(self.scanNr)
             data = []
-            with h5py.File(os.path.join(path, filepattern%(self.scanNr)), 'r') as hf:
+            fn = os.path.join(path, filepattern%(self.scanNr))
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as hf:
                 line = 0
                 while True:
                     if line >= self.nlines:
@@ -240,7 +245,9 @@ class nanomaxScan_flyscan_april2017(Scan):
 
     def _readLineXrdDataHdf5(self,line,path,filepattern,hdfDataPath):
         data_ = []
-        with h5py.File(os.path.join(path, filepattern%(self.scanNr, line)), 'r') as hf:
+        fn = os.path.join(path, filepattern%(self.scanNr, line))
+        if not os.path.exists(fn): raise NoDataException
+        with h5py.File(fn, 'r') as hf:
             print 'loading data: ' + filepattern%(self.scanNr, line)
             dataset = hf.get(hdfDataPath)
             if self.xrdCropping:
@@ -395,6 +402,7 @@ class nanomaxScan_stepscan_april2017(Scan):
         Override position reading.
         """
 
+        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as hf:
             if self.nominalPositions:
                 title = str(hf.get('entry%d' % self.scanNr + '/title')[()]).split(' ')
@@ -527,7 +535,9 @@ class nanomaxScan_stepscan_april2017(Scan):
             filepattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filepattern%(self.scanNr)
             data = []
-            with h5py.File(os.path.join(path, filepattern%(self.scanNr)), 'r') as hf:
+            fn = os.path.join(path, filepattern%(self.scanNr))
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as hf:
                 for im in range(self.positions.shape[0]):
                     dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
                     if not dataset:
@@ -542,7 +552,9 @@ class nanomaxScan_stepscan_april2017(Scan):
 
     def _readLineXrdDataHdf5(self,im,path,filepattern,hdfDataPath,ic=None,jc=None):
         data_ = []
-        with h5py.File(os.path.join(path, filepattern%(self.scanNr, im)), 'r') as hf:
+        fn = os.path.join(path, filepattern%(self.scanNr))
+        if not os.path.exists(fn): raise NoDataException
+        with h5py.File(fn, 'r') as hf:
             print 'loading data: ' + filepattern%(self.scanNr, im)
             dataset = hf.get(hdfDataPath)
             # for the first file, determine center of mass

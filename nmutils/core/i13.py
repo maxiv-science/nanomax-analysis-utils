@@ -1,5 +1,6 @@
 from Scan import Scan
 from ..utils import fastBinPixels
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
@@ -72,6 +73,7 @@ class i13_stepscan(Scan):
         Override position reading.
         """
 
+        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as hf:
             x = np.array(hf.get('entry1/instrument/%s/%s' % ((self.xMotor,)*2)))
             y = np.array(hf.get('entry1/instrument/%s/%s' % ((self.yMotor,)*2)))
@@ -95,6 +97,7 @@ class i13_stepscan(Scan):
 
         if self.dataType == 'xrd':
             print "loading diffraction data..."
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as fp:
                 d = fp.get('entry1/instrument/%s/data' % self.detector)
                 if self.xrdCropping:

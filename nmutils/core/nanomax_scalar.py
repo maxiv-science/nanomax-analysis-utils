@@ -1,8 +1,10 @@
 from Scan import Scan
+from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
 from .nanomax_nov2018 import flyscan_nov2018
+import os.path
 
 class nanomax_scalar(Scan):
     # Simple loading of x y z data from sardana's h5 file.
@@ -62,6 +64,7 @@ class nanomax_scalar(Scan):
         Override position reading.
         """
 
+        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as hf:
             x = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.xMotor))
             y = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.yMotor))
@@ -84,11 +87,12 @@ class nanomax_scalar(Scan):
         path of the Lima hdf5 files.
         """
 
+        if not os.path.exists(self.fileName): raise NoDataException
         if self.dataType == 'xrd':
             with h5py.File(self.fileName, 'r') as hf:
                 data = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.scalarData))
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrd''')
+            raise NoDataException('unknown datatype specified (should be ''xrd''')
         # pretend this is 2d detector data
         data = data.reshape(-1, 1, 1)
         return data
@@ -132,6 +136,7 @@ class scalar_flyscan_mar2019(flyscan_nov2018, Scan):
         """
         if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
+            if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = np.array(hf[entry+'/measurement/Ni6602_buff'])
                 I0_data = I0_data.astype(float) * 1e-5
@@ -145,6 +150,7 @@ class scalar_flyscan_mar2019(flyscan_nov2018, Scan):
             
             entry = 'entry%d' % self.scanNr
             fileName = self.fileName
+            if not os.path.exists(fileName): raise NoDataException
             with h5py.File(fileName, 'r') as hf:
                 data = hf[entry + '/measurement/' + self.scalarData]
                 data = data[:self.nlines, :self.images_per_line]
@@ -153,5 +159,5 @@ class scalar_flyscan_mar2019(flyscan_nov2018, Scan):
                 data = data / I0_data
 
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrd'')')
+            raise NoDataException('unknown datatype specified (should be ''xrd'')')
         return data.reshape(-1, 1, 1)
