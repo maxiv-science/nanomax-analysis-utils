@@ -21,7 +21,7 @@ from distutils.version import LooseVersion
 try:
     import silx
     assert LooseVersion(silx.version) >= LooseVersion('0.10.1')
-except:
+except (ImportError, AssertionError):
     raise Exception('This application requires silx >= 0.10.1')
 
 from silx.gui import qt
@@ -92,9 +92,10 @@ class ScanViewer(qt.QMainWindow):
         subclass_ = str(self.ui.scanClassBox.currentText())
         try:
             subclass = getattr(nmutils.core, subclass_)
-        except:
-            return
-        return subclass.default_opts.copy()
+            opts = subclass.default_opts.copy()
+        except AttributeError:
+            opts = {}
+        return opts
 
     def gatherOptions(self):
         # collect options from the options tab:
@@ -204,8 +205,9 @@ class ScanViewer(qt.QMainWindow):
             try:
                 subclass = str(self.ui.scanClassBox.currentText())
                 scan_ = getattr(nmutils.core, subclass)()
-            except:
-                raise Exception("Invalid subclass")
+            except AttributeError:
+                self.statusOutput("Invalid subclass!")
+                return
 
             # get options
             opts = self.gatherOptions()
@@ -218,7 +220,7 @@ class ScanViewer(qt.QMainWindow):
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
                 has_xrd = False
-            except (AttributeError, IOError):
+            except nmutils.NoDataException:
                 print "no xrd data found"
                 has_xrd = False
 
@@ -227,7 +229,7 @@ class ScanViewer(qt.QMainWindow):
                 scan_.addData(dataType='xrf', name='xrf', **opts)
                 print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
                 has_xrf = True
-            except (AttributeError, IOError):
+            except nmutils.NoDataException:
                 print "no xrf data found"
                 has_xrf = False
 
@@ -245,9 +247,9 @@ class ScanViewer(qt.QMainWindow):
                 if has_xrf:
                     self.ui.xrfWidget.setScan(self.scan)
             self.statusOutput("")
-        except Exception as e:
+        except:
             self.statusOutput("Loading failed. See terminal output for details.")
-            print 'The error was: ', e
+            raise
 
 if __name__ == '__main__':
     # you always need a qt app

@@ -116,10 +116,10 @@ class Scan(object):
         # Check if any data exists.
         if not hasattr(self, 'data'):
             # initialize data dict and read positions
-            self.data = {}
             self.positions = self._readPositions()
             self.nPositions = self.positions.shape[0]
             self.nDimensions = self.positions.shape[1]
+            self.data = {}
         else:
             # verify that the data isn't already loaded
             if name in self.data.keys():
