@@ -9,6 +9,7 @@ import numpy as np
 import h5py
 import copy as cp
 import os.path
+from .. import NoDataException
 
 import scipy.ndimage.measurements
 from scipy.interpolate import griddata
@@ -92,11 +93,33 @@ class Scan(object):
                     raise Exception('Data type for option %s should be %s, not %s'%(str(key), str(opts[key]['type']), str(type(val))))
                 # list or tuple in the type field means multiple choice
                 if type(opts[key]['type']) in (list, tuple) and val not in opts[key]['type']:
-                    raise Exception("Value %s isn't on the menu for option %s (%s)" % (str(val), str(key), str(opts[key]['type'])))
+                    raise Exception("Value '%s' isn't on the menu for option %s (%s)" % (str(val), str(key), str(opts[key]['type'])))
                 opts[key]['value'] = val
             else:
                 raise Exception('Unknown option %s' % str(key))
         return opts
+
+    def _safe_get_array(self, fp, path):
+        """
+        Attempts to get array from array(fp[path]), raising an informative
+        NoDataException if that fails.
+        """
+        try:
+            a = np.array(fp[path])
+        except KeyError:
+            raise NoDataException('Dataset %s not found in %s' % (path, fp.filename))
+        return a
+
+    def _safe_get_dataset(self, fp, path):
+        """
+        Attempts to get dataset from fp[path], raising an informative
+        NoDataException if that fails.
+        """
+        try:
+            a = fp[path]
+        except KeyError:
+            raise NoDataException('Dataset %s not found in %s' % (path, fp.filename))
+        return a
 
     def addData(self, name=None, **kwargs):
         """ 

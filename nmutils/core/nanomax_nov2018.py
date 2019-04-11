@@ -1,39 +1,207 @@
-from Scan import Scan
+from . import Scan
 from ..utils import fastBinPixels
 from .. import NoDataException
 import numpy as np
 import h5py
 import copy as cp
 import os.path
-from nanomax_nov2017 import nanomaxScan_flyscan_nov2017
 
-class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
+class flyscan_nov2018(Scan):
     """
-    More mature fly scan format.
+    Fairly mature fly scan format.
     """
 
-    default_opts = cp.deepcopy(nanomaxScan_flyscan_nov2017.default_opts)
-    default_opts['normalize_by_I0'] = {
-            'value': False,
-            'type': bool,
-            'doc': 'whether or not to normalize against I0',
-            }
-    default_opts['xrfChannel'] = {
-            'value': [3,],
-            'type': list,
-            'doc': 'xspress3 channels from which to read XRF, averaged',
-            }
+    # the options scanNr, fileName and dataSource are mandatory for use with scanViewer.
+    default_opts = {
+    'scanNr': {
+        'value': 0,
+        'type': int,
+        'doc': "scan number",
+        },
+    'fileName': {
+        'value': None,
+        'type': str,
+        'doc': "path to the main data file",
+        },
+    'dataSource': {
+        'value': 'pil100k',
+        'type': ['pil100k', 'xspress3', 'adlink', 'merlin', 'pil1m', 'counter'],
+        'doc': "type of data",
+        },
+    'xMotor': {
+        'value': 'samx_buff',
+        'type': str,
+        'doc': 'x axis motor',
+        },
+    'yMotor': {
+        'value': 'samy_buff',
+        'type': str,
+        'doc': 'y axis motor',
+        },
+    'xrfChannel': {
+        'value': [3,],
+        'type': list,
+        'doc': 'xspress3 channels from which to read XRF, averaged',
+        },
+    'xrfCropping': {
+        'value': [],
+        'type': list,
+        'doc': 'energy channel range to load, [ch0, ch1]',
+        },
+    'xrdCropping': {
+        'value': [],
+        'type': list,
+        'doc': 'detector area to load, [i0, i1, j0, j1]',
+        },
+    'xrdBinning': {
+        'value': 1,
+        'type': int,
+        'doc': 'bin xrd pixels n-by-n (after cropping)',
+        },
+    'xrdNormalize': {
+        'value': [],
+        'type': list,
+        'doc': 'normalize XRD images by average over the ROI [i0, i1, j0, j1]',
+        },
+    'nMaxLines': {
+        'value': 0,
+        'type': int,
+        'doc': 'load at most N lines - 0 means load all',
+        },
+    'globalPositions': {
+        'value': False,
+        'type': bool,
+        'doc': 'attempt to assign global scanning positions',
+        },
+    'normalize_by_I0': {
+        'value': False,
+        'type': bool,
+        'doc': 'whether or not to normalize against I0',
+        },
+    }
 
     def _prepareData(self, **kwargs):
         """ 
         Parse the derived options
         """
         # copy defaults, then update with kwarg options
-        super(flyscan_nov2018, self)._prepareData(**kwargs)
+
         opts = cp.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
+        
+        # parse options
+        self.dataSource = opts['dataSource']['value']
+        self.xMotor = opts['xMotor']['value']
+        self.yMotor = opts['yMotor']['value']
+        self.xrfChannel = opts['xrfChannel']['value']
+        self.xrfCropping = map(int, opts['xrfCropping']['value'])
+        self.xrdCropping = map(int, opts['xrdCropping']['value'])
+        self.xrdBinning = opts['xrdBinning']['value']
+        self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
+        self.nMaxLines = opts['nMaxLines']['value']
+        self.globalPositions = opts['globalPositions']['value']
+        self.scanNr = opts['scanNr']['value']
+        self.fileName = opts['fileName']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
         self.xrfChannel = map(int, opts['xrfChannel']['value'])
+
+    def _read_buffered(self, fp, entry):
+        """
+        Returns a flat array of buffered positions
+        """
+        data = np.asarray(fp.get(entry))
+        nLines = data.shape[0]
+        # find line length by looking for padding zeros
+        for i in range(data.shape[1]):
+            if data[0, i] == 0:
+                Nx = i
+                break
+        data = data[:, :Nx].flatten()
+        return data, nLines, Nx
+
+    def _read_non_buffered(self, fp, entry, lineLength, nLines):
+        """
+        Returns a flat array of non-buffered positions, repeated to match
+        buffered data.
+        """
+        data = np.asarray(fp.get(entry))
+        if not (len(data) == nLines): raise Exception('Something''s wrong with the positions')
+        data = np.repeat(data, lineLength)
+        return data
+
+    def _readPositions(self):
+        """ 
+        Override position reading.
+        """
+        
+        entry = 'entry%d' % self.scanNr
+        fileName = self.fileName
+
+        # open hdf5 file
+        try:
+            fp = h5py.File(fileName, 'r')
+        except IOError:
+            raise NoDataException
+
+        # infer which is the slow axis
+        slowMotorHint = fp.get(entry + '/title')[()].split(' ')[1]
+        if slowMotorHint in self.xMotor:
+            fastMotor = self.yMotor
+            slowMotor = self.xMotor
+            print "Loader inferred that %s is the fast axis" % self.yMotor
+        elif slowMotorHint in self.yMotor:
+            fastMotor = self.xMotor
+            slowMotor = self.yMotor
+            print "Loader inferred that %s is the fast axis" % self.xMotor
+        else:
+            raise NoDataException("Couldn't determine which is the fast axis!")
+
+        # read the fast axis
+        fast, nLines, lineLen = self._read_buffered(fp, entry+'/measurement/%s'%fastMotor)
+
+        # save number of lines for the _readData method
+        self.nlines = nLines
+        self.images_per_line = lineLen
+
+        # read the slow axis
+        slow_is_buffered = len(fp.get(entry+'/measurement/%s'%slowMotor).shape) > 1
+        if slow_is_buffered:
+            slow, _, _ = self._read_buffered(fp, entry+'/measurement/%s'%slowMotor)
+        else:
+            slow = self._read_non_buffered(fp, entry+'/measurement/%s'%slowMotor, lineLen, nLines)
+
+        # limit the number of lines if requested
+        if self.nMaxLines:
+            self.nlines = self.nMaxLines
+            fast = fast[:lineLen * self.nMaxLines]
+            slow = slow[:lineLen * self.nMaxLines]
+
+        # assign fast and slow positions
+        if fastMotor == self.xMotor:
+            x = fast
+            y = slow
+        else:
+            y = fast
+            x = slow
+
+        print "x and y shapes:", x.shape, y.shape
+
+        # optionally add coarse stage position
+        if self.globalPositions:
+            sams_x = fp.get(entry+'/measurement/sams_x')[()] * 1e3
+            sams_y = fp.get(entry+'/measurement/sams_y')[()] * 1e3
+            sams_z = fp.get(entry+'/measurement/sams_z')[()] * 1e3
+            offsets = {'samx': sams_x, 'samy': sams_y, 'samz': sams_z}
+            x += offsets[self.xMotor[:4]]
+            y += offsets[self.yMotor[:4]]
+            print '*** added rough position offsets!'
+
+        print "loaded positions from %d lines, %d positions on each"%(self.nlines, lineLen)
+
+        # close hdf5 file
+        fp.close()
+
+        return np.vstack((x, y)).T
 
     def _readData(self):
         """ 
@@ -44,60 +212,35 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = np.array(hf[entry+'/measurement/Ni6602_buff'])
+                Io_data = self._safe_get_array(h5, entry+'/measurement/Ni6602_buff')
                 I0_data = I0_data.astype(float) * 1e-5
                 I0_data = I0_data[:, :self.images_per_line]
 
-        if self.dataType == 'xrd':
+        if self.dataSource in ('pil100k', 'merlin', 'pil1m'):
             print "loading diffraction data..."
             path = os.path.split(os.path.abspath(self.fileName))[0]
-
-            # check which detector data are available:
-            avail_dets = []
-            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('merlin')
-                print "Merlin data available"                
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('pil100k')
-                print "100k data available"
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('pil1m')
-                print "1M data available"
-            if len(avail_dets) == 0:
-                print "No XRD data available"
-                return
             
-            # check which detector was used
-            if self.detPreference in avail_dets:
-                chosen_det = self.detPreference
-            else: 
-                chosen_det = avail_dets[0]
-            if chosen_det == 'merlin':
+            # set detector paths
+            if self.dataSource == 'merlin':
                 filename_pattern = 'scan_%04d_merlin_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Merlin/data'
-                print "Using Merlin XRD data"
-            elif chosen_det == 'pil100k':
+            elif self.dataSource == 'pil100k':
                 filename_pattern = 'scan_%04d_pil100k_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Pilatus/data'
-                print "Using Pilatus 100k data"
-            elif chosen_det == 'pil1m':
+            elif self.dataSource == 'pil1m':
                 filename_pattern = 'scan_%04d_pil1m_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Pilatus/data'
-                print "Using Pilatus 1M data"
-            else:
-                print "Something went really wrong in detector choice"
-                return
 
             data = []
             print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
                  
             fn = os.path.join(path, filename_pattern%self.scanNr)
-            if not os.path.exists(fn): raise NoDataException   
+            if not os.path.exists(fn): raise NoDataException('No hdf5 file found.')
             with h5py.File(fn, 'r') as hf:
                 for line in range(self.nlines):
                     try:
                         print 'loading data: ' + filename_pattern%self.scanNr + ', line %d'%line
-                        dataset = hf.get(hdfpath_pattern%line)
+                        dataset = self._safe_get_dataset(hf, hdfpath_pattern%line)
                         if self.xrdCropping:
                             i0, i1, j0, j1 = self.xrdCropping
                             data_ = np.array(dataset[:, i0 : i1, j0 : j1])
@@ -109,7 +252,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
                             for ii in range(data_.shape[0]):
                                 new_data_[ii] = fastBinPixels(data_[ii], self.xrdBinning)
                             data_ = new_data_
-                        if 'Merlin' in hdfpath_pattern:
+                        if self.dataSource == 'merlin':
                             for i in range(data_.shape[0]):
                                 data_[i] = np.flipud(data_[i]) # Merlin images indexed from the bottom left...
                         del dataset
@@ -126,7 +269,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             print "loaded %d lines of diffraction data"%len(data)
             data = np.concatenate(data, axis=0)
 
-        elif self.dataType == 'xrf':
+        elif self.dataSource == 'xspress3':
             print "loading flurescence data..."
             print "selecting fluorescence channels %s"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
@@ -140,7 +283,7 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
                 while True:
                     if line >= self.nlines:
                         break
-                    dataset = hf.get('entry_%04d/measurement/xspress3/data'%line)
+                    dataset = self._safe_get_dataset(hf, 'entry_%04d/measurement/xspress3/data'%line)
                     if not dataset:
                         break
                     data_ = np.mean(np.array(dataset)[:, self.xrfChannel, :], axis=1)
@@ -152,17 +295,18 @@ class flyscan_nov2018(nanomaxScan_flyscan_nov2017):
             print "loaded %d lines of flurescence data"%len(data)
             data = np.vstack(data)
 
-        elif self.dataType == 'I0':
-            print "loading I0 data..."
+        elif self.dataSource in ('adlink', 'counter'):
+            print "loading buffered scalar data..."
+            channel = {'adlink': 'AdLink_buff', 'counter': 'Ni6602_buff'}[self.dataSource]
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                data = np.array(hf[entry+'/measurement/Ni6602_buff'])
+                data = self._safe_get_array(hf, entry+'/measurement/%s'%channel)
                 data = data.astype(float)
                 data = data[:, :self.images_per_line]
                 data = data.flatten()
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrd'', ''xrf'' or ''I0''')
+            raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
         return data
 
        
@@ -182,11 +326,10 @@ class stepscan_nov2018(Scan):
             'type': str,
             'doc': "path to the main data file",
             },
-        # the dataType option is mandatory for use with scanViewer
-        'dataType': {
-            'value': 'xrd',
-            'type': str,
-            'doc': "type of data, 'xrd' or 'xrf'",
+        'dataSource': {
+            'value': 'merlin',
+            'type': ['merlin', 'xspress3', 'counter1', 'pil100k', 'pil1m', 'counter2', 'counter3'],
+            'doc': "type of data",
             },
         'xMotor': {
             'value': 'samx',
@@ -218,11 +361,6 @@ class stepscan_nov2018(Scan):
             'type': bool,
             'doc': 'whether to normalize against I0 (counter1)',
             },
-        'detectorPreference': {
-            'value': 'pil100k',
-            'type': ['pil100k', 'pil1m', 'merlin'],
-            'doc': 'preferred XRD detector',
-            },
         'nominalPositions': {
             'value': False,
             'type': bool,
@@ -240,14 +378,13 @@ class stepscan_nov2018(Scan):
         opts = self._updateOpts(opts, **kwargs)
         
         # parse options
-        self.dataType = opts['dataType']['value']
+        self.dataSource = opts['dataSource']['value']
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
         self.xrdCropping = int(opts['xrdCropping']['value'])
         self.xrdBinning = int(opts['xrdBinning']['value'])
         self.normalize_by_I0 = (opts['normalize_by_I0']['value'])
-        self.detPreference = opts['detectorPreference']['value']
         self.nominalPositions = bool(opts['nominalPositions']['value'])
         self.scanNr = int(opts['scanNr']['value'])
         self.fileName = opts['fileName']['value']
@@ -307,49 +444,24 @@ class stepscan_nov2018(Scan):
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = np.array(hf[entry+'/measurement/counter1'])
+                I0_data = self._safe_get_array(hf, entry+'/measurement/counter1')
                 I0_data = I0_data.astype(float) * 1e-5
                 print I0_data
 
-        if self.dataType == 'xrd':
+        if self.dataSource in ('merlin', 'pil100k', 'pil1m'):
             print "loading diffraction data..."
             path = os.path.split(os.path.abspath(self.fileName))[0]
 
-            # check which detector data are available:
-            avail_dets = []
-            if os.path.isfile(os.path.join(path, 'scan_%04d_merlin_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('merlin')
-                print "Merlin data available"                
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil100k_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('pil100k')
-                print "100k data available"
-            if os.path.isfile(os.path.join(path, 'scan_%04d_pil1m_%04d.hdf5'%(self.scanNr,0))):
-                avail_dets.append('pil1m')
-                print "1M data available"
-            if len(avail_dets) == 0:
-                print "No XRD data available"
-                return
-
-            # check which detector was used
-            if self.detPreference in avail_dets:
-                chosen_det = self.detPreference
-            else: 
-                chosen_det = avail_dets[0]
-            if chosen_det == 'merlin':
+            # set detector paths
+            if self.dataSource == 'merlin':
                 filename_pattern = 'scan_%04d_merlin_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Merlin/data'
-                print "Using Merlin XRD data"
-            elif chosen_det == 'pil100k':
+            elif self.dataSource == 'pil100k':
                 filename_pattern = 'scan_%04d_pil100k_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Pilatus/data'
-                print "Using Pilatus 100k data"
-            elif chosen_det == 'pil1m':
+            elif self.dataSource == 'pil1m':
                 filename_pattern = 'scan_%04d_pil1m_0000.hdf5'
                 hdfpath_pattern = 'entry_%04d/measurement/Pilatus/data'
-                print "Using Pilatus 1M data"
-            else:
-                print "Something went really wrong in detector choice"
-                return
 
             data = []
             ic = None; jc = None # center of mass
@@ -361,7 +473,7 @@ class stepscan_nov2018(Scan):
                 with h5py.File(fn, 'r') as hf:
                     print 'loading data: ' + os.path.join(path, filename_pattern%self.scanNr)
                     for im in range(self.positions.shape[0]):
-                        dataset = hf.get(hdfpath_pattern%im)
+                        dataset = self._safe_get_dataset(hf, hdfpath_pattern%im)
                         # for the first frame, determine center of mass
                         if ic is None or jc is None == 0:
                             import scipy.ndimage.measurements
@@ -394,7 +506,7 @@ class stepscan_nov2018(Scan):
             if self.normalize_by_I0:
                 data = data / I0_data[:, None, None]
 
-        elif self.dataType == 'xrf':
+        elif self.dataSource == 'xspress3':
             print "loading flurescence data..."
             print "selecting fluorescence channel %d"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
@@ -405,7 +517,7 @@ class stepscan_nov2018(Scan):
             if not os.path.exists(fn): raise NoDataException
             with h5py.File(fn, 'r') as hf:
                 for im in range(self.positions.shape[0]):
-                    dataset = hf.get('entry_%04d/measurement/xspress3/data'%im)
+                    dataset = self._safe_get_dataset(hf, 'entry_%04d/measurement/xspress3/data'%im)
                     if not dataset:
                         break
                     data.append(np.array(dataset)[0, self.xrfChannel])
@@ -413,15 +525,15 @@ class stepscan_nov2018(Scan):
             if self.normalize_by_I0:
                 data = data / I0_data[:, None]
 
-        elif self.dataType == 'I0':
+        elif self.dataSource in ('counter1', 'counter2', 'counter3'):
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = np.array(hf[entry+'/measurement/counter1'])
+                I0_data = self._safe_get_array(hf, entry+'/measurement/counter1')
                 I0_data = I0_data.astype(float)
                 data = I0_data.flatten()
         else:
-            raise RuntimeError('unknown datatype specified (should be ''xrd'' or ''xrf''')
+            raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
 
         return data
 
