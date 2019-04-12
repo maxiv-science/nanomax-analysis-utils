@@ -24,10 +24,10 @@ class Scan(object):
     # be overridden. Tip: for multiple choice, give a list or tuple of
     # possibilities in the 'type' field.
     default_opts = {
-        'dataType': {
-            'value': 'my_parameter',
-            'type': str,
-            'doc': "some meaningful values, maybe 'xrd' or 'xrf'",
+        'dataSource': {
+            'value': 'val1',
+            'type': ['val1', 'val2', 'val3'],
+            'doc': "some meaningful values, maybe 'waxs' or 'merlin'",
             }
     }
 

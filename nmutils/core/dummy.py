@@ -9,11 +9,11 @@ class dummyScan(Scan):
     """
 
     default_opts = {
-        # the dataType option is mandatory for use with scanViewer
-        'dataType': {
+        # the dataSource option is mandatory for use with scanViewer
+        'dataSource': {
             'value': 'xrd',
-            'type': str,
-            'doc': "type of data, 'xrd' or 'xrf'",
+            'type': ['fake-xrd', 'fake-xrf', 'fake-scalar'],
+            'doc': "type of data",
             },
         'xrange': {
             'value': [0, 1024],
@@ -42,6 +42,12 @@ class dummyScan(Scan):
             },
         }
 
+    # an optional class attribute which lets scanViewer know what
+    # dataSource options have what dimensionalities.
+    sourceDims = {'fake-xrd': 2,
+                  'fake-xrf': 1,
+                  'fake-scalar': 0}
+
 
     def _prepareData(self, **kwargs):
         """ 
@@ -52,7 +58,7 @@ class dummyScan(Scan):
         opts = copy.deepcopy(self.default_opts)
         opts = self._updateOpts(opts, **kwargs)
         
-        self.dataType = opts['dataType']['value']
+        self.dataSource = opts['dataSource']['value']
         self.xrange = map(int, opts['xrange']['value'])
         self.yrange = map(int, opts['yrange']['value'])
         self.stepsize = int(opts['stepsize']['value'])
@@ -84,18 +90,22 @@ class dummyScan(Scan):
         """
         frame = self.framesize
         data = []
-        if self.dataType == 'xrd':
+        if self.dataSource == 'fake-xrd':
             for pos in self.positions:
                 dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
                                    pos[0]-frame/2:pos[0]+frame/2,]
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(dataframe)
-        elif self.dataType == 'xrf':
+        elif self.dataSource == 'fake-xrf':
             for pos in self.positions:
                 dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
                                    pos[0]-frame/2:pos[0]+frame/2,]
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(np.mean(dataframe, axis=0))
+        elif self.dataSource == 'fake-scalar':
+            self.dataSource = 'fake-xrd'
+            data = self._readData()
+            data = np.var(data, axis=(1,2))
         return np.array(data)

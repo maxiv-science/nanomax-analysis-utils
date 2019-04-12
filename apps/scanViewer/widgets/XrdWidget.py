@@ -208,11 +208,11 @@ class XrdWidget(qt.QWidget):
             # if the mask is cleared, reset without wasting time
             if (mask is None) or (not np.sum(mask)):
                 print 'building XRD map by averaging all pixels'
-                average = np.mean(self.scan.data['xrd'], axis=(1,2))
+                average = np.mean(self.scan.data['2d'], axis=(1,2))
             else:
                 ii, jj = np.where(mask)
                 print 'building XRD map by averaging %d pixels'%len(ii)
-                average = np.mean(self.scan.data['xrd'][:, ii, jj], axis=1)
+                average = np.mean(self.scan.data['2d'][:, ii, jj], axis=1)
             method = self.map.interpolMenu.currentText()
             sampling = self.map.interpolBox.value()
             x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
@@ -239,19 +239,19 @@ class XrdWidget(qt.QWidget):
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
             self.image.getMaskToolsDockWidget().setVisible(False)
-            if self.scan.data['xrd'].shape[1:] == (1, 1):
+            if self.scan.data['2d'].shape[1:] == (1, 1):
                 return
             # get and check the mask array
             if self.selectionMode == 'ind':
                 index = self.map.indexBox.value()
-                data = self.scan.data['xrd'][index]
+                data = self.scan.data['2d'][index]
             elif self.selectionMode == 'roi':
                 self.indexMarkerOn(False)
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
                     print 'building diffraction pattern from all positions'
-                    data = np.mean(self.scan.data['xrd'], axis=0)
+                    data = np.mean(self.scan.data['2d'], axis=0)
                 else:
                     # recreate the interpolated grid from above, to find masked
                     # positions on the oversampled grid
@@ -268,7 +268,7 @@ class XrdWidget(qt.QWidget):
                             maskedPositions.append(i)
                     print 'building diffraction pattern from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
-                    data = np.mean(self.scan.data['xrd'][maskedPositions], axis=0)
+                    data = np.mean(self.scan.data['2d'][maskedPositions], axis=0)
             self.image.addImage(data, legend='data', colormap=self.diffCmap,
                 resetzoom=False)
             self.window().statusOutput('')

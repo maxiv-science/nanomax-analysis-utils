@@ -162,7 +162,7 @@ class ComWidget(qt.QWidget):
             self.map.removeImage('data')
             self.image.removeImage('data')
             return
-        if scan.data['xrd'].shape[1:] == (1, 1):
+        if scan.data['2d'].shape[1:] == (1, 1):
             return
         # avoid old position grids:
         if self.map.positionsAction.isChecked():
@@ -175,7 +175,7 @@ class ComWidget(qt.QWidget):
         self.map.resetZoom()
 
     def resetImage(self):
-        self.image.addImage(self.scan.meanData(name='xrd'), 
+        self.image.addImage(self.scan.meanData(name='2d'), 
             colormap=self.diffCmap, legend='data')
         self.image.setKeepDataAspectRatio(True)
         self.image.setYAxisInverted(True)
@@ -194,8 +194,8 @@ class ComWidget(qt.QWidget):
             com = []
             mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
             if (mask is None) or (not np.sum(mask)):
-                mask = np.zeros(self.scan.data['xrd'][0].shape, dtype=int)
-            for im in self.scan.data['xrd']:
+                mask = np.zeros(self.scan.data['2d'][0].shape, dtype=int)
+            for im in self.scan.data['2d']:
                 com_ = scipy.ndimage.measurements.center_of_mass(im * (1 - mask))
                 if np.any(np.isnan(com_)):
                     com_ = (0, 0)
@@ -239,3 +239,7 @@ class ComWidget(qt.QWidget):
             self.map.addCurve([], [], legend='scan positions')
         self.map.setGraphXLimits(*xlims)
         self.map.setGraphYLimits(*ylims)
+
+#class ComWidget(qt.QWidget):
+#    def setScan(self, scan):
+#        pass

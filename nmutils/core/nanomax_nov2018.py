@@ -11,7 +11,7 @@ class flyscan_nov2018(Scan):
     Fairly mature fly scan format.
     """
 
-    # the options scanNr, fileName and dataSource are mandatory for use with scanViewer.
+    # the dataSource option is mandatory for use with scanViewer.
     default_opts = {
     'scanNr': {
         'value': 0,
@@ -25,7 +25,7 @@ class flyscan_nov2018(Scan):
         },
     'dataSource': {
         'value': 'pil100k',
-        'type': ['pil100k', 'xspress3', 'adlink', 'merlin', 'pil1m', 'counter'],
+        'type': ['pil100k', 'merlin', 'pil1m', 'xspress3', 'counter', 'adlink'],
         'doc': "type of data",
         },
     'xMotor': {
@@ -79,6 +79,11 @@ class flyscan_nov2018(Scan):
         'doc': 'whether or not to normalize against I0',
         },
     }
+
+    # an optional class attribute which lets scanViewer know what
+    # dataSource options have what dimensionalities.
+    sourceDims = {'pil100k':2, 'xspress3':1, 'adlink':0, 'merlin':2, 'pil1m':2, 'counter':0}
+    assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
         """ 
@@ -328,7 +333,7 @@ class stepscan_nov2018(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['merlin', 'xspress3', 'counter1', 'pil100k', 'pil1m', 'counter2', 'counter3'],
+            'type': ['merlin', 'xspress3', 'pil100k', 'pil1m', 'counter1', 'counter2', 'counter3'],
             'doc': "type of data",
             },
         'xMotor': {
@@ -367,6 +372,11 @@ class stepscan_nov2018(Scan):
             'doc': 'use nominal instead of recorded positions',
             },
     }
+
+    # an optional class attribute which lets scanViewer know what
+    # dataSource options have what dimensionalities.
+    sourceDims = {'pil100k':2, 'xspress3':1, 'merlin':2, 'pil1m':2, 'counter1':0, 'counter2':0, 'counter3':0}
+    assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
         """ 

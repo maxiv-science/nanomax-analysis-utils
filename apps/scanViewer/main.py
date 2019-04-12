@@ -1,6 +1,6 @@
 """
 This application loads data through subclasses of nmutils.core.Scan. 
-These subclasses should have the option "dataType" for data loading,
+These subclasses should have the option "dataSource" for data loading,
 and should expect the 'xrd' and 'xrf' values for this keyword. In 
 addition, they can have whatever options they want.
 """
@@ -136,9 +136,9 @@ class ScanViewer(qt.QMainWindow):
         i = 0
         for name, opt in opts.iteritems():
             # special: the options scanNr and fileName (or path) have their input
-            # widgets at the top of the GUI for convenience, while dataType is
-            # used by the viewer. Handled below.
-            if name in ('dataType', 'scanNr', 'path', 'fileName'):
+            # widgets at the top of the GUI for convenience, while dataSource is
+            # handled per tab.
+            if name in ('dataSource', 'scanNr', 'path', 'fileName'):
                 continue
             grid.addWidget(qt.QLabel(name), i, 0)
             grid.addWidget(qt.QLabel(opt['doc']), i, 2)
@@ -183,6 +183,23 @@ class ScanViewer(qt.QMainWindow):
         self.ui.browseButton.setDisabled(not ('path' in opts.keys() or 'fileName' in opts.keys()))
         self.ui.scanNumberBox.setDisabled('scanNr' not in opts.keys())
 
+        # per-tab dataSource option
+        boxes = {self.ui.dataSource2dBox:2, self.ui.dataSource1dBox:1, self.ui.dataSource0dBox:0}
+        subclass_ = str(self.ui.scanClassBox.currentText())
+        try:
+            subclass = getattr(nmutils.core, subclass_)
+        except AttributeError:
+            subclass = None
+
+        for box, dim in boxes.iteritems():
+            box.clear()
+            if subclass is not None:
+                for name in opts['dataSource']['type']:
+                    if hasattr(subclass, 'sourceDims') and not subclass.sourceDims[name] == dim:
+                        continue
+                    box.addItem(name)
+                box.addItem('')
+
     def statusOutput(self, msg):
         self.ui.statusbar.showMessage(msg)
         self.ui.statusbar.showMessage(msg)
@@ -196,6 +213,7 @@ class ScanViewer(qt.QMainWindow):
                 self.ui.comWidget.setScan(None)
                 self.ui.xrdWidget.setScan(None)
                 self.ui.xrfWidget.setScan(None)
+                self.ui.scalarWidget.setScan(None)
                 del(self.scan)
                 self.scan = None
                 # enforcing garbage collection for good measure
@@ -212,26 +230,59 @@ class ScanViewer(qt.QMainWindow):
             # get options
             opts = self.gatherOptions()
 
-            # add xrd data:
+            # add 2D data:
             try:
-                scan_.addData(dataType='xrd', name='xrd', **opts)
-                print "loaded xrd data: %d positions, %d x %d pixels"%(scan_.data['xrd'].shape)
+                source = self.ui.dataSource2dBox.currentText()
+                if not source:
+                    raise nmutils.NoDataException
+                scan_.addData(dataSource=source, name='2d', **opts)
+                dim = len(scan_.data['2d'].shape[1:])
+                if not dim == 2:
+                    scan_.removeData(name='2d')
+                    print "loaded 2D was %uD, discarding" % dim
+                    raise nmutils.NoDataException
+                print "loaded 2D data: %d positions, %d x %d pixels"%(scan_.data['2d'].shape)
                 has_xrd = True
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
                 has_xrd = False
             except nmutils.NoDataException:
-                print "no xrd data found"
+                print "no 2D data found"
                 has_xrd = False
 
-            # add xrf data:
+            # add 1D data:
             try:
-                scan_.addData(dataType='xrf', name='xrf', **opts)
-                print "loaded xrf data: %d positions, %d channels"%(scan_.data['xrf'].shape)
+                source = self.ui.dataSource1dBox.currentText()
+                if not source:
+                    raise nmutils.NoDataException
+                scan_.addData(dataSource=source, name='1d', **opts)
+                dim = len(scan_.data['1d'].shape[1:])
+                if not dim == 1:
+                    scan_.removeData(name='1d')
+                    print "loaded 1D was %uD, discarding" % dim
+                    raise nmutils.NoDataException
+                print "loaded 1D data: %d positions, %d channels"%(scan_.data['1d'].shape)
                 has_xrf = True
             except nmutils.NoDataException:
                 print "no xrf data found"
                 has_xrf = False
+
+            # add 0D data:
+            try:
+                source = self.ui.dataSource0dBox.currentText()
+                if not source:
+                    raise nmutils.NoDataException
+                scan_.addData(dataSource=source, name='0d', **opts)
+                dim = len(scan_.data['0d'].shape[1:])
+                if not dim == 0:
+                    scan_.removeData(name='0d')
+                    print "loaded 0D was %uD, discarding" % dim
+                    raise nmutils.NoDataException
+                print "loaded 0D data: %d positions"%(scan_.data['0d'].shape)
+                has_scalar = True
+            except nmutils.NoDataException:
+                print "no 0D data found"
+                has_scalar = False
 
             # append or store loaded scan as it is
             if not self.scan:
@@ -246,6 +297,8 @@ class ScanViewer(qt.QMainWindow):
                     self.ui.xrdWidget.setScan(self.scan)
                 if has_xrf:
                     self.ui.xrfWidget.setScan(self.scan)
+                if has_scalar:
+                    self.ui.scalarWidget.setScan(self.scan)
             self.statusOutput("")
         except:
             self.statusOutput("Loading failed. See terminal output for details.")

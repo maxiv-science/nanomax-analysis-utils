@@ -33,37 +33,83 @@
        </attribute>
        <layout class="QGridLayout" name="optionsGrid"/>
       </widget>
-      <widget class="QWidget" name="roi">
+      <widget class="QWidget" name="tab2d">
        <attribute name="title">
-        <string>XRD region of interest</string>
+        <string>Image data</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="XrdWidget" name="xrdWidget" native="true">
-          <zorder></zorder>
-          <zorder></zorder>
-          <zorder>browseButton</zorder>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>data source</string>
+          </property>
          </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="dataSource2dBox"/>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="XrdWidget" name="xrdWidget" native="true"/>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="com">
+      <widget class="QWidget" name="tab2dCom">
        <attribute name="title">
-        <string>XRD center of mass</string>
+        <string>Image center of mass</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="1">
+         <widget class="QComboBox" name="dataSource2dComBox"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>data source</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
          <widget class="ComWidget" name="comWidget" native="true"/>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="xrf">
+      <widget class="QWidget" name="tab1d">
        <attribute name="title">
-        <string>XRF region of interest</string>
+        <string>Spectral data</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="1">
+         <widget class="QComboBox" name="dataSource1dBox"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>data source</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
          <widget class="XrfWidget" name="xrfWidget" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab0d">
+       <attribute name="title">
+        <string>Scalar data</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="1">
+         <widget class="QComboBox" name="dataSource0dBox"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>data source</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="ScalarWidget" name="scalarWidget" native="true"/>
         </item>
        </layout>
       </widget>
@@ -226,7 +272,7 @@
      <x>0</x>
      <y>0</y>
      <width>1082</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -249,6 +295,12 @@
    <class>XrfWidget</class>
    <extends>QWidget</extends>
    <header>widgets/XrfWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ScalarWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/ScalarWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
