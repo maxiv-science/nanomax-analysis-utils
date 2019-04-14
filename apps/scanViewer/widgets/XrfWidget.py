@@ -43,7 +43,6 @@ class XrfWidget(qt.QWidget):
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
-        self.map.interpolMenu.currentIndexChanged.connect(self.updateMap)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)
@@ -108,9 +107,8 @@ class XrfWidget(qt.QWidget):
                 average = np.mean(self.scan.data['1d'][:, lower:upper], axis=1)
 
             # interpolate and plot map
-            method = self.map.interpolMenu.currentText()
             sampling = self.map.interpolBox.value()
-            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
+            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method='nearest')
             self.map.addImage(z, legend='data', 
                 scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
                 origin=[x.min(), y.min()], resetzoom=False)

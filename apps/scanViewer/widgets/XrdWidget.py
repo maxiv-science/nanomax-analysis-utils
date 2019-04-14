@@ -39,10 +39,6 @@ class MapWidget(PlotWindow):
             toolTip='Map oversampling relative to average step size')
         self.interpolBox.setRange(1, 50)
         self.interpolBox.setValue(5)
-        self.interpolMenu = qt.QComboBox(
-            toolTip='Type of interpolation between scan positions')
-        self.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
-        self.interpolToolbar.addWidget(self.interpolMenu)
         self.interpolToolbar.addWidget(qt.QLabel(' N:'))
         self.interpolToolbar.addWidget(self.interpolBox)
 
@@ -157,7 +153,6 @@ class XrdWidget(qt.QWidget):
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
-        self.map.interpolMenu.currentIndexChanged.connect(self.updateMap)
 
         # connect the clicker box
         self.map.indexBox.valueChanged.connect(self.selectByIndex)
@@ -214,9 +209,8 @@ class XrdWidget(qt.QWidget):
                 ii, jj = np.where(mask)
                 print 'building XRD map by averaging %d pixels'%len(ii)
                 average = np.mean(self.scan.data['2d'][:, ii, jj], axis=1)
-            method = self.map.interpolMenu.currentText()
             sampling = self.map.interpolBox.value()
-            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method=method)
+            x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method='nearest')
             self.map.addImage(z, legend='data', 
                 scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
                 origin=[x.min(), y.min()], resetzoom=False)

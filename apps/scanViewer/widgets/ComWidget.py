@@ -39,10 +39,6 @@ class MapWidget(PlotWindow):
             toolTip='Map oversampling relative to average step size')
         self.interpolBox.setRange(1, 50)
         self.interpolBox.setValue(5)
-        self.interpolMenu = qt.QComboBox(
-            toolTip='Type of interpolation between scan positions')
-        self.interpolMenu.insertItems(1, ['nearest', 'linear', 'cubic'])
-        self.interpolToolbar.addWidget(self.interpolMenu)
         self.interpolToolbar.addWidget(qt.QLabel(' N:'))
         self.interpolToolbar.addWidget(self.interpolBox)
 
@@ -146,7 +142,6 @@ class ComWidget(qt.QWidget):
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
-        self.map.interpolMenu.currentIndexChanged.connect(self.updateMap)
 
         # connect the COM chooser
         self.map.comDirectionBox.currentIndexChanged.connect(self.updateMap)
@@ -213,9 +208,8 @@ class ComWidget(qt.QWidget):
             else:
                 return
             # interpolate and show
-            method = self.map.interpolMenu.currentText()
             sampling = self.map.interpolBox.value()
-            x, y, z = self.scan.interpolatedMap(com, sampling, origin='ul', method=method)
+            x, y, z = self.scan.interpolatedMap(com, sampling, origin='ul', method='nearest')
             try:
                 self.map.addImage(z, legend='data', 
                     scale=[abs(x[0,0]-x[0,1]), abs(y[0,0]-y[1,0])],
