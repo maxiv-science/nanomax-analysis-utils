@@ -4,80 +4,7 @@ from silx.gui import qt
 import scipy.ndimage.measurements
 import numpy as np
 
-class MapWidget(PlotWindow):
-    """
-    A re-implementation of Plot2D, with customized tools.
-    """
-
-    def __init__(self, parent=None):
-        # List of information to display at the bottom of the plot
-        posInfo = [
-            ('X', lambda x, y: x),
-            ('Y', lambda x, y: y),
-            ('Data', self._getActiveImageValue)]
-
-        super(MapWidget, self).__init__(parent=parent, backend=None,
-                                     resetzoom=True, autoScale=False,
-                                     logScale=False, grid=False,
-                                     curveStyle=False, colormap=True,
-                                     aspectRatio=True, yInverted=True,
-                                     copy=True, save=True, print_=False,
-                                     control=False, position=posInfo,
-                                     roi=False, mask=False)
-        if parent is None:
-            self.setWindowTitle('comMapWidget')
-
-        self.setGraphTitle('COM deviation from the mean')
-        self.setGraphXLabel('motor x [um]')
-        self.setGraphYLabel('motor y [um]')
-        self.setKeepDataAspectRatio(True)
-        self.setYAxisInverted(True)
-
-        # add an interpolation toolbar
-        self.interpolToolbar = self.addToolBar('Interpolation & COM')
-        self.interpolBox = qt.QSpinBox(
-            toolTip='Map oversampling relative to average step size')
-        self.interpolBox.setRange(1, 50)
-        self.interpolBox.setValue(5)
-        self.interpolToolbar.addWidget(qt.QLabel(' N:'))
-        self.interpolToolbar.addWidget(self.interpolBox)
-
-        # add a menu for COM type
-        self.interpolToolbar.addSeparator()
-        self.comDirectionBox = qt.QComboBox(
-            toolTip='Type of COM deviation calculated')
-        self.comDirectionBox.insertItems(1, ['horizontal', 'vertical', 'magnitude'])
-        self.interpolToolbar.addWidget(qt.QLabel(' COM:'))
-        self.interpolToolbar.addWidget(self.comDirectionBox)
-
-        # add a button to toggle positions
-        self.positionsAction = qt.QAction('positions', self, checkable=True)
-        self.toolBar().addAction(self.positionsAction)
-
-        # add a profile tool
-        self.profile = ProfileToolBar(plot=self)
-        self.addToolBar(self.profile)
-
-
-    def _getActiveImageValue(self, x, y):
-        """Get value of active image at position (x, y)
-
-        :param float x: X position in plot coordinates
-        :param float y: Y position in plot coordinates
-        :return: The value at that point or '-'
-        """
-        image = self.getActiveImage()
-        if image is not None:
-            data, params = image[0], image[4]
-            ox, oy = params['origin']
-            sx, sy = params['scale']
-            if (y - oy) >= 0 and (x - ox) >= 0:
-                # Test positive before cast otherwisr issue with int(-0.5) = 0
-                row = int((y - oy) / sy)
-                col = int((x - ox) / sx)
-                if (row < data.shape[0] and col < data.shape[1]):
-                    return data[row, col]
-        return '-'
+from XrdWidget import MapWidget
 
 class ImageWidget(PlotWindow):
     """
@@ -131,20 +58,23 @@ class ImageWidget(PlotWindow):
 class ComWidget(qt.QWidget):
     def __init__(self, parent=None):
 
-        super(ComWidget, self).__init__()
+        super(ComWidget, self).__init__(parent=parent)
         self.map = MapWidget(self)
         self.image = ImageWidget(self)
         self.setLayout(qt.QHBoxLayout())
         self.layout().addWidget(self.image)
         self.layout().addWidget(self.map)
 
+        # disable the roi tool
+        self.map.getMaskAction().setEnabled(False)
+
+        self.direction = 0
+        import ipdb; ipdb.set_trace()
+
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
-
-        # connect the COM chooser
-        self.map.comDirectionBox.currentIndexChanged.connect(self.updateMap)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)
@@ -198,12 +128,11 @@ class ComWidget(qt.QWidget):
                 com.append(com_)
             com = np.array(com)
             # choose which COM to show
-            direction = self.map.comDirectionBox.currentIndex()
-            if direction == 0:
+            if self.direction == 0:
                 com = com[:, 1] - np.mean(com[:, 1])
-            elif direction == 1:
+            elif self.direction == 1:
                 com = com[:, 0] - np.mean(com[:, 0])
-            elif direction == 2:
+            elif self.direction == 2:
                 com = np.sum((com - np.mean(com, axis=0))**2, axis=1)
             else:
                 return

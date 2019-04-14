@@ -85,8 +85,16 @@ class ScanViewer(qt.QMainWindow):
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
 
+        # connect the COM chooser
+        self.ui.comDirBox.insertItems(1, ['horizontal', 'vertical', 'magnitude'])
+        self.ui.comDirBox.currentIndexChanged.connect(self._updateComWidget)
+
         # dummy scan
         self.scan = None
+
+    def _updateComWidget(self):
+        self.ui.comWidget.direction = self.ui.comDirBox.currentIndex()
+        self.ui.comWidget.updateMap()
 
     def _current_subclass_opts(self):
         subclass_ = str(self.ui.scanClassBox.currentText())
