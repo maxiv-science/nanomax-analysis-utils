@@ -173,6 +173,9 @@ class ScanViewer(qt.QMainWindow):
             self.formWidgets[name] = w
             i += 1
 
+        # add a vertical spacer on the last line to make the table more compact
+        grid.setRowStretch(i, 1)
+
         # special treatment
         oldtext = str(self.ui.filenameBox.text())
         if 'path' in opts.keys() and oldtext.startswith('<'):

@@ -32,10 +32,11 @@ class XrfWidget(qt.QWidget):
     def __init__(self, parent=None):
         
         super(XrfWidget, self).__init__()
-        self.map = MapWidget()
-        self.spectrum = SpectrumWidget()
-        parent.layout().addWidget(self.spectrum)
-        parent.layout().addWidget(self.map)
+        self.map = MapWidget(self)
+        self.spectrum = SpectrumWidget(self)
+        self.setLayout(qt.QHBoxLayout())
+        self.layout().addWidget(self.spectrum)
+        self.layout().addWidget(self.map)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}

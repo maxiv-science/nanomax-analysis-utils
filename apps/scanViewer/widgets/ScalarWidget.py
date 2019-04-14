@@ -13,11 +13,12 @@ class ScalarWidget(qt.QWidget):
     def __init__(self, parent=None):
 
         super(ScalarWidget, self).__init__()
-        self.map = MapWidget()
-        self.value = qt.QLabel()
+        self.map = MapWidget(self)
+        self.value = qt.QLabel(self)
         self.value.setText('scalar value')
-        parent.layout().addWidget(self.value)
-        parent.layout().addWidget(self.map)
+        self.setLayout(qt.QHBoxLayout())
+        self.layout().addWidget(self.value)
+        self.layout().addWidget(self.map)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}
@@ -88,9 +89,6 @@ class ScalarWidget(qt.QWidget):
         if self.scan is None:
             return
         try:
-            # workaround to avoid the infinite loop which occurs when both
-            # mask widgets are open at the same time
-            self.image.getMaskToolsDockWidget().setVisible(False)
             # get and check the mask array
             if self.selectionMode == 'ind':
                 index = self.map.indexBox.value()
@@ -118,7 +116,7 @@ class ScalarWidget(qt.QWidget):
                             maskedPositions.append(i)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['0d'][maskedPositions], axis=0)
-            self.value.setText('scalar value: %s' % data)
+            self.value.setText('scalar value: \n%s' % data)
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')

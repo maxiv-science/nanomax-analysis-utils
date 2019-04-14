@@ -146,10 +146,11 @@ class XrdWidget(qt.QWidget):
     def __init__(self, parent=None):
 
         super(XrdWidget, self).__init__()
-        self.map = MapWidget()
-        self.image = ImageWidget()
-        parent.layout().addWidget(self.image)
-        parent.layout().addWidget(self.map)
+        self.map = MapWidget(self)
+        self.image = ImageWidget(self)
+        self.setLayout(qt.QHBoxLayout())
+        self.layout().addWidget(self.image)
+        self.layout().addWidget(self.map)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}

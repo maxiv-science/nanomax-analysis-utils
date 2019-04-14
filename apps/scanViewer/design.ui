@@ -46,9 +46,29 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="dataSource2dBox"/>
+         <widget class="QComboBox" name="dataSource2dBox">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
-        <item row="2" column="0" colspan="2">
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="0" colspan="3">
          <widget class="XrdWidget" name="xrdWidget" native="true"/>
         </item>
        </layout>
@@ -59,7 +79,14 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="1">
-         <widget class="QComboBox" name="dataSource2dComBox"/>
+         <widget class="QComboBox" name="dataSource2dComBox">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_2">
@@ -68,7 +95,20 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="0" colspan="3">
          <widget class="ComWidget" name="comWidget" native="true"/>
         </item>
        </layout>
@@ -79,7 +119,14 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="1">
-         <widget class="QComboBox" name="dataSource1dBox"/>
+         <widget class="QComboBox" name="dataSource1dBox">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_3">
@@ -88,7 +135,20 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="0" colspan="3">
          <widget class="XrfWidget" name="xrfWidget" native="true"/>
         </item>
        </layout>
@@ -99,7 +159,14 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_6">
         <item row="0" column="1">
-         <widget class="QComboBox" name="dataSource0dBox"/>
+         <widget class="QComboBox" name="dataSource0dBox">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_4">
@@ -108,7 +175,20 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0" colspan="2">
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="1" column="0" colspan="3">
          <widget class="ScalarWidget" name="scalarWidget" native="true"/>
         </item>
        </layout>
