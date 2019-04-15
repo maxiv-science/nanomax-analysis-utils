@@ -252,6 +252,10 @@ class ScanViewer(qt.QMainWindow):
             except nmutils.NoDataException:
                 print "no 2D data found"
                 has_xrd = False
+            except KeyboardInterrupt:
+                print "cancelled"
+                self.statusOutput("")
+                return
 
             # add 1D data:
             try:
@@ -269,6 +273,10 @@ class ScanViewer(qt.QMainWindow):
             except nmutils.NoDataException:
                 print "no xrf data found"
                 has_xrf = False
+            except KeyboardInterrupt:
+                print "cancelled"
+                self.statusOutput("")
+                return
 
             # add 0D data:
             try:
@@ -286,6 +294,10 @@ class ScanViewer(qt.QMainWindow):
             except nmutils.NoDataException:
                 print "no 0D data found"
                 has_scalar = False
+            except KeyboardInterrupt:
+                print "cancelled"
+                self.statusOutput("")
+                return
 
             # append or store loaded scan as it is
             if not self.scan:

@@ -302,7 +302,7 @@ class flyscan_nov2018(Scan):
 
         elif self.dataSource in ('adlink', 'counter'):
             print "loading buffered scalar data..."
-            channel = {'adlink': 'AdLink_buff', 'counter': 'Ni6602_buff'}[self.dataSource]
+            channel = {'adlink': 'AdLinkAI_buff', 'counter': 'Ni6602_buff'}[self.dataSource]
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:

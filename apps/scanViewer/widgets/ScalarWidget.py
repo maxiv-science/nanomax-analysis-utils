@@ -116,6 +116,7 @@ class ScalarWidget(qt.QWidget):
                         if dist2 < pointSpacing2:
                             maskedPositions.append(i)
                     # get the average and replace the image with legend 'data'
+                    print 'calculating average scalar from %d positions'%len(maskedPositions)
                     data = np.mean(self.scan.data['0d'][maskedPositions], axis=0)
             self.value.setText('scalar value: \n%s' % data)
             self.window().statusOutput('')
