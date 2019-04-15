@@ -5,12 +5,8 @@ and should expect the 'xrd' and 'xrf' values for this keyword. In
 addition, they can have whatever options they want.
 """
 
-# hdf5plugin is needed to read compressed Eiger files, and has to be
-# imported before h5py.
-try:
-    import hdf5plugin 
-except ImportError:
-    print "hdf5plugin not found - may not be able to read compressed Eiger files"
+# nmutils loads Eiger plugins, which have to be imported before h5py
+import nmutils
 
 # silx automatically chooses PyQt version. You can force it here
 # by first importing it explicitly.
@@ -32,7 +28,6 @@ import sys
 import gc
 import numpy as np
 from scipy.interpolate import griddata
-import nmutils
 import time
 
 # using the single inheritance method here, as described here,
