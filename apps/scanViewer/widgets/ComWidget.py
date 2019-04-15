@@ -59,17 +59,28 @@ class ComWidget(qt.QWidget):
     def __init__(self, parent=None):
 
         super(ComWidget, self).__init__(parent=parent)
+        self.setLayout(qt.QVBoxLayout())
+
+        # the direction menu
+        hbox = qt.QHBoxLayout()
+        self.directionCombo = qt.QComboBox()
+        self.directionCombo.insertItems(1, ['horizontal', 'vertical', 'magnitude'])
+        self.directionCombo.currentIndexChanged.connect(self.updateMap)
+        hbox.addWidget(qt.QLabel('COM direction:'))
+        hbox.addWidget(self.directionCombo)
+        hbox.addStretch(1)
+        self.layout().addLayout(hbox)
+
+        # the image and map parts
+        hbox2 = qt.QHBoxLayout()
         self.map = MapWidget(self)
         self.image = ImageWidget(self)
-        self.setLayout(qt.QHBoxLayout())
-        self.layout().addWidget(self.image)
-        self.layout().addWidget(self.map)
+        hbox2.addWidget(self.image)
+        hbox2.addWidget(self.map)
+        self.layout().addLayout(hbox2)
 
         # disable the roi tool
         self.map.getMaskAction().setEnabled(False)
-
-        self.direction = 0
-        import ipdb; ipdb.set_trace()
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
 
@@ -128,11 +139,12 @@ class ComWidget(qt.QWidget):
                 com.append(com_)
             com = np.array(com)
             # choose which COM to show
-            if self.direction == 0:
+            direction = self.directionCombo.currentIndex()
+            if direction == 0:
                 com = com[:, 1] - np.mean(com[:, 1])
-            elif self.direction == 1:
+            elif direction == 1:
                 com = com[:, 0] - np.mean(com[:, 0])
-            elif self.direction == 2:
+            elif direction == 2:
                 com = np.sum((com - np.mean(com, axis=0))**2, axis=1)
             else:
                 return
