@@ -58,6 +58,9 @@ class MapWidget(CustomPlotWindow):
         self.profile = ProfileToolBar(plot=self)
         self.addToolBar(self.profile)
 
+        # set default colormap
+        self.setDefaultColormap({'name':'gray', 'autoscale':True, 'normalization':'linear'})
+
 class ImageWidget(CustomPlotWindow):
     """
     A re-implementation of Plot2D, with customized tools.
@@ -85,6 +88,8 @@ class ImageWidget(CustomPlotWindow):
         self.getMaskAction().setToolTip('Select a diffraction region of interest')
         self.getMaskAction().setIcon(getQIcon('image-select-box'))
 
+        # set default colormap
+        self.setDefaultColormap({'name':'temperature', 'autoscale':True, 'normalization':'log'})
 
 class XrdWidget(qt.QWidget):
     # This widget defines a MapWidget and and ImageWidget and describes
@@ -99,9 +104,6 @@ class XrdWidget(qt.QWidget):
         splitter.addWidget(self.image)
         splitter.addWidget(self.map)
         self.layout().addWidget(splitter)
-
-        self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
-        self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
@@ -216,8 +218,7 @@ class XrdWidget(qt.QWidget):
                     print 'building diffraction pattern from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['2d'][maskedPositions], axis=0)
-            self.image.addImage(data, legend='data', colormap=self.diffCmap,
-                resetzoom=False)
+            self.image.addImage(data, legend='data', resetzoom=False)
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')

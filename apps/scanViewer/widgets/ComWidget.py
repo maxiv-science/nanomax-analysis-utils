@@ -30,6 +30,9 @@ class ImageWidget(CustomPlotWindow):
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
+        # set the default colormap
+        self.setDefaultColormap({'name':'temperature', 'autoscale':True, 'normalization':'log'})
+
 
 class ComWidget(qt.QWidget):
     def __init__(self, parent=None):
@@ -54,8 +57,6 @@ class ComWidget(qt.QWidget):
         splitter.addWidget(self.image)
         splitter.addWidget(self.map)
         self.layout().addWidget(splitter)
-
-        self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
 
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
@@ -85,8 +86,7 @@ class ComWidget(qt.QWidget):
         self.map.resetZoom()
 
     def resetImage(self):
-        self.image.addImage(self.scan.meanData(name='2d'), 
-            colormap=self.diffCmap, legend='data')
+        self.image.addImage(self.scan.meanData(name='2d'), legend='data')
         self.image.setKeepDataAspectRatio(True)
         self.image.setYAxisInverted(True)
         self.image.resetZoom()

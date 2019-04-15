@@ -23,9 +23,6 @@ class ScalarWidget(qt.QWidget):
         splitter.setSizes((300,300))
         self.layout().addWidget(splitter)
 
-        self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
-        self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}
-
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
 
