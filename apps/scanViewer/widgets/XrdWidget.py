@@ -3,18 +3,14 @@ from silx.gui.plot.Profile import ProfileToolBar
 from silx.gui.icons import getQIcon
 from silx.gui import qt
 import numpy as np
+from .Base import CustomPlotWindow
 
-class MapWidget(PlotWindow):
+class MapWidget(CustomPlotWindow):
     """
     A re-implementation of Plot2D, with customized tools.
     """
 
     def __init__(self, parent=None):
-        # List of information to display at the bottom of the plot
-        posInfo = [
-            ('X', lambda x, y: x),
-            ('Y', lambda x, y: y),
-            ('Data', self._getActiveImageValue)]
 
         super(MapWidget, self).__init__(parent=parent, backend=None,
                                      resetzoom=True, autoScale=False,
@@ -22,8 +18,7 @@ class MapWidget(PlotWindow):
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
                                      copy=True, save=True, print_=False,
-                                     control=False, position=posInfo,
-                                     roi=False, mask=True)
+                                     control=False, roi=False, mask=True)
         if parent is None:
             self.setWindowTitle('comMapWidget')
 
@@ -62,37 +57,12 @@ class MapWidget(PlotWindow):
         self.profile = ProfileToolBar(plot=self)
         self.addToolBar(self.profile)
 
-    def _getActiveImageValue(self, x, y):
-        """Get value of active image at position (x, y)
-
-        :param float x: X position in plot coordinates
-        :param float y: Y position in plot coordinates
-        :return: The value at that point or '-'
-        """
-        image = self.getActiveImage()
-        if image is not None:
-            data, params = image[0], image[4]
-            ox, oy = params['origin']
-            sx, sy = params['scale']
-            if (y - oy) >= 0 and (x - ox) >= 0:
-                # Test positive before cast otherwisr issue with int(-0.5) = 0
-                row = int((y - oy) / sy)
-                col = int((x - ox) / sx)
-                if (row < data.shape[0] and col < data.shape[1]):
-                    return data[row, col]
-        return '-'
-
-class ImageWidget(PlotWindow):
+class ImageWidget(CustomPlotWindow):
     """
     A re-implementation of Plot2D, with customized tools.
     """
 
     def __init__(self, parent=None):
-        # List of information to display at the bottom of the plot
-        posInfo = [
-            ('X', lambda x, y: x),
-            ('Y', lambda x, y: y),
-            ('Data', self._getActiveImageValue)]
 
         super(ImageWidget, self).__init__(parent=parent, backend=None,
                                      resetzoom=True, autoScale=False,
@@ -100,8 +70,7 @@ class ImageWidget(PlotWindow):
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
                                      copy=True, save=True, print_=False,
-                                     control=False, position=posInfo,
-                                     roi=False, mask=True)
+                                     control=False, roi=False, mask=True)
         if parent is None:
             self.setWindowTitle('comImageWidget')
 
@@ -114,26 +83,6 @@ class ImageWidget(PlotWindow):
         self.getMaskToolsDockWidget().setWindowTitle('diffraction ROI')
         self.getMaskAction().setToolTip('Select a diffraction region of interest')
         self.getMaskAction().setIcon(getQIcon('image-select-box'))
-
-    def _getActiveImageValue(self, x, y):
-        """Get value of active image at position (x, y)
-
-        :param float x: X position in plot coordinates
-        :param float y: Y position in plot coordinates
-        :return: The value at that point or '-'
-        """
-        image = self.getActiveImage()
-        if image is not None:
-            data, params = image[0], image[4]
-            ox, oy = params['origin']
-            sx, sy = params['scale']
-            if (y - oy) >= 0 and (x - ox) >= 0:
-                # Test positive before cast otherwisr issue with int(-0.5) = 0
-                row = int((y - oy) / sy)
-                col = int((x - ox) / sx)
-                if (row < data.shape[0] and col < data.shape[1]):
-                    return data[row, col]
-        return '-'
 
 
 class XrdWidget(qt.QWidget):
