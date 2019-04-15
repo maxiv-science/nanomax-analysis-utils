@@ -48,15 +48,12 @@ class ComWidget(qt.QWidget):
         self.layout().addLayout(hbox)
 
         # the image and map parts
-        hbox2 = qt.QHBoxLayout()
-        self.map = MapWidget(self)
+        splitter = qt.QSplitter()
+        self.map = MapWidget(self, mask=False)
         self.image = ImageWidget(self)
-        hbox2.addWidget(self.image)
-        hbox2.addWidget(self.map)
-        self.layout().addLayout(hbox2)
-
-        # disable the roi tool
-        self.map.getMaskAction().setEnabled(False)
+        splitter.addWidget(self.image)
+        splitter.addWidget(self.map)
+        self.layout().addWidget(splitter)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
 

@@ -3,6 +3,7 @@ from silx.gui.plot.Profile import ProfileToolBar
 from silx.gui.icons import getQIcon
 from silx.gui import qt
 import numpy as np
+
 from .Base import CustomPlotWindow
 
 class MapWidget(CustomPlotWindow):
@@ -10,7 +11,7 @@ class MapWidget(CustomPlotWindow):
     A re-implementation of Plot2D, with customized tools.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, mask=True):
 
         super(MapWidget, self).__init__(parent=parent, backend=None,
                                      resetzoom=True, autoScale=False,
@@ -18,7 +19,7 @@ class MapWidget(CustomPlotWindow):
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
                                      copy=True, save=True, print_=False,
-                                     control=False, roi=False, mask=True)
+                                     control=False, roi=False, mask=mask)
         if parent is None:
             self.setWindowTitle('comMapWidget')
 
@@ -94,8 +95,10 @@ class XrdWidget(qt.QWidget):
         self.map = MapWidget(self)
         self.image = ImageWidget(self)
         self.setLayout(qt.QHBoxLayout())
-        self.layout().addWidget(self.image)
-        self.layout().addWidget(self.map)
+        splitter = qt.QSplitter()
+        splitter.addWidget(self.image)
+        splitter.addWidget(self.map)
+        self.layout().addWidget(splitter)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}

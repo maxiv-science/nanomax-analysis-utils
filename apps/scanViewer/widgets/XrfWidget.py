@@ -5,7 +5,7 @@ from silx.gui import qt
 import numpy as np
 import time
 
-from XrdWidget import MapWidget
+from .XrdWidget import MapWidget
 
 class SpectrumWidget(PlotWindow):
     """
@@ -35,8 +35,10 @@ class XrfWidget(qt.QWidget):
         self.map = MapWidget(self)
         self.spectrum = SpectrumWidget(self)
         self.setLayout(qt.QHBoxLayout())
-        self.layout().addWidget(self.spectrum)
-        self.layout().addWidget(self.map)
+        splitter = qt.QSplitter()
+        splitter.addWidget(self.spectrum)
+        splitter.addWidget(self.map)
+        self.layout().addWidget(splitter)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}

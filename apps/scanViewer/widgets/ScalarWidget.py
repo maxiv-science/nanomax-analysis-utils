@@ -5,7 +5,7 @@ from silx.gui import qt
 import scipy.ndimage.measurements
 import numpy as np
 
-from XrdWidget import MapWidget
+from .XrdWidget import MapWidget
 
 class ScalarWidget(qt.QWidget):
     # This widget defines a MapWidget and and normal text label and describes
@@ -17,8 +17,11 @@ class ScalarWidget(qt.QWidget):
         self.value = qt.QLabel(self)
         self.value.setText('scalar value')
         self.setLayout(qt.QHBoxLayout())
-        self.layout().addWidget(self.value)
-        self.layout().addWidget(self.map)
+        splitter = qt.QSplitter()
+        splitter.addWidget(self.value)
+        splitter.addWidget(self.map)
+        splitter.setSizes((300,300))
+        self.layout().addWidget(splitter)
 
         self.diffCmap = {'name':'temperature', 'autoscale':True, 'normalization':'log'}
         self.mapCmap = {'name':'gray', 'autoscale':True, 'normalization':'linear'}
