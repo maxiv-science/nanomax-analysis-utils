@@ -81,7 +81,7 @@ class ScanViewer(qt.QMainWindow):
         self.ui.loadButton.clicked.connect(self.load)
 
         # dummy scan
-        self.scan = None
+        self._scan = None
 
     def _current_subclass_opts(self):
         subclass_ = str(self.ui.scanClassBox.currentText())
@@ -202,20 +202,39 @@ class ScanViewer(qt.QMainWindow):
         self.ui.statusbar.showMessage(msg)
         self.ui.statusbar.showMessage(msg)
 
+    @property
+    def scan(self):
+        return self._scan
+
+    @scan.setter
+    def scan(self, scn):
+        self._scan = scn
+        if scn is None:
+            # clear all the widgets' references
+            self.ui.xrdWidget.setScan(None)
+            self.ui.comWidget.setScan(None)
+            self.ui.xrfWidget.setScan(None)
+            self.ui.scalarWidget.setScan(None)
+            # do this just to be sure
+            del(self._scan)
+            self._scan = None
+            # enforce garbage collection for good measure
+            gc.collect()
+        else:
+            if '2d' in scn.data.keys():
+                self.ui.xrdWidget.setScan(scn)
+                self.ui.comWidget.setScan(scn)
+            if '1d' in scn.data.keys():
+                self.ui.xrfWidget.setScan(scn)
+            if '0d' in scn.data.keys():
+                self.ui.scalarWidget.setScan(scn)
+
     def load(self):
         try:
             self.statusOutput("Loading data...")
             if self.scan and not self.ui.appendBox.isChecked():
                 print "Deleting previous scan from memory"
-                # These references have to go
-                self.ui.comWidget.setScan(None)
-                self.ui.xrdWidget.setScan(None)
-                self.ui.xrfWidget.setScan(None)
-                self.ui.scalarWidget.setScan(None)
-                del(self.scan)
                 self.scan = None
-                # enforcing garbage collection for good measure
-                gc.collect()
 
             # construct a scan
             try:
@@ -288,20 +307,15 @@ class ScanViewer(qt.QMainWindow):
                 return
 
             # append or store loaded scan as it is
-            if not self.scan:
-                self.scan = scan_
+            if self.scan is None:
+                merged = scan_
             else:
-                self.scan.merge(scan_)
+                merged = self.scan
+                merged.merge(scan_)
 
             # update the widgets
-            if self.scan.nPositions > 1:
-                if '2d' in self.scan.data.keys():
-                    self.ui.comWidget.setScan(self.scan)
-                    self.ui.xrdWidget.setScan(self.scan)
-                if '1d' in self.scan.data.keys():
-                    self.ui.xrfWidget.setScan(self.scan)
-                if '0d' in self.scan.data.keys():
-                    self.ui.scalarWidget.setScan(self.scan)
+            if merged.nPositions > 1:
+                self.scan = merged
             self.statusOutput("")
         except:
             self.statusOutput("Loading failed. See terminal output for details.")
