@@ -146,7 +146,7 @@ class XrdWidget(qt.QWidget):
         if self.scan is None:
             return
         try:
-            self.window().statusOutput('Building XRD map...')
+            self.window().statusOutput('Building 2D data map...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
             self.map.getMaskToolsDockWidget().setVisible(False)
@@ -157,11 +157,11 @@ class XrdWidget(qt.QWidget):
             mask = self.image.getMaskToolsDockWidget().widget().getSelectionMask()
             # if the mask is cleared, reset without wasting time
             if (mask is None) or (not np.sum(mask)):
-                print 'building XRD map by averaging all pixels'
+                print 'building 2D data map by averaging all pixels'
                 average = np.mean(self.scan.data['2d'], axis=(1,2))
             else:
                 ii, jj = np.where(mask)
-                print 'building XRD map by averaging %d pixels'%len(ii)
+                print 'building 2D data map by averaging %d pixels'%len(ii)
                 average = np.mean(self.scan.data['2d'][:, ii, jj], axis=1)
             sampling = self.map.interpolBox.value()
             x, y, z = self.scan.interpolatedMap(average, sampling, origin='ul', method='nearest')
@@ -177,14 +177,14 @@ class XrdWidget(qt.QWidget):
                 self.map.setKeepDataAspectRatio(True)
             self.window().statusOutput('')
         except:
-            self.window().statusOutput('Failed to build XRD map. See terminal output.')
+            self.window().statusOutput('Failed to build 2D data map. See terminal output.')
             raise
 
     def updateImage(self):
         if self.scan is None:
             return
         try:
-            self.window().statusOutput('Building diffraction pattern...')
+            self.window().statusOutput('Building 2D image...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
             self.image.getMaskToolsDockWidget().setVisible(False)
@@ -199,7 +199,7 @@ class XrdWidget(qt.QWidget):
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
-                    print 'building diffraction pattern from all positions'
+                    print 'building 2D image from all positions'
                     data = np.mean(self.scan.data['2d'], axis=0)
                 else:
                     # recreate the interpolated grid from above, to find masked
@@ -215,13 +215,13 @@ class XrdWidget(qt.QWidget):
                         dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
                         if dist2 < pointSpacing2:
                             maskedPositions.append(i)
-                    print 'building diffraction pattern from %d positions'%len(maskedPositions)
+                    print 'building 2D image from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['2d'][maskedPositions], axis=0)
             self.image.addImage(data, legend='data', resetzoom=False)
             self.window().statusOutput('')
         except:
-            self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')
+            self.window().statusOutput('Failed to build 2D image. See terminal output.')
             raise
 
     def togglePositions(self):

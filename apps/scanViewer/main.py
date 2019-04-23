@@ -240,13 +240,10 @@ class ScanViewer(qt.QMainWindow):
                     print "loaded 2D was %uD, discarding" % dim
                     raise nmutils.NoDataException
                 print "loaded 2D data: %d positions, %d x %d pixels"%(scan_.data['2d'].shape)
-                has_xrd = True
             except MemoryError:
                 print "Out of memory! Consider cropping or binning your images"
-                has_xrd = False
             except nmutils.NoDataException:
                 print "no 2D data found"
-                has_xrd = False
             except KeyboardInterrupt:
                 print "cancelled"
                 self.statusOutput("")
@@ -264,10 +261,8 @@ class ScanViewer(qt.QMainWindow):
                     print "loaded 1D was %uD, discarding" % dim
                     raise nmutils.NoDataException
                 print "loaded 1D data: %d positions, %d channels"%(scan_.data['1d'].shape)
-                has_xrf = True
             except nmutils.NoDataException:
                 print "no xrf data found"
-                has_xrf = False
             except KeyboardInterrupt:
                 print "cancelled"
                 self.statusOutput("")
@@ -285,10 +280,8 @@ class ScanViewer(qt.QMainWindow):
                     print "loaded 0D was %uD, discarding" % dim
                     raise nmutils.NoDataException
                 print "loaded 0D data: %d positions"%(scan_.data['0d'].shape)
-                has_scalar = True
             except nmutils.NoDataException:
                 print "no 0D data found"
-                has_scalar = False
             except KeyboardInterrupt:
                 print "cancelled"
                 self.statusOutput("")
@@ -302,12 +295,12 @@ class ScanViewer(qt.QMainWindow):
 
             # update the widgets
             if self.scan.nPositions > 1:
-                if has_xrd:
+                if '2d' in self.scan.data.keys():
                     self.ui.comWidget.setScan(self.scan)
                     self.ui.xrdWidget.setScan(self.scan)
-                if has_xrf:
+                if '1d' in self.scan.data.keys():
                     self.ui.xrfWidget.setScan(self.scan)
-                if has_scalar:
+                if '0d' in self.scan.data.keys():
                     self.ui.scalarWidget.setScan(self.scan)
             self.statusOutput("")
         except:

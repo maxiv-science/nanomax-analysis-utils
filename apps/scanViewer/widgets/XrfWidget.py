@@ -87,7 +87,7 @@ class XrfWidget(qt.QWidget):
             return
 
         try:
-            self.window().statusOutput('Building XRF map...')
+            self.window().statusOutput('Building 1D data map...')
             # workaround to avoid the infinite loop which occurs when both
             # mask widgets are open at the same time
             self.map.getMaskToolsDockWidget().setVisible(False)
@@ -97,12 +97,12 @@ class XrfWidget(qt.QWidget):
             # get ROI information
             roi = self.spectrum.getCurvesRoiWidget().currentRoi
             if roi is None:
-                print "building fluorescence map from the whole spectrum"
+                print "building 1D data map from the whole spectrum"
                 average = np.mean(self.scan.data['1d'], axis=1)
             else:
                 lower = int(np.floor(roi.getFrom()))
                 upper = int(np.ceil(roi.getTo()))
-                print "building fluorescence map from channels %d to %d"%(lower, upper)
+                print "building 1D data map from channels %d to %d"%(lower, upper)
                 average = np.mean(self.scan.data['1d'][:, lower:upper], axis=1)
 
             # interpolate and plot map
@@ -116,14 +116,14 @@ class XrfWidget(qt.QWidget):
             self.window().statusOutput('')
             self.last_map_update = time.time()
         except:
-            self.window().statusOutput('Failed to build XRF map. See terminal output.')
+            self.window().statusOutput('Failed to build 1D data map. See terminal output.')
             raise
 
     def updateSpectrum(self):
         if self.scan is None:
             return
         try:
-            self.window().statusOutput('Building XRF spectrum...')
+            self.window().statusOutput('Building 1D curve...')
             if self.selectionMode == 'ind':
                 index = self.map.indexBox.value()
                 data = self.scan.data['1d'][index]
@@ -132,7 +132,7 @@ class XrfWidget(qt.QWidget):
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
-                    print 'building fluorescence spectrum from all positions'
+                    print 'building 1D curve from all positions'
                     data = np.mean(self.scan.data['1d'], axis=0)
                 else:
                     # recreate the interpolated grid from above, to find masked
@@ -148,14 +148,14 @@ class XrfWidget(qt.QWidget):
                         dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
                         if dist2 < pointSpacing2:
                             maskedPositions.append(i)
-                    print 'building fluorescence spectrum from %d positions'%len(maskedPositions)
+                    print 'building 1D curve from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['1d'][maskedPositions], axis=0)
             self.spectrum.addCurve(range(len(data)), data, legend='data',
                 resetzoom = False)
             self.window().statusOutput('')
         except:
-            self.window().statusOutput('Failed to build XRF spectrum. See terminal output.')
+            self.window().statusOutput('Failed to build 1D curve. See terminal output.')
             raise
 
     def togglePositions(self):
