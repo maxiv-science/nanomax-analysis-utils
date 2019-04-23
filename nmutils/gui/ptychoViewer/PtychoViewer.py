@@ -114,4 +114,3 @@ if __name__ == '__main__':
     viewer.show()
     # run the app
     app.exec_()
-

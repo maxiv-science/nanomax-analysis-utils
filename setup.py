@@ -4,5 +4,6 @@ setup(
     name = "NanoMAX Analysis Utilities",
     version = "0.1a0",
     packages = find_packages(),
-    install_requires = ['numpy', 'h5py']
+    install_requires = ['numpy', 'h5py'],
+    scripts = ['apps/scanViewer.py', 'apps/ptychoViewer.py'],
     )

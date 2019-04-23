@@ -1,0 +1,22 @@
+#/usr/bin/env python
+
+"""
+The normal NanoMAX scan viewer.
+"""
+
+from nmutils.gui.scanViewer import ScanViewer
+from silx.gui import qt
+import sys
+
+if __name__ == '__main__':
+    # you always need a qt app
+    app = qt.QApplication(sys.argv)
+    # for convenience, you can pass the filename as an argument
+    fn = None
+    if len(sys.argv) >= 2:
+        fn = sys.argv[1]
+    # instantiate and show the main object
+    viewer = ScanViewer(fn)
+    viewer.show()
+    # run the app
+    app.exec_()
