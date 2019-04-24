@@ -8,8 +8,6 @@ import h5py
 import numpy as np
 import os, time, sys, argparse
 
-NBINS = 1000
-
 FORCE, CHECK, REMEMBER = (0, 1, 2)
 
 ### Parse input
@@ -142,7 +140,7 @@ while not args.laziness == FORCE:
                     if n % 10 == 0:
                         sys.stdout.write(fmt % (n, N))
                         sys.stdout.flush()
-                    out = integrator.integrate1d(data=im, npt=NBINS, filename=None, mask=mask)
+                    out = integrator.integrate1d(data=im, npt=args.nbins, filename=None, mask=mask)
                     q, I = out.radial, out.intensity
                     intensities.append(I)
                     n += 1
