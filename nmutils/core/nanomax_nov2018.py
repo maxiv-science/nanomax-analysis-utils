@@ -333,7 +333,7 @@ class stepscan_nov2018(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['merlin', 'xspress3', 'pil100k', 'pil1m', 'counter1', 'counter2', 'counter3'],
+            'type': ['merlin', 'xspress3', 'pil100k', 'pil1m', 'counter1', 'counter2', 'counter3', 'pil1m-waxs'],
             'doc': "type of data",
             },
         'xMotor': {
@@ -371,11 +371,16 @@ class stepscan_nov2018(Scan):
             'type': bool,
             'doc': 'use nominal instead of recorded positions',
             },
+        'waxsPath': {
+            'value': '../../process/radial_integration/<sampledir>',
+            'type': str,
+            'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
+        },
     }
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
-    sourceDims = {'pil100k':2, 'xspress3':1, 'merlin':2, 'pil1m':2, 'counter1':0, 'counter2':0, 'counter3':0}
+    sourceDims = {'pil100k':2, 'xspress3':1, 'merlin':2, 'pil1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'pil1m-waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -398,6 +403,7 @@ class stepscan_nov2018(Scan):
         self.nominalPositions = bool(opts['nominalPositions']['value'])
         self.scanNr = int(opts['scanNr']['value'])
         self.fileName = opts['fileName']['value']
+        self.waxsPath = opts['waxsPath']['value']
 
     def _readPositions(self):
         """ 
@@ -534,6 +540,18 @@ class stepscan_nov2018(Scan):
             data = np.array(data)
             if self.normalize_by_I0:
                 data = data / I0_data[:, None]
+
+        elif self.dataSource == 'pil1m-waxs':
+            print "loading WAXS data..."
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            with h5py.File(os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr), 'r') as fp:
+                I = fp['I'][:]
+            return I
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3'):
             entry = 'entry%d' % self.scanNr
