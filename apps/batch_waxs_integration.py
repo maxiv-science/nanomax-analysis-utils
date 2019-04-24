@@ -92,7 +92,7 @@ while not args.laziness == FORCE:
         if not inputfn.endswith('.hdf5'):
             continue
         outputfn = inputfn.split('.')[0] + '_waxs.' + inputfn.split('.')[-1]
-        output_file = os.path.join(args.output_folder, outputfn)
+        output_file = os.path.join(output_folder, outputfn)
         assert '/raw/' not in output_file
         input_file = os.path.join(args.input_folder, inputfn)
 
