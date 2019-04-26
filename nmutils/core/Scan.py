@@ -207,8 +207,7 @@ class Scan(object):
 
         # otherwise, construct a new objects and copy all the attributes
         # create a new object of the right subclass:
-        new = None  # just tricking the editor
-        exec("new = %s()" % type(self).__name__)
+        new = self.__class__()
 
         # copy all the non-data attributes
         for key in self.__dict__.keys():
