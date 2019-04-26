@@ -16,7 +16,7 @@ for i, n in enumerate(scan_numbers):
 	new = nmutils.core.flyscan_nov2018()
 	new.addData(dataSource='xspress3', normalize_by_I0=False, globalPositions=True,
 		fileName='/data/staff/nanomax/commissioning_2019-1/20190415_Vajda/raw/sphere-1/sphere-1.h5',
-		scanNr=n, name='1d', xrfCropping=[0,1600])
+		scanNr=n, name='1d', xrfCropping=[0,1800])
 	if i == 0:
 		scan = new
 		continue

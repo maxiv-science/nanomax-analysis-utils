@@ -292,6 +292,8 @@ class flyscan_nov2018(Scan):
                     if not dataset:
                         break
                     data_ = np.mean(np.array(dataset)[:, self.xrfChannel, :], axis=1)
+                    if self.xrfCropping:
+                        data_ = data_[:, self.xrfCropping[0]:self.xrfCropping[1]]
                     if self.normalize_by_I0:
                         I0_line = I0_data[line]
                         data_ = data_ / I0_line[:, None]
