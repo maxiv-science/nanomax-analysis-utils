@@ -281,7 +281,7 @@ class Scan(object):
 
         return new
 
-    def interpolatedMap(self, values, oversampling, origin='lr', method='nearest'):
+    def interpolatedMap(self, values, oversampling, origin='lr', method='nearest', equal=False):
         """ 
         Provides a regular and interpolated xy map of the scan, with the
         values provided. For example, a ROI integral can be provided which
@@ -290,7 +290,10 @@ class Scan(object):
         values: a length-N array, with one value per position
         oversampling: the oversampling ratio relative to the average position spacing
         origin: 'lr', 'll', 'ur', 'ul'
+        equal: use equal pixel sizes for x and y
         """
+        assert self.nDimensions == 2
+
         xMin, xMax = np.min(self.positions[:,0]), np.max(self.positions[:,0])
         yMin, yMax = np.min(self.positions[:,1]), np.max(self.positions[:,1])
 
@@ -306,6 +309,9 @@ class Scan(object):
         else:
             xstepsize = (xMax-xMin) / np.sqrt(self.nPositions) / oversampling
             ystepsize = (yMax-yMin) / np.sqrt(self.nPositions) / oversampling
+            if equal:
+                xstepsize = min(xstepsize, ystepsize)
+                ystepsize = xstepsize
             xmargin = oversampling * xstepsize / 2
             ymargin = oversampling * ystepsize / 2
             y, x = np.mgrid[yMax+ymargin:yMin-ymargin:-ystepsize, xMax+xmargin:xMin-xmargin:-xstepsize]
@@ -330,27 +336,29 @@ class Scan(object):
 
         return x, y, z
     
-    def export(self, filepath, meshgrid=True, shape=""):
+    def export(self, filepath, method='reshape', shape=None, oversampling=1, equal=True):
         """ 
         Dumps data into a single HDF5 file in order to allow export into other software
         or reload later.
 
         filepath: full path and name of the output file
-        meshgrid: flag to cast data into the scan measurement grid (default=False)
-        shape: string defining shape of the scan measurement grid as "lines points" (default="") ,
-               the fast axis is the last dimension (i.e. points)   
+        method: "reshape"  - attempt to cast the data on a regular grid,
+                "resample" - resample the data on a regular grid,
+                "none" - export the data without forcing it onto any sort of grid
+        shape:  tuple defining shape of the scan measurement grid as (lines, points),
+                optionally used  with "reshape", inferred by default
+        oversampling: the oversampling ratio relative to the typical step size,
+                      used with "resample"
+        equal:  use equal step sizes in x and y for "resample"
         """
+        # this only applies for 1D and 2D scans
+        assert self.nDimensions in (1, 2)
+
         # check input arguments
-        if shape:
-            meshgrid = True
-            shape = tuple( map(int, shape.split()) )
-        if meshgrid and not shape:
-            shape, fast_axis_label = self._shapeFromPositions2D(self.positions[:,0],self.positions[:,1])
-            print("Fast axis detectected to be: %s" % (fast_axis_label,))
-        if meshgrid:
-            print("Data will be exported assuming the scan grid dims: %s points" % (shape,))
+        assert method in ('reshape', 'resample', 'none')
+
         # export to hdf5 file
-        with h5py.File(filepath,'w-',libver='earliest') as h5f:
+        with h5py.File(filepath, 'w-', libver='earliest') as h5f:
             # create entry
             grp_path = "/entry0"
             grp = h5f.create_group(grp_path)
@@ -364,20 +372,43 @@ class Scan(object):
             grp_path = "/entry0/data"
             grp = h5f.create_group(grp_path)
             # save positions
-            shp = shape if meshgrid else (self.nPositions,) 
-            dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=shp, dtype=np.float, compression="lzf")
-            dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=shp, dtype=np.float, compression="lzf")
+            if method == 'reshape':
+                if shape is None:
+                    shape, fast_axis_label = self._shapeFromPositions2D(self.positions[:,0],self.positions[:,1])
+                    if not np.prod(shape) == self.nPositions:
+                        raise Exception('Something went really wrong when trying to reshape the scan grid')
+                    print("Fast axis detectected to be: %s" % (fast_axis_label,))
+                dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], shape=shape, dtype=np.float, compression="lzf")
+                dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], shape=shape, dtype=np.float, compression="lzf")
+            elif method == 'resample':
+                x, y = self.interpolatedMap(np.zeros(self.nPositions), oversampling, equal=equal)[:2]
+                shape = x.shape
+                dset = h5f.create_dataset(name=grp_path+"/positions_x", data=x, dtype=np.float, compression="lzf")
+                dset = h5f.create_dataset(name=grp_path+"/positions_y", data=y, dtype=np.float, compression="lzf")
+            elif method == 'none':
+                dset = h5f.create_dataset(name=grp_path+"/positions_x", data=self.positions[:,0], dtype=np.float, compression="lzf")
+                dset = h5f.create_dataset(name=grp_path+"/positions_y", data=self.positions[:,1], dtype=np.float, compression="lzf")
             # create datasets
             for dsetname in self.data.keys():
-                shp = shape + self.data[dsetname].shape[1:] if meshgrid else self.data[dsetname].shape
-                dt = self.data[dsetname].dtype
-                dims = len(shp)
-                chunk = self._calcChunkSize(shp,dt.itemsize)
-                print("%s, shape: %s, chunk: %s" % (dsetname, shp, chunk,))
-                if chunk not in [None,[]]:
-                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, chunks=chunk, dtype=dt, compression="lzf")
+                # total data shape
+                if method in ('reshape', 'resample'):
+                    shp = shape + self.data[dsetname].shape[1:]
                 else:
-                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=self.data[dsetname], shape=shp, dtype=dt, compression="lzf")
+                    shp = self.data[dsetname].shape
+                # chunking
+                dt = self.data[dsetname].dtype
+                chunk = self._calcChunkSize(shp, dt.itemsize)
+                print("%s, shape: %s, chunk: %s" % (dsetname, shp, chunk,))
+                # what data to write?
+                if method in ('reshape', 'none'):
+                    data = self.data[dsetname]
+                elif method == 'resample':
+                    data = self.interpolatedMap(self.data[dsetname], oversampling, equal=equal)[-1]
+                # write it
+                if chunk not in [None,[]]:
+                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=data, shape=shp, chunks=chunk, dtype=dt, compression="lzf")
+                else:
+                    dset = h5f.create_dataset(name=grp_path+"/"+dsetname, data=data, shape=shp, dtype=dt, compression="lzf")
             print("Scan data were exported to %s:%s" % (filepath,grp_path,))
 
     def _calcChunkSize(self,shape,dsize):
