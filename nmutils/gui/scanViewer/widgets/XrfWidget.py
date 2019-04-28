@@ -4,6 +4,8 @@ from silx.gui.icons import getQIcon
 from silx.gui import qt
 import numpy as np
 import time
+import h5py
+import os, tempfile
 
 from .XrdWidget import MapWidget
 
@@ -186,3 +188,32 @@ class XrfWidget(qt.QWidget):
         # clearing the mask also invokes self.updateSpectrum():
         self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
         self.selectionMode = 'roi'
+
+    def launchPyMCA(self):
+        """
+        Exports the current scan, loads it, and launches a PyMCA QStackWidget.
+        The data is written to disk so that the Scan.export method can be used
+        as it is. That method allows writing data to disk without using more
+        memory. While that feature is not needed here, replicating the export
+        code would be too ugly.
+        """
+        filename = os.path.join(tempfile.gettempdir(), 'tmp.hdf5')
+        self.window().statusOutput("Exporting data and launching PyMCA...")
+        try:
+            print 'Trying to reshape the data into a regular grid'
+            if os.path.exists(filename):
+                os.remove(filename)
+            self.scan.export(filename)
+        except Exception:
+            print 'Reshaping the data didn\'t work - resampling instead'
+            if os.path.exists(filename):
+                os.remove(filename)
+            self.scan.export(filename, method='resample')
+        from PyMca5.PyMca.QStackWidget import QStackWidget
+        w = QStackWidget()
+        with h5py.File(filename) as fp:
+            data = fp['entry0/data/1d'][:]
+        w.setStack(data, mcaindex=-1)
+        w.show()
+        self.pymcaWindow = w
+        self.window().statusOutput("")

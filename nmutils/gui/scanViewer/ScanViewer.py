@@ -1,8 +1,9 @@
 """
 This application loads data through subclasses of nmutils.core.Scan. 
 These subclasses should have the option "dataSource" for data loading,
-and should expect the 'xrd' and 'xrf' values for this keyword. In 
-addition, they can have whatever options they want.
+and they can have a dict "sourceDims" that assigns a dimensionality
+to each data source. In addition, they can have whatever options they
+want.
 """
 
 # nmutils loads Eiger plugins, which have to be imported before h5py
@@ -28,7 +29,6 @@ import sys
 import gc
 import numpy as np
 from scipy.interpolate import griddata
-import time
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html
@@ -79,6 +79,9 @@ class ScanViewer(qt.QMainWindow):
 
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
+
+        # connect the PyMCA button to the slot on that widget
+        self.ui.pymcaButton.clicked.connect(self.ui.xrfWidget.launchPyMCA)
 
         # dummy scan
         self._scan = None
@@ -214,6 +217,7 @@ class ScanViewer(qt.QMainWindow):
             self.ui.xrdWidget.setScan(None)
             self.ui.comWidget.setScan(None)
             self.ui.xrfWidget.setScan(None)
+            self.ui.pymcaButton.setEnabled(False)
             self.ui.scalarWidget.setScan(None)
             # do this just to be sure
             del(self._scan)
@@ -226,12 +230,14 @@ class ScanViewer(qt.QMainWindow):
                 self.ui.comWidget.setScan(scn)
             if '1d' in scn.data.keys():
                 self.ui.xrfWidget.setScan(scn)
+                self.ui.pymcaButton.setEnabled(True)
             if '0d' in scn.data.keys():
                 self.ui.scalarWidget.setScan(scn)
 
     def load(self):
         try:
             self.statusOutput("Loading data...")
+
             if self.scan and not self.ui.appendBox.isChecked():
                 print "Deleting previous scan from memory"
                 self.scan = None
@@ -281,7 +287,7 @@ class ScanViewer(qt.QMainWindow):
                     raise nmutils.NoDataException
                 print "loaded 1D data: %d positions, %d channels"%(scan_.data['1d'].shape)
             except nmutils.NoDataException:
-                print "no xrf data found"
+                print "no 1D data found"
             except KeyboardInterrupt:
                 print "cancelled"
                 self.statusOutput("")
@@ -333,4 +339,3 @@ if __name__ == '__main__':
     viewer.show()
     # run the app
     app.exec_()
-
