@@ -196,9 +196,8 @@ class XrfWidget(qt.QWidget):
         """
         Exports the current scan, loads it, and launches a PyMCA QStackWidget.
         The data is written to disk so that the Scan.export method can be used
-        as it is. That method allows writing data to disk without using more
-        memory. While that feature is not needed here, replicating the export
-        code would be too ugly.
+        as it is. This allows discarding the held data before launching PyMCA,
+        avoiding double memory usage.
         """
         filename = os.path.join(tempfile.gettempdir(), 'tmp.hdf5')
         method, shape, oversampling, equal, discard, ok = PymcaLaunchDialog().getValues()
