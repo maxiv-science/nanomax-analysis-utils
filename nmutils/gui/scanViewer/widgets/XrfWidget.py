@@ -61,6 +61,9 @@ class XrfWidget(qt.QWidget):
         # workaround to avoid multiple updates
         self.last_map_update = 0.0
 
+        # a list of pymca windows to keep then in scope
+        self.pymcaWindows = []
+
     def setScan(self, scan):
         self.scan = scan
         if not scan:
@@ -198,22 +201,96 @@ class XrfWidget(qt.QWidget):
         code would be too ugly.
         """
         filename = os.path.join(tempfile.gettempdir(), 'tmp.hdf5')
-        self.window().statusOutput("Exporting data and launching PyMCA...")
-        try:
-            print 'Trying to reshape the data into a regular grid'
+        method, shape, oversampling, equal, discard, ok = PymcaLaunchDialog().getValues()
+        if ok:
+            self.window().statusOutput("Exporting data and launching PyMCA...")
+            # reshape/resample and export data to temporary hdf5
             if os.path.exists(filename):
                 os.remove(filename)
-            self.scan.export(filename)
-        except Exception:
-            print 'Reshaping the data didn\'t work - resampling instead'
-            if os.path.exists(filename):
-                os.remove(filename)
-            self.scan.export(filename, method='resample')
-        from PyMca5.PyMca.QStackWidget import QStackWidget
-        w = QStackWidget()
-        with h5py.File(filename) as fp:
-            data = fp['entry0/data/1d'][:]
-        w.setStack(data, mcaindex=-1)
-        w.show()
-        self.pymcaWindow = w
-        self.window().statusOutput("")
+            try:
+                self.scan.export(filename, method=method, shape=shape,
+                    oversampling=oversampling, equal=equal)
+            except Exception as e:
+                print e
+                self.window().statusOutput("Failed to export data, see terminal for info.")
+                return
+            if discard:
+                # discard all data on the parent widget
+                self.window().scan = None
+            # launch a PyMCA widget with that data
+            from PyMca5.PyMca.QStackWidget import QStackWidget
+            w = QStackWidget()
+            with h5py.File(filename) as fp:
+                data = fp['entry0/data/1d'][:]
+            if data.ndim == 2:
+                data = data.reshape((1,) + data.shape)
+            w.setStack(data)
+            w.show()
+            self.pymcaWindows.append(w)
+            self.window().statusOutput("")
+
+class PymcaLaunchDialog(qt.QDialog):
+    """
+    Dialog box for getting options before launching PyMCA.
+    """
+    def setupUi(self):
+        # form layout for grid scan inputs
+        layout = qt.QFormLayout()
+        self.noChangeBox = qt.QRadioButton()
+        layout.addRow(qt.QLabel("Export flat list of points:"), self.noChangeBox)
+        self.reshapeBox = qt.QRadioButton()
+        self.reshapeBox.setChecked(True)
+        layout.addRow(qt.QLabel("Try reshaping the data:"), self.reshapeBox)
+        self.shapeBox = qt.QLineEdit('auto')
+        layout.addRow(qt.QLabel("    shape:"), self.shapeBox)
+        self.resampleBox = qt.QRadioButton()
+        layout.addRow(qt.QLabel("Resample the data on a grid:"), self.resampleBox)
+        self.oversamplingBox = qt.QSpinBox()
+        self.oversamplingBox.setValue(1)
+        layout.addRow(qt.QLabel("    oversampling relative to typical step size:"), self.oversamplingBox)
+        self.equalBox = qt.QCheckBox()
+        self.equalBox.setChecked(True)
+        layout.addRow(qt.QLabel("    equal horizontal and vertical steps"), self.equalBox)
+        self.formGroupBox = qt.QGroupBox("PyMCA needs data layed out on a regular grid.")
+        self.formGroupBox.setLayout(layout)
+
+        # another form layout for an option to discard the data
+        layout = qt.QFormLayout()
+        self.discardBox = qt.QCheckBox()
+        layout.addRow(qt.QLabel("Discard data in scanviewer before launching"), self.discardBox)
+        self.discardGroupBox = qt.QGroupBox("Opening the data in PyMCA might double memory use.")
+        self.discardGroupBox.setLayout(layout)
+
+        # ok/cancel buttons
+        buttonBox = qt.QDialogButtonBox(qt.QDialogButtonBox.Ok | qt.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+
+        # put everything together
+        mainLayout = qt.QVBoxLayout()
+        mainLayout.addWidget(self.formGroupBox)
+        mainLayout.addWidget(self.discardGroupBox)
+        mainLayout.addWidget(buttonBox)
+        self.setLayout(mainLayout)
+
+        self.setWindowTitle("Launch PyMCA...")
+
+    def getValues(self):
+        self.setupUi()
+        self.exec_()
+        ok = (self.result() == self.Accepted)
+        if self.reshapeBox.isChecked():
+            method = 'reshape'
+        elif self.resampleBox.isChecked():
+            method = 'resample'
+        else:
+            method = 'none'
+        shape = self.shapeBox.text()
+        print shape
+        shape = shape.replace(',', ' ').replace('x', ' ').split()
+        shape = [int(s) for s in shape] if len(shape) == 2 else None
+        oversampling = self.oversamplingBox.value()
+        equal = self.equalBox.isChecked()
+        discard = self.discardBox.isChecked()
+        print 'getValues  done'
+        return method, shape, oversampling, equal, discard, ok
