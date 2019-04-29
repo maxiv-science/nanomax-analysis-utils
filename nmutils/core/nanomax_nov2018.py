@@ -206,9 +206,17 @@ class flyscan_nov2018(Scan):
         # close hdf5 file
         fp.close()
 
+        # save motor labels
+        if self.globalPositions:
+            rough = {'samx_buff':'sams_x', 'samy_buff':'sams_y', 'samz_buff':'sams_z'}
+            self.positionDimLabels = ['%s+%s (um)'%(self.xMotor, rough[self.xMotor]),
+                                      '%s+%s (um)'%(self.yMotor, rough[self.yMotor])]
+        else:
+            self.positionDimLabels = ['%s (um)'%self.xMotor, '%s (um)'%self.yMotor]
+
         return np.vstack((x, y)).T
 
-    def _readData(self):
+    def _readData(self, name):
         """ 
         Override data reading.
         """
@@ -275,7 +283,7 @@ class flyscan_nov2018(Scan):
             data = np.concatenate(data, axis=0)
 
         elif self.dataSource == 'xspress3':
-            print "loading flurescence data..."
+            print "loading fluorescence data..."
             print "selecting fluorescence channels %s"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
@@ -299,8 +307,10 @@ class flyscan_nov2018(Scan):
                         data_ = data_ / I0_line[:, None]
                     data.append(data_)
                     line += 1
-            print "loaded %d lines of flurescence data"%len(data)
+            print "loaded %d lines of fluorescence data"%len(data)
             data = np.vstack(data)
+            self.dataDimLabels[name] = ['Approx. energy (keV)']
+            self.dataAxes[name] = [np.arange(data_.shape[-1]) * .01]
 
         elif self.dataSource in ('adlink', 'counter'):
             print "loading buffered scalar data..."
@@ -450,9 +460,12 @@ class stepscan_nov2018(Scan):
         except TypeError:
             x = np.zeros(y.shape)
 
+        # save motor labels
+        self.positionDimLabels = [self.xMotor, self.yMotor]
+
         return np.vstack((x, y)).T
 
-    def _readData(self):
+    def _readData(self, name):
         """ 
         Override data reading. Here the filename is only used to find the
         path of the Lima hdf5 files.
@@ -525,8 +538,8 @@ class stepscan_nov2018(Scan):
                 data = data / I0_data[:, None, None]
 
         elif self.dataSource == 'xspress3':
-            print "loading flurescence data..."
-            print "selecting fluorescence channel %d"%self.xrfChannel
+            print "loading fluorescence data..."
+            print "selecting xspress3 channel %d"%self.xrfChannel
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
             print 'loading data: ' + filename_pattern%(self.scanNr)
@@ -542,6 +555,8 @@ class stepscan_nov2018(Scan):
             data = np.array(data)
             if self.normalize_by_I0:
                 data = data / I0_data[:, None]
+            self.dataDimLabels[name] = ['Approx. energy (keV)']
+            self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
 
         elif self.dataSource == 'pil1m-waxs':
             print "loading WAXS data..."

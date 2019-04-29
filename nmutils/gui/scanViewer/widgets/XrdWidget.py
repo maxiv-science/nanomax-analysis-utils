@@ -24,8 +24,6 @@ class MapWidget(CustomPlotWindow):
             self.setWindowTitle('comMapWidget')
 
         self.setGraphTitle('Scan map')
-        self.setGraphXLabel('motor x [um]')
-        self.setGraphYLabel('motor y [um]')
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
@@ -78,9 +76,6 @@ class ImageWidget(CustomPlotWindow):
         if parent is None:
             self.setWindowTitle('comImageWidget')
 
-        self.setGraphXLabel('Columns')
-        self.setGraphYLabel('Rows')
-        self.setGraphTitle('Diffraction')
         self.setKeepDataAspectRatio(True)
         self.setYAxisInverted(True)
 
@@ -176,6 +171,8 @@ class XrdWidget(qt.QWidget):
             else:
                 self.map.setKeepDataAspectRatio(True)
             self.window().statusOutput('')
+            self.map.setGraphXLabel(self.scan.positionDimLabels[0])
+            self.map.setGraphYLabel(self.scan.positionDimLabels[1])
         except:
             self.window().statusOutput('Failed to build 2D data map. See terminal output.')
             raise
@@ -219,6 +216,9 @@ class XrdWidget(qt.QWidget):
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['2d'][maskedPositions], axis=0)
             self.image.addImage(data, legend='data', resetzoom=False)
+            self.image.setGraphTitle(self.scan.dataTitles['2d'])
+            self.image.setGraphXLabel(self.scan.dataDimLabels['2d'][1])
+            self.image.setGraphYLabel(self.scan.dataDimLabels['2d'][0])
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build 2D image. See terminal output.')

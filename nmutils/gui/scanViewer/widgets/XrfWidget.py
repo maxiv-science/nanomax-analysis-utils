@@ -25,9 +25,6 @@ class SpectrumWidget(PlotWindow):
                                      roi=True, mask=False, fit=False)
         if parent is None:
             self.setWindowTitle('Plot1D')
-        self.setGraphXLabel('Detector channel')
-        self.setGraphYLabel('Signal')
-        self.setGraphTitle('Fluorescence emission')
         self.setYAxisLogarithmic(True)
 
 class XrfWidget(qt.QWidget):
@@ -120,6 +117,8 @@ class XrfWidget(qt.QWidget):
             self.map.setGraphYLimits(*ylims)
             self.window().statusOutput('')
             self.last_map_update = time.time()
+            self.map.setGraphXLabel(self.scan.positionDimLabels[0])
+            self.map.setGraphYLabel(self.scan.positionDimLabels[1])
         except:
             self.window().statusOutput('Failed to build 1D data map. See terminal output.')
             raise
@@ -156,8 +155,11 @@ class XrfWidget(qt.QWidget):
                     print 'building 1D curve from %d positions'%len(maskedPositions)
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['1d'][maskedPositions], axis=0)
-            self.spectrum.addCurve(range(len(data)), data, legend='data',
+            self.spectrum.addCurve(self.scan.dataAxes['1d'][0], data, legend='data',
                 resetzoom = False)
+            self.spectrum.setGraphTitle(self.scan.dataTitles['1d'])
+            self.spectrum.setGraphXLabel(self.scan.dataDimLabels['1d'][0])
+            self.spectrum.setGraphYLabel('signal')
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build 1D curve. See terminal output.')

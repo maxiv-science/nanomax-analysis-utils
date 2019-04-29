@@ -82,9 +82,10 @@ class dummyScan(Scan):
         lenx = len(x)
         x = np.repeat(x, len(y))
         y = np.tile(y, lenx)
+        self.positionDimLabels = ['fake x motor (um)', 'fake y motor (um)']
         return np.vstack((x, y)).T
 
-    def _readData(self):
+    def _readData(self, name):
         """ 
         Override data reading.
         """
@@ -97,6 +98,7 @@ class dummyScan(Scan):
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(dataframe)
+                self.dataTitles[name] = 'Very fake XRD data'
         elif self.dataSource == 'fake-xrf':
             for pos in self.positions:
                 dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
@@ -104,8 +106,11 @@ class dummyScan(Scan):
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(np.mean(dataframe, axis=0))
+                self.dataTitles[name] = 'Very fake XRF data'
+                self.dataAxes[name] = [np.arange(data[-1].shape[-1]) * .01,]
+                self.dataDimLabels[name] = ['Fake energy (some unit)']
         elif self.dataSource == 'fake-scalar':
             self.dataSource = 'fake-xrd'
-            data = self._readData()
+            data = self._readData(name)
             data = np.var(data, axis=(1,2))
         return np.array(data)

@@ -33,12 +33,17 @@ class Scan(object):
 
     def __init__(self):
         """ 
-        Only initializes counters. Parameters, positions and data are
-        added later.
+        Only initializes counters and containers. Parameters, positions
+        and data are added later.
         """
         self.nDataSets = 0
         self.nPositions = None
-        self.nDimensions = None  # scan dimensions
+        self.nDimensions = None
+
+        self.positionDimLabels = [] # labels for each of the scanning dimensions
+        self.dataTitles = {}        # titles for each dataset
+        self.dataDimLabels = {}     # labels for each of the data dimensions
+        self.dataAxes = {}          # numerical values for the aces of each dataset
 
     def _prepareData(self, **kwargs):
         """
@@ -66,7 +71,7 @@ class Scan(object):
         """
         raise NotImplementedError
 
-    def _readData(self):
+    def _readData(self, name):
         """ 
         Placeholder method to be subclassed. Private method which
         interfaces with the actual hdf5 file and returns an N-by-(image
@@ -142,6 +147,8 @@ class Scan(object):
             self.positions = self._readPositions()
             self.nPositions = self.positions.shape[0]
             self.nDimensions = self.positions.shape[1]
+            if not self.positionDimLabels:
+                self.positionDimLabels = ['scan direction %d' % i for i in range(1, self.nDimensions+1)]
             self.data = {}
         else:
             # verify that the data isn't already loaded
@@ -154,7 +161,18 @@ class Scan(object):
 
         # The actual reading is done by _readData() which knows about the
         # details of the hdf5 file
-        data = self._readData()
+        data = self._readData(name)
+
+        # Check if _readData has filled in the info fields, otherwise generate something
+        if self.dataTitles.get(name) is None:
+            self.dataTitles[name] = '%s dataset' % name
+        if self.dataDimLabels.get(name) is None:
+            self.dataDimLabels[name] = ['data dim %u' % i for i in range(data.ndim-1)]
+        if self.dataAxes.get(name) is None:
+            self.dataAxes[name] = [range(sh) for sh in data.shape[1:]]
+        assert str(self.dataTitles) == self.dataTitles
+        assert len(self.dataDimLabels[name]) == data.ndim - 1
+        assert len(self.dataAxes[name]) == data.ndim - 1
 
         # pad the data in case there were missing frames
         if data.shape[0] < self.nPositions:

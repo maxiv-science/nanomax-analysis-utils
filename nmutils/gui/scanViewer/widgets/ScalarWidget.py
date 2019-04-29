@@ -78,6 +78,8 @@ class ScalarWidget(qt.QWidget):
                 self.map.setKeepDataAspectRatio(False)
             else:
                 self.map.setKeepDataAspectRatio(True)
+            self.map.setGraphXLabel(self.scan.positionDimLabels[0])
+            self.map.setGraphYLabel(self.scan.positionDimLabels[1])
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build scalar map. See terminal output.')

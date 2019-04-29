@@ -132,6 +132,8 @@ class ComWidget(qt.QWidget):
                 self.map.setGraphYLimits(*ylims)
             except:
                 print "Invalid center of mass"
+            self.map.setGraphXLabel(self.scan.positionDimLabels[0])
+            self.map.setGraphYLabel(self.scan.positionDimLabels[1])
             self.window().statusOutput('')
         except:
             self.window().statusOutput('Failed to build COM map. See terminal output.')
