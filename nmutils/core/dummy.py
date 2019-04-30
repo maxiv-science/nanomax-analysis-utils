@@ -11,7 +11,7 @@ class dummyScan(Scan):
     default_opts = {
         # the dataSource option is mandatory for use with scanViewer
         'dataSource': {
-            'value': 'xrd',
+            'value': 'fake-xrd',
             'type': ['fake-xrd', 'fake-xrf', 'fake-scalar'],
             'doc': "type of data",
             },
@@ -48,7 +48,6 @@ class dummyScan(Scan):
                   'fake-xrf': 1,
                   'fake-scalar': 0}
 
-
     def _prepareData(self, **kwargs):
         """ 
         This method gets the kwargs passed to the addData() method, and
@@ -66,7 +65,6 @@ class dummyScan(Scan):
         self.doFourier = opts['fourier']['value']
 
         self.image = face(gray=True)
-
 
     def _readPositions(self):
         """ 
