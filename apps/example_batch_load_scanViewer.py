@@ -16,7 +16,7 @@ scan_numbers = range(2, 32+1) # to 32
 # loop through these and load the data, merging them together after each
 for i, n in enumerate(scan_numbers):
 	new = nmutils.core.flyscan_nov2018()
-	new.addData(dataSource='xspress3', normalize_by_I0=False, globalPositions=True,
+	new.addData(dataSource='xspress3', normalize_by_I0=True, globalPositions=True,
 		#fileName='/data/staff/nanomax/commissioning_2019-1/20190415_Vajda/raw/sphere-1/sphere-1.h5',
 		fileName='/home/alex/tmp/sphere-1/sphere-1.h5',
 		scanNr=n, name='1d', xrfCropping=[0,1800])
