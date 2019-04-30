@@ -574,7 +574,7 @@ class stepscan_nov2018(Scan):
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = self._safe_get_array(hf, entry+'/measurement/counter1')
+                I0_data = self._safe_get_array(hf, entry+'/measurement/' + self.dataSource)
                 I0_data = I0_data.astype(float)
                 data = I0_data.flatten()
         else:
