@@ -36,14 +36,36 @@ class Scan(object):
         Only initializes counters and containers. Parameters, positions
         and data are added later.
         """
-        self.nDataSets = 0
-        self.nPositions = None
-        self.nDimensions = None
 
+        # A dict of datasets, where each value is an array, the first
+        # index of which is the position, so (Npositions x M x N) or
+        # (Npositions x M) for example. Each dataset can have different
+        # dimensionality.
+        self.data = {}
+
+        # An array of scanning positions (Npositions x Ndimensions),
+        # common to all datasets. No assumptions on scanning grids
+        # are made.
+        self.positions = None
+
+        # Optional metadata fields filled in by _readPositions and
+        # _readData which can be used later for plotting or labeling.
         self.positionDimLabels = [] # labels for each of the scanning dimensions
         self.dataTitles = {}        # titles for each dataset
         self.dataDimLabels = {}     # labels for each of the data dimensions
-        self.dataAxes = {}          # numerical values for the aces of each dataset
+        self.dataAxes = {}          # numerical values for the axes of each dataset
+
+    @property
+    def nDatasets(self):
+        return len(self.data)
+
+    @property
+    def nPositions(self):
+        return None if self.positions is None else self.positions.shape[0]
+
+    @property
+    def nDimensions(self):
+        return None if self.positions is None else self.positions.shape[1]
 
     def _prepareData(self, **kwargs):
         """
@@ -137,19 +159,16 @@ class Scan(object):
         """
 
         if not name:
-            name = 'data%u' % self.nDataSets
+            name = 'data%u' % self.nDatasets
 
         self._prepareData(**kwargs)
 
         # Check if any data exists.
-        if not hasattr(self, 'data'):
+        if not self.nDatasets:
             # initialize data dict and read positions
             self.positions = self._readPositions()
-            self.nPositions = self.positions.shape[0]
-            self.nDimensions = self.positions.shape[1]
             if not self.positionDimLabels:
                 self.positionDimLabels = ['scan direction %d' % i for i in range(1, self.nDimensions+1)]
-            self.data = {}
         else:
             # verify that the data isn't already loaded
             if name in self.data.keys():
@@ -170,7 +189,7 @@ class Scan(object):
             self.dataDimLabels[name] = ['data dim %u' % i for i in range(data.ndim-1)]
         if self.dataAxes.get(name) is None:
             self.dataAxes[name] = [range(sh) for sh in data.shape[1:]]
-        assert str(self.dataTitles) == self.dataTitles
+        assert str(self.dataTitles[name]) == self.dataTitles[name]
         assert len(self.dataDimLabels[name]) == data.ndim - 1
         assert len(self.dataAxes[name]) == data.ndim - 1
 
@@ -188,14 +207,12 @@ class Scan(object):
             data = data[:self.nPositions]
 
         self.data[name] = data
-        self.nDataSets += 1
         
     def removeData(self, name):
         if name in self.data.keys():
             self.data.pop(name, None)
         else:
             raise ValueError("Dataset '%s' doesn't exist!" % name)
-        self.nDataSets -= 1
 
     def listData(self):
         return self.data.keys()
@@ -203,7 +220,7 @@ class Scan(object):
     def meanData(self, name=None):
         """ Returns the scan-average of the specified data set. """
         if not name:
-            if self.nDataSets == 1:
+            if self.nDatasets == 1:
                 name = self.listData()[0]
             else:
                 raise ValueError(
@@ -229,15 +246,10 @@ class Scan(object):
 
         # copy all the non-data attributes
         for key in self.__dict__.keys():
-            if key not in ['data', 'positions', 'nPositions']:
+            if key not in ['data', 'positions']:
                 exec("new.%s = cp.deepcopy(self.%s)" % (key, key))
-        new.data = {}
-        new.nPositions = 0
-        new.positions = None
-        new.nDatasets = 0
         for dataset in self.data.keys():
             new.data[dataset] = None
-            new.nDatasets += 1
 
         return new
 
@@ -248,7 +260,6 @@ class Scan(object):
         """
         assert self.data.keys() == scanobj.data.keys()
         self.positions = np.concatenate((self.positions, scanobj.positions), axis=0)
-        self.nPositions = self.positions.shape[0]
         for key in self.data.keys():
             self.data[key] = np.concatenate((self.data[key], scanobj.data[key]), axis=0)
 
@@ -295,7 +306,6 @@ class Scan(object):
         for dataset in self.data.keys():
             new.data[dataset] = np.array(new.data[dataset])
         new.positions = np.array(new.positions)
-        new.nPositions = new.positions.shape[0]
 
         return new
 
