@@ -224,8 +224,8 @@ class flyscan_nov2018(Scan):
         if self.normalize_by_I0:
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
-            with h5py.File(self.fileName, 'r') as hf:
-                Io_data = self._safe_get_array(h5, entry+'/measurement/Ni6602_buff')
+            with h5py.File(self.fileName, 'r') as fp:
+                I0_data = self._safe_get_array(fp, entry+'/measurement/Ni6602_buff')
                 I0_data = I0_data.astype(float) * 1e-5
                 I0_data = I0_data[:, :self.images_per_line]
 
