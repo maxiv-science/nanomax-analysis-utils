@@ -6,6 +6,16 @@ to each data source. In addition, they can have whatever options they
 want.
 """
 
+try:
+    # A slight hack - this lets qtconsole choose Qt library.
+    # I have to do this first otherwise the ipython widget doesn't
+    # work. Is it the same everywhere?
+    from qtconsole.rich_ipython_widget import RichIPythonWidget
+    from silx.gui.console import IPythonDockWidget
+    HAS_QTCONSOLE = True
+except:
+    HAS_QTCONSOLE = False
+
 # nmutils loads Eiger plugins, which have to be imported before h5py
 import nmutils
 
@@ -22,7 +32,8 @@ except (ImportError, AssertionError):
     raise Exception('This application requires silx >= 0.10.1')
 
 from silx.gui import qt
-print 'silx %s using' % silx.version, qt.BINDING
+print 'silx %s is using %s' % (silx.version, qt.BINDING)
+print 'Interactive console%s available' % ('' if HAS_QTCONSOLE else ' not')
 from silx.gui.icons import getQIcon
 import design
 import sys
@@ -85,6 +96,30 @@ class ScanViewer(qt.QMainWindow):
 
         # dummy scan
         self._scan = None
+
+        # the ipython button
+        self.ui.ipythonButton.setCheckable(True)
+        self.ui.ipythonButton.setChecked(False)
+        self.ui.ipythonButton.clicked.connect(self._toggle_ipython)
+        if HAS_QTCONSOLE:
+            self.console = IPythonDockWidget(parent=self,
+                available_vars={'self': self, 'ui': self.ui, 'update':self._update},
+                custom_banner=('Nanomax Scan Viewer console.\n'
+                               + '"self" refers to the ScanViewer instance.\n'
+                               + '"self.scan" refers to the current Scan object.\n'
+                               + '"update()" refreshes all plots and images after modifying data.'
+                               + '\n\n')
+                )
+            self.console.hide()
+            self.addDockWidget(qt.Qt.BottomDockWidgetArea, self.console)
+        else:
+            self.ui.ipythonButton.setEnabled(False)
+
+    def _toggle_ipython(self):
+        if self.ui.ipythonButton.isChecked():
+            self.console.show()
+        else:
+            self.console.hide()
 
     def _current_subclass_opts(self):
         subclass_ = str(self.ui.scanClassBox.currentText())
@@ -204,6 +239,13 @@ class ScanViewer(qt.QMainWindow):
     def statusOutput(self, msg):
         self.ui.statusbar.showMessage(msg)
         self.ui.statusbar.showMessage(msg)
+
+    def _update(self):
+        """
+        Dummy property for use with the ipython console, makes the plots
+        update by activating the self.scan setter method.
+        """
+        self.scan = self.scan
 
     @property
     def scan(self):

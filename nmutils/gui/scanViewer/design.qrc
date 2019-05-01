@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="logos">
+    <file>ipython.ico</file>
     <file>nanomax.png</file>
     <file>N.png</file>
   </qresource>

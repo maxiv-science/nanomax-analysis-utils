@@ -21,7 +21,7 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
+      <item row="0" column="2">
        <widget class="QComboBox" name="scanClassBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -74,7 +74,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="4">
+      <item row="1" column="5">
        <widget class="QPushButton" name="loadButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -102,7 +102,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="1" column="2">
        <widget class="QLineEdit" name="filenameBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -130,7 +130,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
+      <item row="1" column="4">
        <widget class="QPushButton" name="browseButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -152,17 +152,37 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="1" column="3">
        <widget class="QCheckBox" name="appendBox">
         <property name="text">
          <string>Append</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2" colspan="3">
+      <item row="0" column="3" colspan="3">
        <widget class="QSpinBox" name="scanNumberBox">
         <property name="maximum">
          <number>999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" rowspan="2">
+       <widget class="QPushButton" name="ipythonButton">
+        <property name="toolTip">
+         <string>Show/hide the interactive IPython shell</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="design.qrc">
+          <normaloff>:/logos/ipython.ico</normaloff>:/logos/ipython.ico</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>48</width>
+          <height>48</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -350,16 +370,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1082</width>
-     <height>22</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
