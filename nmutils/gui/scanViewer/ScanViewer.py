@@ -7,13 +7,9 @@ want.
 """
 
 try:
-    # A slight hack - this lets qtconsole choose Qt library.
-    # I have to do this first otherwise the ipython widget doesn't
-    # work. Is it the same everywhere?
-    from qtconsole.rich_ipython_widget import RichIPythonWidget
     from silx.gui.console import IPythonDockWidget
     HAS_QTCONSOLE = True
-except:
+except ImportError:
     HAS_QTCONSOLE = False
 
 # nmutils loads Eiger plugins, which have to be imported before h5py
@@ -34,7 +30,7 @@ except (ImportError, AssertionError):
 from silx.gui import qt
 print 'silx %s is using %s' % (silx.version, qt.BINDING)
 if not HAS_QTCONSOLE:
-    print 'Interactive console not available, make sure to have qtconsole installed'
+    print 'Interactive console not available, make sure to have qtconsole installed and working. The following line should succeed on your system, \n    python -c "from silx.gui.console import IPythonDockWidget"'
 from silx.gui.icons import getQIcon
 import design
 import sys
