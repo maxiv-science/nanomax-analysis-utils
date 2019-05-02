@@ -291,11 +291,9 @@ class PymcaLaunchDialog(qt.QDialog):
         else:
             method = 'none'
         shape = self.shapeBox.text()
-        print shape
         shape = shape.replace(',', ' ').replace('x', ' ').split()
         shape = [int(s) for s in shape] if len(shape) == 2 else None
         oversampling = self.oversamplingBox.value()
         equal = self.equalBox.isChecked()
         discard = self.discardBox.isChecked()
-        print 'getValues  done'
         return method, shape, oversampling, equal, discard, ok

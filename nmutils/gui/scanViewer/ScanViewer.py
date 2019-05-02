@@ -33,7 +33,7 @@ except (ImportError, AssertionError):
 
 from silx.gui import qt
 print 'silx %s is using %s' % (silx.version, qt.BINDING)
-print 'Interactive console%s available' % ('' if HAS_QTCONSOLE else ' not')
+print 'Interactive console%s available, make sure to have qtconsole installed' % ('' if HAS_QTCONSOLE else ' not')
 from silx.gui.icons import getQIcon
 import design
 import sys
