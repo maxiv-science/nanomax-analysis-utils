@@ -219,7 +219,11 @@ class XrfWidget(qt.QWidget):
                 # discard all data on the parent widget
                 self.window().scan = None
             # launch a PyMCA widget with that data
-            from PyMca5.PyMca.QStackWidget import QStackWidget
+            try:
+                from PyMca5.PyMca.QStackWidget import QStackWidget
+            except:
+                self.window().statusOutput('PyMCA python module not found!')
+                return
             w = QStackWidget()
             with h5py.File(filename) as fp:
                 data = fp['entry0/data/1d'][:]
