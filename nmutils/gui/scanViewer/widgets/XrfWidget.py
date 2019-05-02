@@ -205,6 +205,11 @@ class XrfWidget(qt.QWidget):
         method, shape, oversampling, equal, discard, ok = PymcaLaunchDialog().getValues()
         if ok:
             self.window().statusOutput("Exporting data and launching PyMCA...")
+            try:
+                from PyMca5.PyMca.QStackWidget import QStackWidget
+            except ImportError:
+                self.window().statusOutput('PyMCA python module not found!')
+                return
             # reshape/resample and export data to temporary hdf5
             if os.path.exists(filename):
                 os.remove(filename)
@@ -219,11 +224,6 @@ class XrfWidget(qt.QWidget):
                 # discard all data on the parent widget
                 self.window().scan = None
             # launch a PyMCA widget with that data
-            try:
-                from PyMca5.PyMca.QStackWidget import QStackWidget
-            except:
-                self.window().statusOutput('PyMCA python module not found!')
-                return
             w = QStackWidget()
             with h5py.File(filename) as fp:
                 data = fp['entry0/data/1d'][:]
