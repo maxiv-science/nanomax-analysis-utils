@@ -102,8 +102,11 @@ class XrfWidget(qt.QWidget):
                 print "building 1D data map from the whole spectrum"
                 average = np.mean(self.scan.data['1d'], axis=1)
             else:
-                lower = int(np.floor(roi.getFrom()))
-                upper = int(np.ceil(roi.getTo()))
+                lowerval = int(np.floor(roi.getFrom()))
+                upperval = int(np.ceil(roi.getTo()))
+                xvector = self.scan.dataAxes['1d'][0]
+                upper = (np.abs(xvector - upperval)).argmin()
+                lower = (np.abs(xvector - lowerval)).argmin()
                 print "building 1D data map from channels %d to %d"%(lower, upper)
                 average = np.mean(self.scan.data['1d'][:, lower:upper], axis=1)
 
