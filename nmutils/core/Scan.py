@@ -188,7 +188,7 @@ class Scan(object):
         if self.dataDimLabels.get(name) is None:
             self.dataDimLabels[name] = ['data dim %u' % i for i in range(data.ndim-1)]
         if self.dataAxes.get(name) is None:
-            self.dataAxes[name] = [range(sh) for sh in data.shape[1:]]
+            self.dataAxes[name] = [np.arange(sh) for sh in data.shape[1:]]
         assert str(self.dataTitles[name]) == self.dataTitles[name]
         assert len(self.dataDimLabels[name]) == data.ndim - 1
         assert len(self.dataAxes[name]) == data.ndim - 1
