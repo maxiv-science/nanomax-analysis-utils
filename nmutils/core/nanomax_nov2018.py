@@ -25,7 +25,7 @@ class flyscan_nov2018(Scan):
         },
     'dataSource': {
         'value': 'pil100k',
-        'type': ['pil100k', 'merlin', 'pil1m', 'xspress3', 'counter', 'adlink'],
+        'type': ['pil100k', 'merlin', 'pil1m', 'xspress3', 'counter', 'adlink', 'pil1m-waxs'],
         'doc': "type of data",
         },
     'xMotor': {
@@ -78,11 +78,16 @@ class flyscan_nov2018(Scan):
         'type': bool,
         'doc': 'whether or not to normalize against I0',
         },
+    'waxsPath': {
+        'value': '../../process/radial_integration/<sampledir>',
+        'type': str,
+        'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
+        },
     }
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
-    sourceDims = {'pil100k':2, 'xspress3':1, 'adlink':0, 'merlin':2, 'pil1m':2, 'counter':0}
+    sourceDims = {'pil100k':2, 'xspress3':1, 'adlink':0, 'merlin':2, 'pil1m':2, 'counter':0, 'pil1m-waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -109,6 +114,7 @@ class flyscan_nov2018(Scan):
         self.fileName = opts['fileName']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
         self.xrfChannel = map(int, opts['xrfChannel']['value'])
+        self.waxsPath = opts['waxsPath']['value']
 
     def _read_buffered(self, fp, entry):
         """
@@ -309,6 +315,9 @@ class flyscan_nov2018(Scan):
                     line += 1
             print "loaded %d lines of fluorescence data"%len(data)
             data = np.vstack(data)
+            bad = np.where(np.isinf(data) | np.isnan(data))
+            good = np.where(np.isfinite(data))
+            data[bad] = np.mean(data[good])
             self.dataDimLabels[name] = ['Approx. energy (keV)']
             self.dataAxes[name] = [np.arange(data_.shape[-1]) * .01]
 
@@ -322,6 +331,25 @@ class flyscan_nov2018(Scan):
                 data = data.astype(float)
                 data = data[:, :self.images_per_line]
                 data = data.flatten()
+
+        elif self.dataSource == 'pil1m-waxs':
+            print "loading WAXS data..."
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            with h5py.File(os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr), 'r') as fp:
+                data = fp['I'][:]
+                q = fp['q'][:]
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
+            if self.normalize_by_I0:
+                data = data / I0_data.flatten()[:, None]
+                bad = np.where(np.isinf(data) | np.isnan(data))
+                good = np.where(np.isfinite(data))
+                data[bad] = np.mean(data[good])
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
         return data
@@ -567,8 +595,15 @@ class stepscan_nov2018(Scan):
                 self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
                 path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
             with h5py.File(os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr), 'r') as fp:
-                I = fp['I'][:]
-            return I
+                data = fp['I'][:]
+                q = fp['q'][:]
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
+            try:
+                if self.normalize_by_I0:
+                    data = data / I0_data[:, None]
+            except:
+                raise NotImplementedError('Something went wrong when normalizing the WAXS data!')
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3'):
             entry = 'entry%d' % self.scanNr
