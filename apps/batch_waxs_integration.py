@@ -83,7 +83,7 @@ def images(fp, shape=None, ignore=[]):
 ### do the actual loop. super messy, sorry about this...
 done_lst = [] # list of remembered input files considered done
 bad_list = [] # list of input files which haven't worked
-while not args.laziness == FORCE:
+while True:
     for inputfn in os.listdir(args.input_folder):
         time.sleep(1)
         print ''
@@ -152,3 +152,7 @@ while not args.laziness == FORCE:
                     meta = integrator.make_headers('dict')
                     fpout['I'] = I
                     fpout['q'] = q
+
+    if args.laziness == FORCE:
+        break
+
