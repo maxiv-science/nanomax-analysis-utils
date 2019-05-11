@@ -340,7 +340,9 @@ class flyscan_nov2018(Scan):
                 sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
                 self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
                 path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
-            with h5py.File(os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr), 'r') as fp:
+            fn = os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr)
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as fp:
                 data = fp['I'][:]
                 q = fp['q'][:]
             self.dataAxes[name] = [q,]
@@ -594,7 +596,9 @@ class stepscan_nov2018(Scan):
                 sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
                 self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
                 path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
-            with h5py.File(os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr), 'r') as fp:
+            fn = os.path.join(path, 'scan_%04d_pil1m_0000_waxs.hdf5' % self.scanNr)
+            if not os.path.exists(fn): raise NoDataException
+            with h5py.File(fn, 'r') as fp:
                 data = fp['I'][:]
                 q = fp['q'][:]
             self.dataAxes[name] = [q,]
