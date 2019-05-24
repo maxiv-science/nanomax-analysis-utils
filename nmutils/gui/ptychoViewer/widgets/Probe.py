@@ -35,7 +35,7 @@ class ProbeManager(object):
         self.energy = energy
         self.ui.probePlot.setScale(psize * 1e6)
         self.ui.probePlot2.setScale(psize * 1e6)
-        self.ui.probePlot2.setData(self.probe2d, copy=False)
+        self.ui.probePlot2.set_data(self.probe2d)
         self.ui.verticalFocusView.addXMarker(0., legend='sample', text='sample', color='g')
         self.ui.horizontalFocusView.addXMarker(0., legend='sample', text='', color='g')
         lims = [-1e6*probe.shape[0] * psize / 2, 1e6*probe.shape[0] * psize / 2] # um
@@ -66,7 +66,7 @@ class ProbeManager(object):
             zslice = np.argmin(np.abs(self.zdist*1e6 - z))
             data = self.probe3d[zslice]
             zz = self.zdist[zslice]*1e6
-            self.ui.probePlot.setData(data, copy=False)
+            self.ui.probePlot.set_data(data)
             self.ui.verticalFocusView.addXMarker(zz, legend='zslice',
                         text='\n\n %d um'%int(np.round(zz)), color='m')
             self.ui.horizontalFocusView.addXMarker(zz, legend='zslice',
@@ -157,6 +157,24 @@ class ProbeView(ComplexImageView):
         self.setVisualizationMode(self.Mode.LOG10_AMPLITUDE_PHASE)
         self.setKeepDataAspectRatio(True)
         self.getPlot().getColorBarWidget().setVisible(False)
+
+        # add a phase shift number
+        self.phaseShiftBox = qt.QDoubleSpinBox(toolTip='Phase shift everything')
+        self.phaseShiftBox.setRange(-3.14, 3.14)
+        self.phaseShiftBox.setSingleStep(.1)
+        self.phaseShiftBox.setValue(0.)
+        self.phaseShiftBox.setPrefix('phase shift: ')
+        self.phaseShiftBox.valueChanged.connect(self._update)
+        self.getPlot().toolBar().addWidget(self.phaseShiftBox)
+
+    def set_data(self, data):
+        self.data = data
+        self._update()
+
+    def _update(self):
+        shift = self.phaseShiftBox.value()
+        shifted = np.exp(1j * shift) * self.data
+        self.setData(shifted, copy=False)
 
 class Histogram(PlotWindow):
     def __init__(self, parent=None):
