@@ -21,9 +21,9 @@ from distutils.version import LooseVersion
 
 ## simplest possible input #############################################
 detector = 'pilatus'
-folder = '/data/visitors/nanomax/20180514/2018121908/raw/backup/'
-scannr = 3
-distance = 4.05
+folder = '/data/visitors/nanomax/20180514/2018121908/raw/L1_macro/'
+scannr = 7
+distance = 4.0
 ########################################################################
 
 # General parameters
@@ -40,22 +40,20 @@ p.scans.scan00.coherence = u.Param()
 p.scans.scan00.coherence.num_probe_modes = 5
 
 p.scans.scan00.data = u.Param()
-p.scans.scan00.data.name = 'NanomaxFlyscanNov2018'
+p.scans.scan00.data.name = 'NanomaxFlyscanMay2019'
 p.scans.scan00.data.dfile = p.run + '.ptyd'
 p.scans.scan00.data.xMotorFlipped = False
 p.scans.scan00.data.yMotorFlipped = False
 p.scans.scan00.data.xMotor = 'samx_buff'
 p.scans.scan00.data.yMotor = 'samy_buff'
-p.scans.scan00.data.nMaxLines = 20
-#p.scans.scan00.data.firstLine=5
-p.scans.scan00.data.dataPath = folder
-p.scans.scan00.data.pilatusPath = p.scans.scan00.data.dataPath
-p.scans.scan00.data.pilatusPattern = 'scan_%%04u_%s_%%04u.hdf5' % {'pilatus': 'pil100k', 'merlin': 'merlin'}[detector]
-p.scans.scan00.data.datafile = folder.strip('/').split('/')[-1] + '.h5'
-p.scans.scan00.data.hdfPath = 'entry_%%04u/measurement/%s/data' % {'pilatus': 'Pilatus', 'merlin': 'Merlin'}[detector]
+p.scans.scan00.data.nMaxLines = None
+p.scans.scan00.data.firstLine = 0
+p.scans.scan00.data.path = folder
+p.scans.scan00.data.detector = 'pil100k' if detector is 'pilatus' else detector
+p.scans.scan00.data.I0 = 'Ni6602_buff'
 p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
                             'pilatus': None}[detector]
-p.scans.scan00.data.scannr = scannr
+p.scans.scan00.data.scanNumber = scannr
 p.scans.scan00.data.shape = 128
 p.scans.scan00.data.save = 'append'
 p.scans.scan00.data.center = None
