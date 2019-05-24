@@ -22,6 +22,8 @@ parser.add_argument('--mask_file', type=str, dest='mask_file',
                     help='Mask file, edf format from pyFAI.')
 parser.add_argument('--output_folder', type=str, dest='output_folder', default=None,
                     help='Output folder. If relative, it refers to input_folder. By default uses the an analog of the input_folder under ../../process/radial_integration/<sample name>.')
+parser.add_argument('--filter', type=str, dest='filter', default=None,
+                    help='Only integrate files whos name contains this string.')
 parser.add_argument('--nbins', type=int, dest='nbins', default=500,
                     help='Number of q bins.')
 parser.add_argument('--laziness', type=int, dest='laziness', default=2,
@@ -85,8 +87,9 @@ done_lst = [] # list of remembered input files considered done
 bad_list = [] # list of input files which haven't worked
 while True:
     for inputfn in os.listdir(args.input_folder):
-        time.sleep(1)
-        print ''
+        if args.filter is not None:
+            if not args.filter in inputfn:
+                continue
 
         do_integ = False
         if not inputfn.endswith('.hdf5'):
@@ -155,4 +158,6 @@ while True:
 
     if args.laziness == FORCE:
         break
+
+    time.sleep(1)
 
