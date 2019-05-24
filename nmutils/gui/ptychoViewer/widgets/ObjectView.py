@@ -6,7 +6,7 @@ import silx
 from silx.gui.plot.ComplexImageView import ComplexImageView
 from silx.gui import qt
 from distutils.version import LooseVersion
-import ptypy
+from ptypy.utils import rmphaseramp
 
 class ObjectView(ComplexImageView):
     """
@@ -56,7 +56,7 @@ class ObjectView(ComplexImageView):
         weights = np.zeros_like(self.original_data)
         M, N = weights.shape
         weights[M/3:M/3*2, N/3:N/3*2] = 1
-        return ptypy.utils.rmphaseramp(self.original_data, weights)
+        return rmphaseramp(self.original_data, weights)
 
     def _toggleRamp(self):
         if self.rampAction.isChecked():

@@ -3,3 +3,4 @@ from image_utils import *
 from plot_utils import *
 from propagation_utils import *
 import bodies
+from ion_chamber import Ionchamber
