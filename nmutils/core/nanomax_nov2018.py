@@ -123,7 +123,7 @@ class flyscan_nov2018(Scan):
         data = np.asarray(fp.get(entry))
         # find line length by looking for padding zeros
         try:
-        nLines = data.shape[0]
+            nLines = data.shape[0]
             for i in range(data.shape[1]):
                 if data[0, i] == 0:
                     Nx = i
