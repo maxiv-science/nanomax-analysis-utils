@@ -123,11 +123,15 @@ class flyscan_nov2018(Scan):
         data = np.asarray(fp.get(entry))
         nLines = data.shape[0]
         # find line length by looking for padding zeros
-        for i in range(data.shape[1]):
-            if data[0, i] == 0:
-                Nx = i
-                break
-        data = data[:, :Nx].flatten()
+        try:
+            for i in range(data.shape[1]):
+                if data[0, i] == 0:
+                    Nx = i
+                    break
+            data = data[:, :Nx].flatten()
+        except IndexError:
+            print '*** Bad positions. Try setting nMaxLines if the scan is still under way.'
+            raise NoDataException
         return data, nLines, Nx
 
     def _read_non_buffered(self, fp, entry, lineLength, nLines):
@@ -136,7 +140,9 @@ class flyscan_nov2018(Scan):
         buffered data.
         """
         data = np.asarray(fp.get(entry))
-        if not (len(data) == nLines): raise Exception('Something''s wrong with the positions')
+        if not (len(data) == nLines): 
+            print '*** Bad positions. Try setting nMaxLines if the scan is still under way.'
+            raise NoDataException
         data = np.repeat(data, lineLength)
         return data
 
