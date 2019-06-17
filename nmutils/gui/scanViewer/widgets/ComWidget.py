@@ -43,7 +43,7 @@ class ComWidget(qt.QWidget):
         # the direction menu
         hbox = qt.QHBoxLayout()
         self.directionCombo = qt.QComboBox()
-        self.directionCombo.insertItems(1, ['horizontal', 'vertical', 'magnitude'])
+        self.directionCombo.insertItems(1, ['', 'horizontal', 'vertical', 'magnitude'])
         self.directionCombo.currentIndexChanged.connect(self.updateMap)
         hbox.addWidget(qt.QLabel('COM direction:'))
         hbox.addWidget(self.directionCombo)
@@ -95,6 +95,9 @@ class ComWidget(qt.QWidget):
         if self.scan is None:
             return
         try:
+            direction = self.directionCombo.currentIndex()
+            if not direction:
+                return
             print 'building COM map'
             self.window().statusOutput('Building COM map...')
             # store the limits to maintain zoom
@@ -112,12 +115,11 @@ class ComWidget(qt.QWidget):
                 com.append(com_)
             com = np.array(com)
             # choose which COM to show
-            direction = self.directionCombo.currentIndex()
-            if direction == 0:
+            if direction == 1:
                 com = com[:, 1] - np.mean(com[:, 1])
-            elif direction == 1:
-                com = com[:, 0] - np.mean(com[:, 0])
             elif direction == 2:
+                com = com[:, 0] - np.mean(com[:, 0])
+            elif direction == 3:
                 com = np.sum((com - np.mean(com, axis=0))**2, axis=1)
             else:
                 return
