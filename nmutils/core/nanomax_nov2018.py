@@ -674,6 +674,16 @@ class stepscan_nov2018(Scan):
             'type': str,
             'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
         },
+        'burstSum': {
+            'value': False,
+            'type': bool,
+            'doc': 'whether or not to sum burst acquisitions (otherwise you get the first frame)',
+        },
+        'nMaxPositions': {
+            'value': 0,
+            'type': int,
+            'doc': 'maximum number of positions to read (0 means all)',
+        },
     }
 
     # an optional class attribute which lets scanViewer know what
@@ -702,6 +712,8 @@ class stepscan_nov2018(Scan):
         self.scanNr = int(opts['scanNr']['value'])
         self.fileName = opts['fileName']['value']
         self.waxsPath = opts['waxsPath']['value']
+        self.burstSum = opts['burstSum']['value']
+        self.nMaxPositions = opts['nMaxPositions']['value']
 
     def _readPositions(self):
         """ 
@@ -735,7 +747,13 @@ class stepscan_nov2018(Scan):
             else:
                 x = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.xMotor))
                 y = np.array(hf.get('entry%d' % self.scanNr + '/measurement/%s' % self.yMotor))
-
+            if self.nMaxPositions:
+                x = x[:self.nMaxPositions]
+                y = y[:self.nMaxPositions]
+            if 'sams_' in self.xMotor:
+                x *= 1000
+            if 'sams_' in self.yMotor:
+                y *= 1000
         # allow 1d scans
         try:
             len(y)
@@ -790,6 +808,8 @@ class stepscan_nov2018(Scan):
                 with h5py.File(fn, 'r') as hf:
                     print 'loading data: ' + os.path.join(path, filename_pattern%self.scanNr)
                     for im in range(self.positions.shape[0]):
+                        if self.nMaxPositions and im == self.nMaxPositions:
+                            break
                         dataset = self._safe_get_dataset(hf, hdfpath_pattern%im)
                         # for the first frame, determine center of mass
                         if ic is None or jc is None == 0:
@@ -803,9 +823,15 @@ class stepscan_nov2018(Scan):
                             print "Estimated center of mass to (%d, %d)"%(ic, jc)
                         if self.xrdCropping:
                             delta = self.xrdCropping / 2
-                            data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
+                            if self.burstSum:
+                                data_ = np.sum(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]), axis=0)
+                            else:
+                                data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
                         else:
-                            data_ = np.array(dataset[0])
+                            if self.burstSum:
+                                data_ = np.sum(np.array(dataset), axis=0)
+                            else:
+                                data_ = np.array(dataset[0])
                         if self.xrdBinning > 1:
                             data_ = fastBinPixels(data_, self.xrdBinning)
                         if 'Merlin' in hdfpath_pattern:
