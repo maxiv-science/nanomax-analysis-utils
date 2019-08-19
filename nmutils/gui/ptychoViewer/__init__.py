@@ -1,1 +1,1 @@
-from PtychoViewer import PtychoViewer
+from .PtychoViewer import PtychoViewer

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 
-class dataGrabber():
+class dataGrabber(object):
     """
     Class which grabs and parses the Sardana output for plotting
     simple scans.
@@ -79,13 +79,13 @@ if __name__ == '__main__':
     # plot in a loop
     while True:
         if grabber.update():
-            print 'found %s data points' % grabber.x.shape
+            print('found %s data points' % grabber.x.shape)
             plt.gca().clear()
             plt.plot(grabber.x, grabber.y, 'x-')
             plt.xlabel(grabber.xaxis)
             plt.ylabel(grabber.yaxis)
             plt.draw()
         else:
-            print 'no data just now'
+            print('no data just now')
         plt.pause(1)
 

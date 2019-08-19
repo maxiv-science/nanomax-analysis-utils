@@ -2,10 +2,11 @@
 
 # Form implementation generated from reading ui file 'design.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
+# #from PyQt5 import QtCore, QtGui, QtWidgets
 from silx.gui import qt as QtCore
 QtGui = QtCore
 QtWidgets = QtCore
@@ -220,8 +221,9 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "data source"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab0d), _translate("MainWindow", "Scalar data"))
 
-from widgets.ComWidget import ComWidget
-from widgets.ScalarWidget import ScalarWidget
-from widgets.XrdWidget import XrdWidget
-from widgets.XrfWidget import XrfWidget
-import design_rc
+
+from .widgets.ComWidget import ComWidget
+from .widgets.ScalarWidget import ScalarWidget
+from .widgets.XrdWidget import XrdWidget
+from .widgets.XrfWidget import XrfWidget
+from . import design_rc

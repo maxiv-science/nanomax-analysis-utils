@@ -102,8 +102,8 @@ class ProbeManager(object):
         self.zdist = np.linspace(-bw, fw, nn) * 1e-6
         dist = self.zdist
         dx = dist[1] - dist[0]
-        print "propagating to %d positions separated by %.1f um..."\
-            % (len(dist), dx*1e6)
+        print("propagating to %d positions separated by %.1f um..."\
+            % (len(dist), dx*1e6))
         self.probe3d = nmutils.utils.propagateNearfield(self.probe2d, self.psize, -dist, self.energy)
 
         # get intensities and focii

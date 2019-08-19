@@ -99,7 +99,7 @@ class XrfWidget(qt.QWidget):
             # get ROI information
             roi = self.spectrum.getCurvesRoiWidget().currentRoi
             if roi is None:
-                print "building 1D data map from the whole spectrum"
+                print("building 1D data map from the whole spectrum")
                 average = np.mean(self.scan.data['1d'], axis=1)
             else:
                 lowerval = int(np.floor(roi.getFrom()))
@@ -107,7 +107,7 @@ class XrfWidget(qt.QWidget):
                 xvector = self.scan.dataAxes['1d'][0]
                 upper = (np.abs(xvector - upperval)).argmin()
                 lower = (np.abs(xvector - lowerval)).argmin()
-                print "building 1D data map from channels %d to %d"%(lower, upper)
+                print("building 1D data map from channels %d to %d"%(lower, upper))
                 average = np.mean(self.scan.data['1d'][:, lower:upper], axis=1)
 
             # interpolate and plot map
@@ -139,7 +139,7 @@ class XrfWidget(qt.QWidget):
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
-                    print 'building 1D curve from all positions'
+                    print('building 1D curve from all positions')
                     data = np.mean(self.scan.data['1d'], axis=0)
                 else:
                     # recreate the interpolated grid from above, to find masked
@@ -155,7 +155,7 @@ class XrfWidget(qt.QWidget):
                         dist2 = np.sum((maskedPoints - self.scan.positions[i])**2, axis=1).min()
                         if dist2 < pointSpacing2:
                             maskedPositions.append(i)
-                    print 'building 1D curve from %d positions'%len(maskedPositions)
+                    print('building 1D curve from %d positions'%len(maskedPositions))
                     # get the average and replace the image with legend 'data'
                     data = np.mean(self.scan.data['1d'][maskedPositions], axis=0)
             self.spectrum.addCurve(self.scan.dataAxes['1d'][0], data, legend='data',
@@ -220,7 +220,7 @@ class XrfWidget(qt.QWidget):
                 self.scan.export(filename, method=method, shape=shape,
                     oversampling=oversampling, equal=equal)
             except Exception as e:
-                print e
+                print(e)
                 self.window().statusOutput("Failed to export data, see terminal for info.")
                 return
             if discard:

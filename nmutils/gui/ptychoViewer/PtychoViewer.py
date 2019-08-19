@@ -10,11 +10,11 @@ try:
 except:
     raise Exception('This application requires silx >= 0.8.0')
 
-from widgets.Probe import ProbeManager
+from .widgets.Probe import ProbeManager
 from silx.gui import qt
-print 'silx %s using' % silx.version, qt.BINDING
+print('silx %s using' % silx.version, qt.BINDING)
 from silx.gui.icons import getQIcon
-import design
+from . import design
 import sys
 import numpy as np
 import h5py
@@ -73,8 +73,8 @@ class PtychoViewer(qt.QMainWindow):
 
             # load reconstruction data
             with h5py.File(inputFile, 'r') as hf:
-                scanid = str(hf['content/probe'].keys()[0])
-                print 'loading entry %s' % scanid
+                scanid = str(list(hf['content/probe'].keys())[0])
+                print('loading entry %s' % scanid)
                 probe = np.array(hf.get('content/probe/%s/data' % scanid))
                 obj = np.array(hf.get('content/obj/%s/data' % scanid))
                 psize = np.array(hf.get('content/probe/%s/_psize' % scanid))
@@ -85,7 +85,7 @@ class PtychoViewer(qt.QMainWindow):
                 obj = obj[0]
                 psize = psize[0]
 
-            print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
+            print("Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy)))
             
             # give loaded data to the widgets
             self.ui.objectWidget.set_data(obj, origin, psize)
@@ -94,7 +94,7 @@ class PtychoViewer(qt.QMainWindow):
             self.statusOutput("")
         except Exception as e:
             self.statusOutput("Loading failed. See terminal output for details.")
-            print 'The error was: ', e
+            print('The error was: ', e)
 
 if __name__ == '__main__':
     # you always need a qt app

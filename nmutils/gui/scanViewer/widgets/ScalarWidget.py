@@ -98,7 +98,7 @@ class ScalarWidget(qt.QWidget):
                 mask = self.map.getMaskToolsDockWidget().widget().getSelectionMask()
                 if (mask is None) or (not np.sum(mask)):
                     # the mask is empty, don't waste time with positions
-                    print 'calculating scalar from all positions'
+                    print('calculating scalar from all positions')
                     data = np.mean(self.scan.data['0d'], axis=0)
                 else:
                     # recreate the interpolated grid from above, to find masked
@@ -115,7 +115,7 @@ class ScalarWidget(qt.QWidget):
                         if dist2 < pointSpacing2:
                             maskedPositions.append(i)
                     # get the average and replace the image with legend 'data'
-                    print 'calculating average scalar from %d positions'%len(maskedPositions)
+                    print('calculating average scalar from %d positions'%len(maskedPositions))
                     data = np.mean(self.scan.data['0d'][maskedPositions], axis=0)
             self.value.setText('scalar value: \n%s' % data)
             self.window().statusOutput('')

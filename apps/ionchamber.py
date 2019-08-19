@@ -24,18 +24,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if (args.frequency is None) and (args.current is None):
-        print "\nPlease specify either frequency or current!\n"
+        print("\nPlease specify either frequency or current!\n")
         exit(-1)
     elif (args.frequency is not None) and (args.current is not None):
-        print "\nDon't specify both frequency and current!\n"
+        print("\nDon't specify both frequency and current!\n")
         exit(-1)
 
     if args.current is None:
         args.current = args.frequency / 1e6 * args.range
 
-    print "\nEnergy  %.0f" % args.energy
-    print "Current %.2e" % args.current
-    print "Length  %.2f" % args.length
+    print("\nEnergy  %.0f" % args.energy)
+    print("Current %.2e" % args.current)
+    print("Length  %.2f" % args.length)
 
     ic = Ionchamber(length=args.length, energy=args.energy)
-    print '\nCalculated flux: %.2e\n' % ic.flux(args.current)
+    print('\nCalculated flux: %.2e\n' % ic.flux(args.current))

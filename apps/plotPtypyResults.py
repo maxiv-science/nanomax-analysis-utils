@@ -64,8 +64,8 @@ if outputFile is not None:
 
 ### load reconstruction data
 with h5py.File(inputFile, 'r') as hf:
-    scanid = str(hf['content/probe'].keys()[0])
-    print 'loading entry %s' % scanid
+    scanid = str(list(hf['content/probe'].keys())[0])
+    print('loading entry %s' % scanid)
     probe = np.array(hf.get('content/probe/%s/data' % scanid))
     obj = np.array(hf.get('content/obj/%s/data' % scanid))
     psize = np.array(hf.get('content/probe/%s/_psize' % scanid))
@@ -78,13 +78,13 @@ try:
     psize = psize[0]
 except IndexError:
     raise IOError('That doesn''t look like a valid reconstruction file!')
-print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
+print("Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy)))
 
 ### define distances and propagate
 dist = np.linspace(backProp, forwProp, steps) * 1e-6
 dx = dist[1] - dist[0]
-print "propagating to %d positions separated by %.1f um..."\
-    % (len(dist), dx*1e6)
+print("propagating to %d positions separated by %.1f um..."\
+    % (len(dist), dx*1e6))
 ### not sure why, but the propagation goes in the other direction here!
 ### it could be a misunderstanding about motors at nanomax...
 field3d = nmutils.utils.propagateNearfield(probe, psize, -dist, energy)
@@ -187,7 +187,7 @@ plt.suptitle(title, fontsize=20)
 if outputFile is not None:
     fn = outputPrefix + '_probe.' + outputSuffix
     plt.savefig(fn)
-    print 'Saved to %s'%fn
+    print('Saved to %s'%fn)
 
 ### Object
 fig, ax = plt.subplots(ncols=2, figsize=(10,6), sharex=True, sharey=True)
@@ -202,7 +202,7 @@ extent = 1e6 * np.array([origin[0], origin[0]+(obj.shape[1]-1)*psize, origin[1],
 
 # amplitude
 mag = np.abs(obj)
-mag_cut = mag[mag.shape[0]/3:2*mag.shape[0]/3, mag.shape[1]/3:2*mag.shape[1]/3] # to find relevant dynamic range
+mag_cut = mag[mag.shape[0]//3:2*mag.shape[0]//3, mag.shape[1]//3:2*mag.shape[1]//3] # to find relevant dynamic range
 vmin = mag_cut.min()
 vmax = mag_cut.max()
 img = ax[0].imshow(mag, cmap='gray', extent=extent, vmin=vmin, vmax=vmax, interpolation='none')
@@ -228,7 +228,7 @@ ax[1].set_title('Phase')
 if outputFile is not None:
     fn = outputPrefix + '_object.' + outputSuffix
     plt.savefig(fn)
-    print "Saved to %s"%fn
+    print("Saved to %s"%fn)
 
 if interactive:
     plt.show()

@@ -13,6 +13,7 @@ from .. import NoDataException
 
 import scipy.ndimage.measurements
 from scipy.interpolate import griddata
+from functools import reduce
 
 __docformat__ = 'restructuredtext'  # This is what we're using! Learn about it.
 
@@ -113,7 +114,7 @@ class Scan(object):
         called from _prepareData().
         """
         opts = opts.copy()
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             if key in opts.keys():
                 # normal type specified
                 if type(opts[key]['type']) is type and not (type(val) == opts[key]['type']):
@@ -196,26 +197,26 @@ class Scan(object):
         # pad the data in case there were missing frames
         if data.shape[0] < self.nPositions:
             missing = self.nPositions - data.shape[0]
-            print "there were %d missing images for dataset '%s', filling with average values"%(missing, name)
+            print("there were %d missing images for dataset '%s', filling with average values"%(missing, name))
             pads = ((0, missing),) + ((0, 0),) * (data.ndim - 1)
             data = np.pad(data, pads, mode='mean')
 
         # remove data in case too much has been returned
         if data.shape[0] > self.nPositions:
             excess = data.shape[0] - self.nPositions
-            print "there were %d too many images for dataset '%s', ignoring"%(excess, name)
+            print("there were %d too many images for dataset '%s', ignoring"%(excess, name))
             data = data[:self.nPositions]
 
         self.data[name] = data
         
     def removeData(self, name):
-        if name in self.data.keys():
+        if name in list(self.data.keys()):
             self.data.pop(name, None)
         else:
             raise ValueError("Dataset '%s' doesn't exist!" % name)
 
     def listData(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def meanData(self, name=None):
         """ Returns the scan-average of the specified data set. """
@@ -393,8 +394,8 @@ class Scan(object):
             # set metdata
             import datetime
             import getpass
-            grp.attrs["author"] = unicode(getpass.getuser(), 'utf-8')
-            grp.attrs["date"] = unicode(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 'utf-8')
+            grp.attrs["author"] = str(getpass.getuser(), 'utf-8')
+            grp.attrs["date"] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 'utf-8')
             grp.attrs["version"] = u"0.1"
             # create data group
             grp_path = "/entry0/data"
@@ -455,7 +456,7 @@ class Scan(object):
                 # no sense for chunking for this dimension
                 return None
             else:
-                return (int(maxChunkSz/dsize),) 
+                return (int(old_div(maxChunkSz,dsize)),) 
         else:
             # try chunking just on the last dimension
             chunk = self._calcChunkSize(shape[-1:], dsize)
@@ -503,7 +504,7 @@ class Scan(object):
         fast_axis_dim = np.mean(dim,dtype=np.int)
         if np.all(dim!=fast_axis_dim):
             print("Warning: something wrong in fast axis length calculation")
-        slow_axis_dim = fast_axis.size / fast_axis_dim
+        slow_axis_dim = fast_axis.size // fast_axis_dim
         if slow_axis_dim*fast_axis_dim != fast_axis.size:
             print("Error: auto-detection of scanning grid failed")
         return (slow_axis_dim, fast_axis_dim), fast_axis_label

@@ -228,6 +228,6 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourier), _translate("MainWindow", "Fourier shell correlation"))
 
-from widgets.ObjectView import ObjectView
-from widgets.Probe import Histogram, ProbeView, PropagationView
-import design_rc
+from .widgets.ObjectView import ObjectView
+from .widgets.Probe import Histogram, ProbeView, PropagationView
+from . import design_rc

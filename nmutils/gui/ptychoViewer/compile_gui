@@ -1,6 +1,6 @@
 # If the gui is modified, the .ui file has to be compiled. First
 # compile the gui using either pyuic4/pyrcc4 or pyuic5/pyrcc5
-pyuic4 design.ui -o design.py
+pyuic5 design.ui -o design.py --import-from
 pyrcc4 design.qrc -o design_rc.py
 
 # and then adjust the imports to use silx rather than PyQt, in both
@@ -12,3 +12,13 @@ pyrcc4 design.qrc -o design_rc.py
 # from silx.gui import qt as QtCore
 # QtGui = QtCore
 # QtWidgets = QtCore
+#
+# Also, until I understand how to do this properly, change the imports at
+# the end of design.py. Example:
+#
+# from .widgets.ComWidget import ComWidget
+# from .widgets.ScalarWidget import ScalarWidget
+# from .widgets.XrdWidget import XrdWidget
+# from .widgets.XrfWidget import XrfWidget
+# from . import design_rc
+

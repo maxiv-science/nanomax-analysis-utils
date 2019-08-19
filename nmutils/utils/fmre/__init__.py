@@ -1,4 +1,4 @@
-import solvers
-import projectors
-import data
-from fmre import *
+from . import solvers
+from . import projectors
+from . import data
+from .fmre import *

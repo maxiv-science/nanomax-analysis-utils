@@ -49,7 +49,7 @@ def dict_walk(dct, ignore=[]):
     """
     if str(ignore) == ignore:
         ignore = [ignore,]
-    for k, v in dct.iteritems():
+    for k, v in dct.items():
         if hasattr(v, 'iteritems'):
             if v.name.split('/')[-1] in ignore:
                 continue
@@ -66,7 +66,7 @@ def count_images(fp, shape=None, ignore=[]):
     counts = 0
     for v in dict_walk(fp, ignore=ignore):
         if len(v.shape) >= 2 and (shape is None or v.shape[-2:] == shape):
-            counts += np.prod(v.shape) / np.prod(v.shape[-2:])
+            counts += np.prod(v.shape) // np.prod(v.shape[-2:])
     return counts
 
 
@@ -103,24 +103,24 @@ while True:
             continue
 
         if args.laziness == FORCE or not os.path.exists(output_file):
-            print 'integrating:\n', input_file
+            print('integrating:\n', input_file)
             do_integ = True
         else:
             if args.laziness == REMEMBER and input_file in done_lst:
-                print 'skipping recognized file:\n', input_file
+                print('skipping recognized file:\n', input_file)
                 continue
             with h5py.File(input_file, 'r') as fp:
                 n_in = count_images(fp, ignore='instrument')
             with h5py.File(output_file, 'r') as fp:
                 n_out = fp['I'].shape[0]
             if n_in > n_out:
-                print 'too few images in output file (%u, %u), integrating again:\n' % (n_in, n_out), input_file
+                print('too few images in output file (%u, %u), integrating again:\n' % (n_in, n_out), input_file)
                 do_integ = True
             elif args.laziness == CHECK:
-                print 'no new data to integrate just now:\n', input_file
+                print('no new data to integrate just now:\n', input_file)
             else:
                 done_lst.append(input_file)
-                print 'no new data to integrate, remembering:\n', input_file
+                print('no new data to integrate, remembering:\n', input_file)
 
         if do_integ:
             integrator = pyFAI.load(args.poni_file)
@@ -129,7 +129,7 @@ while True:
             else:
                 mask = None
             intensities = []
-            print output_file
+            print(output_file)
 
             with h5py.File(input_file, 'r') as fpin:    
                 N = count_images(fpin, ignore='instrument')
@@ -137,7 +137,7 @@ while True:
                 fmt = '\r%%0%uu / %%u' % int(np.ceil(np.log10(N)))
                 for im in images(fpin, ignore='instrument'):
                     if not im.shape == integrator.get_shape():
-                        print 'data doesn''t match poni file, skipping and remembering.'
+                        print('data doesn''t match poni file, skipping and remembering.')
                         bad_list.append(input_file)
                         break
                     if n % 10 == 0:

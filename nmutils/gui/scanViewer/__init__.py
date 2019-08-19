@@ -1,1 +1,1 @@
-from ScanViewer import ScanViewer
+from .ScanViewer import ScanViewer

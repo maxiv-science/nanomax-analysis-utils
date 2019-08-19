@@ -55,7 +55,7 @@ class ObjectView(ComplexImageView):
     def _deramped_data(self):
         weights = np.zeros_like(self.original_data)
         M, N = weights.shape
-        weights[M/3:M/3*2, N/3:N/3*2] = 1
+        weights[M//3:M//3*2, N//3:N//3*2] = 1
         return rmphaseramp(self.original_data, weights)
 
     def _toggleRamp(self):
@@ -72,7 +72,7 @@ class ObjectView(ComplexImageView):
 
 if __name__ == '__main__':
     if LooseVersion(silx.version) <= LooseVersion('0.9.0'):
-        print "NOTE: Changing phase colormaps requires silx 0.10.0"
+        print("NOTE: Changing phase colormaps requires silx 0.10.0")
 
     # you always need a qt app     
     app = qt.QApplication(sys.argv)    
@@ -87,8 +87,8 @@ if __name__ == '__main__':
 
     ### load reconstruction data
     with h5py.File(args.ptyr_file, 'r') as hf:
-        scanid = str(hf['content/probe'].keys()[0])
-        print 'loading entry %s' % scanid
+        scanid = str(list(hf['content/probe'].keys())[0])
+        print('loading entry %s' % scanid)
         probe = np.array(hf.get('content/probe/%s/data' % scanid))
         obj = np.array(hf.get('content/obj/%s/data' % scanid))
         psize = np.array(hf.get('content/probe/%s/_psize' % scanid))
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         psize = psize[0]
     except IndexError:
         raise IOError('That doesn''t look like a valid reconstruction file!')
-    print "Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy))
+    print("Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy)))
 
     # instantiate and run the viewer
     viewer = ObjectView()

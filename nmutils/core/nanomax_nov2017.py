@@ -27,7 +27,7 @@ class flyscan_nov2017(flyscan_nov2018):
                 I0_data = I0_data.astype(float) * 1e-5
                 I0_data = I0_data[:, :self.images_per_line]
 
-        print "loading diffraction data..."
+        print("loading diffraction data...")
         path = os.path.split(os.path.abspath(self.fileName))[0]
         
         # set detector paths
@@ -42,11 +42,11 @@ class flyscan_nov2017(flyscan_nov2018):
             hdfpath_pattern = 'entry_0000/measurement/Pilatus/data'
 
         data = []
-        print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
+        print("attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines)
         for line in range(self.nlines):
             try:
                 with h5py.File(os.path.join(path, filename_pattern%(self.scanNr, line)), 'r') as hf:
-                    print 'loading data: ' + filename_pattern%(self.scanNr, line)
+                    print('loading data: ' + filename_pattern%(self.scanNr, line))
                     dataset = self._safe_get_dataset(hf, hdfpath_pattern)
                     if self.xrdCropping:
                         i0, i1, j0, j1 = self.xrdCropping
@@ -72,10 +72,10 @@ class flyscan_nov2017(flyscan_nov2018):
                     del dataset
             except IOError:
                 # fewer hdf5 files than positions -- this is ok
-                print "couldn't find expected file %s, returning"%(filename_pattern%(self.scanNr, line))
+                print("couldn't find expected file %s, returning"%(filename_pattern%(self.scanNr, line)))
                 break
 
-        print "loaded %d lines of Pilatus data"%len(data)
+        print("loaded %d lines of Pilatus data"%len(data))
         data = np.concatenate(data, axis=0)
 
         return data

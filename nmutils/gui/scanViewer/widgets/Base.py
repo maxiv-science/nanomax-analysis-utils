@@ -31,8 +31,8 @@ class CustomPlotWindow(PlotWindow):
             sx, sy = params['scale']
             if (y - oy) >= 0 and (x - ox) >= 0:
                 # Test positive before cast otherwisr issue with int(-0.5) = 0
-                row = int((y - oy) / sy)
-                col = int((x - ox) / sx)
+                row = (y - oy) // sy
+                col = (x - ox) // sx
                 if (row < data.shape[0] and col < data.shape[1]):
                     return data[row, col]
         return '-'

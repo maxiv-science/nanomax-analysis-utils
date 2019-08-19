@@ -98,7 +98,7 @@ class ComWidget(qt.QWidget):
             direction = self.directionCombo.currentIndex()
             if not direction:
                 return
-            print 'building COM map'
+            print('building COM map')
             self.window().statusOutput('Building COM map...')
             # store the limits to maintain zoom
             xlims = self.map.getGraphXLimits()
@@ -133,7 +133,7 @@ class ComWidget(qt.QWidget):
                 self.map.setGraphXLimits(*xlims)
                 self.map.setGraphYLimits(*ylims)
             except:
-                print "Invalid center of mass"
+                print("Invalid center of mass")
             self.map.setGraphXLabel(self.scan.positionDimLabels[0])
             self.map.setGraphYLabel(self.scan.positionDimLabels[1])
             self.window().statusOutput('')

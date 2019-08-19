@@ -6,7 +6,7 @@ from scipy.ndimage import map_coordinates
 def shift(a, shifts):
     """ Shifts an array periodically. """
     a_ = np.copy(a)
-    shifts = map(int, shifts)
+    shifts = list(map(int, shifts))
     # shift the first index: turns out to work with negative shifts too
     if shifts[0]:
         a_[shifts[0]:, :] = a[:-shifts[0], :]
@@ -28,7 +28,7 @@ def embedMatrix(block, wall, position, mode='center'):
         if mode == 'corner':
             wall[position[0] : position[0] + block.shape[0], position[1] : position[1] + block.shape[1]] = block
         if mode == 'center':
-            wall[position[0]-block.shape[0]/2 : position[0]-block.shape[0]/2 + block.shape[0], position[1]-block.shape[1]/2 : position[1]-block.shape[1]/2 + block.shape[1]] = block
+            wall[position[0]-block.shape[0]//2 : position[0]-block.shape[0]//2 + block.shape[0], position[1]-block.shape[1]//2 : position[1]-block.shape[1]//2 + block.shape[1]] = block
     except ValueError:
         raise ValueError('Trying to put embedded matrix outside the boundaries of the embedding matrix.')
     return wall
@@ -39,9 +39,9 @@ def shiftAndMultiply(block, wall, position, mode='center'):
         if mode == 'corner':
             return block * wall[position[0] : position[0] + block.shape[0], position[1] : position[1] + block.shape[1]]
         if mode == 'center':
-            return block * wall[position[0]-block.shape[0]/2 : position[0]-block.shape[0]/2 + block.shape[0], position[1]-block.shape[1]/2 : position[1]-block.shape[1]/2 + block.shape[1]]
+            return block * wall[position[0]-block.shape[0]//2 : position[0]-block.shape[0]//2 + block.shape[0], position[1]-block.shape[1]//2 : position[1]-block.shape[1]//2 + block.shape[1]]
     except ValueError:
-        print block.shape, wall.shape, position
+        print(block.shape, wall.shape, position)
         raise ValueError('Shifting out of bounds.')
 
 def rotate_coords(x, y, z, theta, axis=0):
@@ -106,7 +106,7 @@ def rotate_3d_array(A, angles=[0, 0, 0], center=None, **kwargs):
     """
 
     if not center:
-        center = np.array(A.shape) / 2
+        center = np.array(A.shape) // 2
 
     # start with a a full set of 3d indices
     i, j, k = np.indices(A.shape)

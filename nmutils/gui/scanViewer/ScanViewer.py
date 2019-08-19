@@ -28,11 +28,11 @@ except (ImportError, AssertionError):
     raise Exception('This application requires silx >= 0.10.1')
 
 from silx.gui import qt
-print 'silx %s is using %s' % (silx.version, qt.BINDING)
+print('silx %s is using %s' % (silx.version, qt.BINDING))
 if not HAS_QTCONSOLE:
-    print 'Interactive console not available, make sure to have qtconsole installed and working. The following line should succeed on your system, \n    python -c "from silx.gui.console import IPythonDockWidget"'
+    print('Interactive console not available, make sure to have qtconsole installed and working. The following line should succeed on your system, \n    python -c "from silx.gui.console import IPythonDockWidget"')
 from silx.gui.icons import getQIcon
-import design
+from . import design
 import sys
 import gc
 import numpy as np
@@ -130,7 +130,7 @@ class ScanViewer(qt.QMainWindow):
     def gatherOptions(self):
         # collect options from the options tab:
         opts = {}
-        for name, w in self.formWidgets.iteritems():
+        for name, w in self.formWidgets.items():
             if isinstance(w, qt.QCheckBox):
                 val = bool(w.isChecked())
             elif isinstance(w, qt.QComboBox):
@@ -164,7 +164,7 @@ class ScanViewer(qt.QMainWindow):
         opts = self._current_subclass_opts()
         self.formWidgets = {}
         i = 0
-        for name, opt in opts.iteritems():
+        for name, opt in opts.items():
             # special: the options scanNr and fileName (or path) have their input
             # widgets at the top of the GUI for convenience, while dataSource is
             # handled per tab.
@@ -224,7 +224,7 @@ class ScanViewer(qt.QMainWindow):
         except AttributeError:
             subclass = None
 
-        for box, dim in boxes.iteritems():
+        for box, dim in boxes.items():
             box.clear()
             if subclass is not None:
                 for name in opts['dataSource']['type']:
@@ -278,7 +278,7 @@ class ScanViewer(qt.QMainWindow):
             self.statusOutput("Loading data...")
 
             if self.scan and not self.ui.appendBox.isChecked():
-                print "Deleting previous scan from memory"
+                print("Deleting previous scan from memory")
                 self.scan = None
 
             # construct a scan
@@ -301,15 +301,15 @@ class ScanViewer(qt.QMainWindow):
                 dim = len(scan_.data['2d'].shape[1:])
                 if not dim == 2:
                     scan_.removeData(name='2d')
-                    print "loaded 2D was %uD, discarding" % dim
+                    print("loaded 2D was %uD, discarding" % dim)
                     raise nmutils.NoDataException
-                print "loaded 2D data: %d positions, %d x %d pixels"%(scan_.data['2d'].shape)
+                print("loaded 2D data: %d positions, %d x %d pixels"%(scan_.data['2d'].shape))
             except MemoryError:
-                print "Out of memory! Consider cropping or binning your images"
+                print("Out of memory! Consider cropping or binning your images")
             except nmutils.NoDataException:
-                print "no 2D data found"
+                print("no 2D data found")
             except KeyboardInterrupt:
-                print "cancelled"
+                print("cancelled")
                 self.statusOutput("")
                 return
 
@@ -322,13 +322,13 @@ class ScanViewer(qt.QMainWindow):
                 dim = len(scan_.data['1d'].shape[1:])
                 if not dim == 1:
                     scan_.removeData(name='1d')
-                    print "loaded 1D was %uD, discarding" % dim
+                    print("loaded 1D was %uD, discarding" % dim)
                     raise nmutils.NoDataException
-                print "loaded 1D data: %d positions, %d channels"%(scan_.data['1d'].shape)
+                print("loaded 1D data: %d positions, %d channels"%(scan_.data['1d'].shape))
             except nmutils.NoDataException:
-                print "no 1D data found"
+                print("no 1D data found")
             except KeyboardInterrupt:
-                print "cancelled"
+                print("cancelled")
                 self.statusOutput("")
                 return
 
@@ -341,13 +341,13 @@ class ScanViewer(qt.QMainWindow):
                 dim = len(scan_.data['0d'].shape[1:])
                 if not dim == 0:
                     scan_.removeData(name='0d')
-                    print "loaded 0D was %uD, discarding" % dim
+                    print("loaded 0D was %uD, discarding" % dim)
                     raise nmutils.NoDataException
-                print "loaded 0D data: %d positions"%(scan_.data['0d'].shape)
+                print("loaded 0D data: %d positions"%(scan_.data['0d'].shape))
             except nmutils.NoDataException:
-                print "no 0D data found"
+                print("no 0D data found")
             except KeyboardInterrupt:
-                print "cancelled"
+                print("cancelled")
                 self.statusOutput("")
                 return
 

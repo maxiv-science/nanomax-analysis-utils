@@ -104,16 +104,16 @@ class flyscan_nov2018(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.xrfChannel = opts['xrfChannel']['value']
-        self.xrfCropping = map(int, opts['xrfCropping']['value'])
-        self.xrdCropping = map(int, opts['xrdCropping']['value'])
+        self.xrfCropping = list(map(int, opts['xrfCropping']['value']))
+        self.xrdCropping = list(map(int, opts['xrdCropping']['value']))
         self.xrdBinning = opts['xrdBinning']['value']
-        self.xrdNormalize = map(int, opts['xrdNormalize']['value'])
+        self.xrdNormalize = list(map(int, opts['xrdNormalize']['value']))
         self.nMaxLines = opts['nMaxLines']['value']
         self.globalPositions = opts['globalPositions']['value']
         self.scanNr = opts['scanNr']['value']
         self.fileName = opts['fileName']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
-        self.xrfChannel = map(int, opts['xrfChannel']['value'])
+        self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
         self.waxsPath = opts['waxsPath']['value']
 
     def _read_buffered(self, fp, entry):
@@ -130,7 +130,7 @@ class flyscan_nov2018(Scan):
                     break
             data = data[:, :Nx].flatten()
         except IndexError:
-            print '*** Bad positions. Try setting nMaxLines if the scan is still under way.'
+            print('*** Bad positions. Try setting nMaxLines if the scan is still under way.')
             raise NoDataException
         return data, nLines, Nx
 
@@ -141,7 +141,7 @@ class flyscan_nov2018(Scan):
         """
         data = np.asarray(fp.get(entry))
         if not (len(data) == nLines): 
-            print '*** Bad positions. Try setting nMaxLines if the scan is still under way.'
+            print('*** Bad positions. Try setting nMaxLines if the scan is still under way.')
             raise NoDataException
         data = np.repeat(data, lineLength)
         return data
@@ -167,11 +167,11 @@ class flyscan_nov2018(Scan):
         if slowMotorHint in self.xMotor:
             fastMotor = self.yMotor
             slowMotor = self.xMotor
-            print "Loader inferred that %s is the fast axis" % self.yMotor
+            print("Loader inferred that %s is the fast axis" % self.yMotor)
         elif slowMotorHint in self.yMotor:
             fastMotor = self.xMotor
             slowMotor = self.yMotor
-            print "Loader inferred that %s is the fast axis" % self.xMotor
+            print("Loader inferred that %s is the fast axis" % self.xMotor)
         else:
             raise NoDataException("Couldn't determine which is the fast axis!")
 
@@ -203,7 +203,7 @@ class flyscan_nov2018(Scan):
             y = fast
             x = slow
 
-        print "x and y shapes:", x.shape, y.shape
+        print("x and y shapes:", x.shape, y.shape)
 
         # optionally add coarse stage position
         if self.globalPositions:
@@ -213,9 +213,9 @@ class flyscan_nov2018(Scan):
             offsets = {'samx': sams_x, 'samy': sams_y, 'samz': sams_z}
             x += offsets[self.xMotor[:4]]
             y += offsets[self.yMotor[:4]]
-            print '*** added rough position offsets!'
+            print('*** added rough position offsets!')
 
-        print "loaded positions from %d lines, %d positions on each"%(self.nlines, lineLen)
+        print("loaded positions from %d lines, %d positions on each"%(self.nlines, lineLen))
 
         # close hdf5 file
         fp.close()
@@ -244,7 +244,7 @@ class flyscan_nov2018(Scan):
                 I0_data = I0_data[:, :self.images_per_line]
 
         if self.dataSource in ('pil100k', 'merlin', 'pil1m'):
-            print "loading diffraction data..."
+            print("loading diffraction data...")
             path = os.path.split(os.path.abspath(self.fileName))[0]
             
             # set detector paths
@@ -259,14 +259,14 @@ class flyscan_nov2018(Scan):
                 hdfpath_pattern = 'entry_%04d/measurement/Pilatus/data'
 
             data = []
-            print "attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines
+            print("attempting to read %d lines of diffraction data (based on the positions array or max number of lines set)"%self.nlines)
                  
             fn = os.path.join(path, filename_pattern%self.scanNr)
             if not os.path.exists(fn): raise NoDataException('No hdf5 file found.')
             with h5py.File(fn, 'r') as hf:
                 for line in range(self.nlines):
                     try:
-                        print 'loading data: ' + filename_pattern%self.scanNr + ', line %d'%line
+                        print('loading data: ' + filename_pattern%self.scanNr + ', line %d'%line)
                         dataset = self._safe_get_dataset(hf, hdfpath_pattern%line)
                         if self.xrdCropping:
                             i0, i1, j0, j1 = self.xrdCropping
@@ -290,18 +290,18 @@ class flyscan_nov2018(Scan):
 
                     except IOError:
                         # fewer hdf5 files than positions -- this is ok
-                        print "couldn't find expected file %s, returning"%(filename_pattern%(self.scanNr, line))
+                        print("couldn't find expected file %s, returning"%(filename_pattern%(self.scanNr, line)))
                         break
 
-            print "loaded %d lines of diffraction data"%len(data)
+            print("loaded %d lines of diffraction data"%len(data))
             data = np.concatenate(data, axis=0)
 
         elif self.dataSource == 'xspress3':
-            print "loading fluorescence data..."
-            print "selecting fluorescence channels %s"%self.xrfChannel
+            print("loading fluorescence data...")
+            print("selecting fluorescence channels %s"%self.xrfChannel)
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
-            print 'loading data: ' + filename_pattern%(self.scanNr)
+            print('loading data: ' + filename_pattern%(self.scanNr))
             data = []
             fn = os.path.join(path, filename_pattern%(self.scanNr))
             if not os.path.exists(fn): raise NoDataException
@@ -321,7 +321,7 @@ class flyscan_nov2018(Scan):
                         data_ = data_ / I0_line[:, None]
                     data.append(data_)
                     line += 1
-            print "loaded %d lines of fluorescence data"%len(data)
+            print("loaded %d lines of fluorescence data"%len(data))
             data = np.vstack(data)
             bad = np.where(np.isinf(data) | np.isnan(data))
             good = np.where(np.isfinite(data))
@@ -330,7 +330,7 @@ class flyscan_nov2018(Scan):
             self.dataAxes[name] = [np.arange(data_.shape[-1]) * .01]
 
         elif self.dataSource in ('adlink', 'counter'):
-            print "loading buffered scalar data..."
+            print("loading buffered scalar data...")
             channel = {'adlink': 'AdLinkAI_buff', 'counter': 'Ni6602_buff'}[self.dataSource]
             entry = 'entry%d' % self.scanNr
             if not os.path.exists(self.fileName): raise NoDataException
@@ -341,7 +341,7 @@ class flyscan_nov2018(Scan):
                 data = data.flatten()
 
         elif self.dataSource == 'pil1m-waxs':
-            print "loading WAXS data..."
+            print("loading WAXS data...")
             if self.waxsPath[0] == '/':
                 path = self.waxsPath
             else:
@@ -533,10 +533,10 @@ class stepscan_nov2018(Scan):
             with h5py.File(self.fileName, 'r') as hf:
                 I0_data = self._safe_get_array(hf, entry+'/measurement/counter1')
                 I0_data = I0_data.astype(float) * 1e-5
-                print I0_data
+                print(I0_data)
 
         if self.dataSource in ('merlin', 'pil100k', 'pil1m'):
-            print "loading diffraction data..."
+            print("loading diffraction data...")
             path = os.path.split(os.path.abspath(self.fileName))[0]
 
             # set detector paths
@@ -558,7 +558,7 @@ class stepscan_nov2018(Scan):
             if not os.path.exists(fn): raise NoDataException
             try:
                 with h5py.File(fn, 'r') as hf:
-                    print 'loading data: ' + os.path.join(path, filename_pattern%self.scanNr)
+                    print('loading data: ' + os.path.join(path, filename_pattern%self.scanNr))
                     for im in range(self.positions.shape[0]):
                         if self.nMaxPositions and im == self.nMaxPositions:
                             break
@@ -568,13 +568,13 @@ class stepscan_nov2018(Scan):
                             import scipy.ndimage.measurements
                             img = np.array(dataset[0])
                             try:
-                                ic, jc = map(int, scipy.ndimage.measurements.center_of_mass(img))
+                                ic, jc = list(map(int, scipy.ndimage.measurements.center_of_mass(img)))
                             except ValueError:
-                                ic = img.shape[0] / 2
-                                jc = img.shape[1] / 2
-                            print "Estimated center of mass to (%d, %d)"%(ic, jc)
+                                ic = img.shape[0] // 2
+                                jc = img.shape[1] // 2
+                            print("Estimated center of mass to (%d, %d)"%(ic, jc))
                         if self.xrdCropping:
-                            delta = self.xrdCropping / 2
+                            delta = self.xrdCropping // 2
                             if self.burstSum:
                                 data_ = np.sum(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]), axis=0)
                             else:
@@ -591,22 +591,22 @@ class stepscan_nov2018(Scan):
                         data.append(data_)
             except IOError:
                 # missing files -- this is ok
-                print "couldn't find expected file %s, filling with zeros"%(filename_pattern%(self.scanNr))
+                print("couldn't find expected file %s, filling with zeros"%(filename_pattern%(self.scanNr)))
                 data.append(np.zeros(data[-1].shape, dtype=data[-1].dtype))
                 missing += 1
-            print "loaded %d images"%len(data)
+            print("loaded %d images"%len(data))
             if missing:
-                print "there were %d missing images" % missing
+                print("there were %d missing images" % missing)
             data = np.array(data)
             if self.normalize_by_I0:
                 data = data / I0_data[:, None, None]
 
         elif self.dataSource == 'xspress3':
-            print "loading fluorescence data..."
-            print "selecting xspress3 channel %d"%self.xrfChannel
+            print("loading fluorescence data...")
+            print("selecting xspress3 channel %d"%self.xrfChannel)
             path = os.path.split(os.path.abspath(self.fileName))[0]
             filename_pattern = 'scan_%04d_xspress3_0000.hdf5'
-            print 'loading data: ' + filename_pattern%(self.scanNr)
+            print('loading data: ' + filename_pattern%(self.scanNr))
             data = []
             fn = os.path.join(path, filename_pattern%(self.scanNr))
             if not os.path.exists(fn): raise NoDataException
@@ -623,7 +623,7 @@ class stepscan_nov2018(Scan):
             self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
 
         elif self.dataSource == 'pil1m-waxs':
-            print "loading WAXS data..."
+            print("loading WAXS data...")
             if self.waxsPath[0] == '/':
                 path = self.waxsPath
             else:

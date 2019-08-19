@@ -158,12 +158,12 @@ if __name__ == '__main__':
         if len(sys.argv) >= 4:
             interval = float(sys.argv[3])
     except:
-        print "\nUsage: python limaLiveViewer.py <lima device> [<det type> <polling interval>]\n"
-        print "   <lima device>       full lima path or one of these shortcuts:"
-        for key, val in known.iteritems():
-            print " "*26 + "%-10s (%s)"%(key, val)
-        print "   <detector type>     1d or 2d, defaults to 2d"
-        print "   <polling interval>  interval with which to check for new images, defaults to 0.1\n\n"
+        print("\nUsage: python limaLiveViewer.py <lima device> [<det type> <polling interval>]\n")
+        print("   <lima device>       full lima path or one of these shortcuts:")
+        for key, val in known.items():
+            print(" "*26 + "%-10s (%s)"%(key, val))
+        print("   <detector type>     1d or 2d, defaults to 2d")
+        print("   <polling interval>  interval with which to check for new images, defaults to 0.1\n\n")
         exit(0)
 
     # instantiate the viewer and run

@@ -1,5 +1,5 @@
 import numpy as np
-from Scan import Scan
+from .Scan import Scan
 from scipy.misc import face
 import copy
 
@@ -58,8 +58,8 @@ class dummyScan(Scan):
         opts = self._updateOpts(opts, **kwargs)
         
         self.dataSource = opts['dataSource']['value']
-        self.xrange = map(int, opts['xrange']['value'])
-        self.yrange = map(int, opts['yrange']['value'])
+        self.xrange = list(map(int, opts['xrange']['value']))
+        self.yrange = list(map(int, opts['yrange']['value']))
         self.stepsize = int(opts['stepsize']['value'])
         self.framesize = int(opts['framesize']['value'])
         self.doFourier = opts['fourier']['value']
@@ -75,8 +75,8 @@ class dummyScan(Scan):
         y0, y1 = self.yrange
         step = self.stepsize
         frame = self.framesize
-        x = np.arange(x0+frame/2, x1-frame/2, step)
-        y = np.arange(y0+frame/2, y1-frame/2, step)
+        x = np.arange(x0+frame//2, x1-frame//2, step)
+        y = np.arange(y0+frame//2, y1-frame//2, step)
         lenx = len(x)
         x = np.repeat(x, len(y))
         y = np.tile(y, lenx)
@@ -91,16 +91,16 @@ class dummyScan(Scan):
         data = []
         if self.dataSource == 'fake-xrd':
             for pos in self.positions:
-                dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
-                                   pos[0]-frame/2:pos[0]+frame/2,]
+                dataframe = self.image[pos[1]-frame//2:pos[1]+frame//2,
+                                   pos[0]-frame//2:pos[0]+frame//2,]
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(dataframe)
                 self.dataTitles[name] = 'Very fake XRD data'
         elif self.dataSource == 'fake-xrf':
             for pos in self.positions:
-                dataframe = self.image[pos[1]-frame/2:pos[1]+frame/2,
-                                   pos[0]-frame/2:pos[0]+frame/2,]
+                dataframe = self.image[pos[1]-frame//2:pos[1]+frame//2,
+                                   pos[0]-frame//2:pos[0]+frame//2,]
                 if self.doFourier:
                     dataframe = np.abs(np.fft.fftshift(np.fft.fft2(dataframe)))**2
                 data.append(np.mean(dataframe, axis=0))
