@@ -394,8 +394,8 @@ class Scan(object):
             # set metdata
             import datetime
             import getpass
-            grp.attrs["author"] = str(getpass.getuser(), 'utf-8')
-            grp.attrs["date"] = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 'utf-8')
+            grp.attrs["author"] = getpass.getuser()
+            grp.attrs["date"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             grp.attrs["version"] = u"0.1"
             # create data group
             grp_path = "/entry0/data"
