@@ -11,7 +11,7 @@ widget, either as 2d images or as spectra.
 import PyTango
 import sys
 import numpy as np
-from silx.gui.plot import ImageView, PlotWindow
+from silx.gui.plot import ImageView, PlotWindow, tools
 from silx.gui import qt
 
 
@@ -47,6 +47,14 @@ class LimaLiveViewer2D(ImageView):
         self.timer.timeout.connect(self._update)
         self.timer.start()
 
+        # Display mouseover position info
+        posInfo = [
+            ('X', lambda x, y: x),
+            ('Y', lambda x, y: y),
+            ('Data', self._getActiveImageValue)]
+        self._positionWidget = tools.PositionInfo(plot=self, converters=posInfo)
+        self.statusBar().addWidget(self._positionWidget)
+
     def _update(self):
         """
         gets and plots the last image
@@ -66,8 +74,26 @@ class LimaLiveViewer2D(ImageView):
                 else:
                     self.setStyleSheet('QMainWindow{background-color: white}')
                 self.setGraphTitle('Total: %.1e (%.1e / s) \n Hottest: %.1e (%.1e / s)' % (total, total/exptime, hottest, hottest/exptime))
+                self._positionWidget.updateInfo()
             except:
                 pass # sometimes you miss frames, no big deal
+
+    def _getActiveImageValue(self, x, y):
+        """
+        Get value of active image at position (x, y)
+        """
+        image = self.getActiveImage()
+        if image is not None:
+            data, params = image[0], image[4]
+            ox, oy = params['origin']
+            sx, sy = params['scale']
+            if (y - oy) >= 0 and (x - ox) >= 0:
+                # Test positive before cast otherwisr issue with int(-0.5) = 0
+                row = int((y - oy) / sy)
+                col = int((x - ox) / sx)
+                if (row < data.shape[0] and col < data.shape[1]):
+                    return data[row, col]
+        return '-'
 
 
 class LimaLiveViewer1D(PlotWindow):
