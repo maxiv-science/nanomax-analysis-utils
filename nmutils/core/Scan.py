@@ -127,6 +127,19 @@ class Scan(object):
                 raise Exception('Unknown option %s' % str(key))
         return opts
 
+    def _safe_get_str(self, fp, path):
+        """
+        Attempts to get string from fp[path], raising an informative
+        NoDataException if that fails.
+        """
+        try:
+            a = fp[path][()]
+        except KeyError:
+            raise NoDataException('Dataset %s not found in %s' % (path, fp.filename))
+        if isinstance(a, bytes):
+            a = str(a, 'utf-8')
+        return a
+
     def _safe_get_array(self, fp, path):
         """
         Attempts to get array from array(fp[path]), raising an informative

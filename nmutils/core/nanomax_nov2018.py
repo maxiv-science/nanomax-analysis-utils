@@ -161,7 +161,7 @@ class flyscan_nov2018(Scan):
             raise NoDataException
 
         # infer which is the slow axis
-        slowMotorHint = self._safe_get_array(fp, entry + '/title')[()].split(' ')[1]
+        slowMotorHint = self._safe_get_str(fp, entry + '/title').split(' ')[1]
         if slowMotorHint in ('sx', 'sy', 'sz'):
             slowMotorHint = {'sx':'lc400_buff_2', 'sy':'lc400_buff_3', 'sz':'lc400_buff_1'}[slowMotorHint]
         if slowMotorHint in self.xMotor:
