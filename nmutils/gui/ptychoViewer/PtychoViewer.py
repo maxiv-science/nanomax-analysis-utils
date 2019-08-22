@@ -6,9 +6,9 @@ This application loads ptypy reconstruction files and displays them nicely.
 from distutils.version import LooseVersion
 try:
     import silx
-    assert LooseVersion(silx.version) >= LooseVersion('0.8.0')
+    assert LooseVersion(silx.version) >= LooseVersion('0.11')
 except:
-    raise Exception('This application requires silx >= 0.8.0')
+    raise Exception('This application requires silx >= 0.11')
 
 from .widgets.Probe import ProbeManager
 from silx.gui import qt

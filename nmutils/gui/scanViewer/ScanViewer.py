@@ -23,9 +23,9 @@ import nmutils
 from distutils.version import LooseVersion
 try:
     import silx
-    assert LooseVersion(silx.version) >= LooseVersion('0.10.1')
+    assert LooseVersion(silx.version) >= LooseVersion('0.11')
 except (ImportError, AssertionError):
-    raise Exception('This application requires silx >= 0.10.1')
+    raise Exception('This application requires silx >= 0.11')
 
 from silx.gui import qt
 if not HAS_QTCONSOLE:
