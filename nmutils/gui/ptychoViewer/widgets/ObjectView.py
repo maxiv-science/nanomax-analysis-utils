@@ -19,7 +19,7 @@ class ObjectView(ComplexImageView):
             self.setWindowTitle('comMapWidget')
 
         self.setKeepDataAspectRatio(True)
-        self.setVisualizationMode(self.Mode.PHASE)
+        self.setComplexMode(self.Mode.PHASE)
         self.getPlot().setGraphYLabel('micrometers')
         self.getPlot().setGraphXLabel('micrometers')
 

@@ -154,7 +154,7 @@ class ProbeView(ComplexImageView):
     """
     def __init__(self, parent=None):
         super(ProbeView, self).__init__(parent=parent)
-        self.setVisualizationMode(self.Mode.LOG10_AMPLITUDE_PHASE)
+        self.setComplexMode(self.Mode.LOG10_AMPLITUDE_PHASE)
         self.setKeepDataAspectRatio(True)
         self.getPlot().getColorBarWidget().setVisible(False)
 
