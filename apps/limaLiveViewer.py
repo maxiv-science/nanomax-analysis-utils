@@ -128,6 +128,7 @@ class LimaLiveViewer1D(PlotWindow):
 if __name__ == '__main__':
     # you always need a qt app     
     app = qt.QApplication(sys.argv)
+    app.setStyle('Fusion')
 
     # a dict of known detectors for convenience
     known = {

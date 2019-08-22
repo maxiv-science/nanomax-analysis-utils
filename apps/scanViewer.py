@@ -11,6 +11,7 @@ import sys
 if __name__ == '__main__':
     # you always need a qt app
     app = qt.QApplication(sys.argv)
+    app.setStyle('Fusion')
     # for convenience, you can pass the filename as an argument
     fn = None
     if len(sys.argv) >= 2:
