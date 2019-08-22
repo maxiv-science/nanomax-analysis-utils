@@ -12,12 +12,12 @@ except:
 
 from .widgets.Probe import ProbeManager
 from silx.gui import qt
-print('silx %s using' % silx.version, qt.BINDING)
 from silx.gui.icons import getQIcon
 from . import design
 import sys
 import numpy as np
 import h5py
+print('silx %s using %s on Python %d.%d' % (silx.version, qt.BINDING, *sys.version_info[:2]))
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html

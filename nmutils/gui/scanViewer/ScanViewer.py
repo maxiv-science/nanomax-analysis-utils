@@ -28,7 +28,6 @@ except (ImportError, AssertionError):
     raise Exception('This application requires silx >= 0.10.1')
 
 from silx.gui import qt
-print('silx %s is using %s' % (silx.version, qt.BINDING))
 if not HAS_QTCONSOLE:
     print('Interactive console not available, make sure to have qtconsole installed and working. The following line should succeed on your system, \n    python -c "from silx.gui.console import IPythonDockWidget"')
 from silx.gui.icons import getQIcon
@@ -37,6 +36,7 @@ import sys
 import gc
 import numpy as np
 from scipy.interpolate import griddata
+print('silx %s using %s on Python %d.%d' % (silx.version, qt.BINDING, *sys.version_info[:2]))
 
 # using the single inheritance method here, as described here,
 # http://pyqt.sourceforge.net/Docs/PyQt4/designer.html
