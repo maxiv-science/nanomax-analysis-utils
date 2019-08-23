@@ -8,12 +8,32 @@ widget, either as 2d images or as spectra.
 #   don't reset zoom when updating
 #   some way to avoid reading the same image more than once?
 
-import PyTango
+try:
+    import PyTango
+except ModuleNotFoundError:
+    print('PyTango not imported')
 import sys
 import numpy as np
 from silx.gui.plot import ImageView, PlotWindow, tools
 from silx.gui import qt
 
+
+class DummyLimaDevice(object):
+    def __init__(self, dim='2d'):
+        self.acq_expo_time = 1.0
+        self.last_image_ready = 1
+        if dim == '2d':
+            self.w = self.h = 100
+            self.image_sizes = (-1, 4, self.w, self.h)
+        elif dim == '1d':
+            self.w = 100
+            self.h = 4
+            self.image_sizes = (-1, 4, self.w, self.h)
+        else:
+            raise ValueError
+
+    def getImage(self, idx):
+        return (np.random.random(self.w * self.h) * 256).astype(np.int32)
 
 class LimaLiveViewer2D(ImageView):
     """
@@ -27,9 +47,10 @@ class LimaLiveViewer2D(ImageView):
         super(LimaLiveViewer2D, self).__init__()
 
         # initialize the lima proxy
-        self.lima = PyTango.DeviceProxy(limaPath)
-
-        # learn about the shape and bit depth of the image
+        if limaPath:
+            self.lima = PyTango.DeviceProxy(limaPath)
+        else:
+            self.lima = DummyLimaDevice('2d')
         ignore, bytes, self.w, self.h = self.lima.image_sizes
         self.dtype = {1: np.int8, 2: np.int16, 4:np.int32}[bytes]
 
@@ -66,9 +87,9 @@ class LimaLiveViewer2D(ImageView):
                 image = image.reshape((self.h, self.w))
                 self.setImage(image, copy=False, reset=(not self.hasImage))
                 self.hasImage = True
-                exptime = self.lima.acq_expo_time
                 total = np.sum(image)
                 hottest = np.max(image)
+                exptime = self.lima.acq_expo_time
                 if (self.alarm is not None) and (hottest/exptime > self.alarm):
                     self.setStyleSheet('QMainWindow{background-color: red}')
                 else:
@@ -76,6 +97,7 @@ class LimaLiveViewer2D(ImageView):
                 self.setGraphTitle('Total: %.1e (%.1e / s) \n Hottest: %.1e (%.1e / s)' % (total, total/exptime, hottest, hottest/exptime))
                 self._positionWidget.updateInfo()
             except:
+                raise
                 pass # sometimes you miss frames, no big deal
 
     def _getActiveImageValue(self, x, y):
@@ -106,9 +128,10 @@ class LimaLiveViewer1D(PlotWindow):
         super(LimaLiveViewer1D, self).__init__()
 
         # initialize the lima proxy
-        self.lima = PyTango.DeviceProxy(limaPath)
-
-        # learn about the shape and bit depth of the image
+        if limaPath:
+            self.lima = PyTango.DeviceProxy(limaPath)
+        else:
+            self.lima = DummyLimaDevice('1d')
         ignore, bytes, self.n, self.N = self.lima.image_sizes
         self.dtype = {1: np.int8, 2: np.int16, 4:np.int32}[bytes]
 
@@ -145,7 +168,6 @@ class LimaLiveViewer1D(PlotWindow):
                     self.addCurve(self.E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
                     self.hasData = True
                     sums.append(np.sum(data[i, :]))
-                exptime = self.lima.acq_expo_time
                 self.setGraphTitle('max(Channels 0,1,2): %.1e (%.1e / s)\nChannel 3: %.1e (%.1e / s)' % (np.max(sums[0:3]), np.max(sums[0:3])/exptime, sums[3], sums[3]/exptime))
             except:
                 pass # sometimes you miss frames, no big deal
@@ -163,6 +185,7 @@ if __name__ == '__main__':
         'merlin': 'lima/limaccd/b303a-a100384-dia-detpicu-02',
         'eiger': 'lima/limaccds/eiger',
         'xspress3': 'lima/limaccd/b303a-a100380-dia-detxfcu-01',
+        'dummy': 'dry run'
     }
 
     # alarm levels in photons per pixel per second
@@ -175,16 +198,20 @@ if __name__ == '__main__':
     # parse arguments
     try:
         kwargs = {}
-        limaPath = known[sys.argv[1]] if sys.argv[1] in known.keys() else sys.argv[1] # parse shortcuts
+        if sys.argv[1] == 'dummy':
+            limaPath = None
+        else:
+            limaPath = known[sys.argv[1]] if sys.argv[1] in known.keys() else sys.argv[1] # parse shortcuts
         alarm = alarm_levels[limaPath] if limaPath in alarm_levels.keys() else None
         Viewer = LimaLiveViewer2D   # default
         interval = 0.1              # default
-        if (len(sys.argv) >= 3 and sys.argv[2].lower() == '1d') or ('xfcu' in limaPath):
+        if (len(sys.argv) >= 3 and sys.argv[2].lower() == '1d') or ('xfcu' in str(limaPath)):
             Viewer = LimaLiveViewer1D
             kwargs['truncate'] = 4096
         if len(sys.argv) >= 4:
             interval = float(sys.argv[3])
     except:
+        raise
         print("\nUsage: python limaLiveViewer.py <lima device> [<det type> <polling interval>]\n")
         print("   <lima device>       full lima path or one of these shortcuts:")
         for key, val in known.items():
