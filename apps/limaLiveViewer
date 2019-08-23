@@ -49,8 +49,8 @@ class LimaLiveViewer2D(ImageView):
 
         # Display mouseover position info
         posInfo = [
-            ('X', lambda x, y: x),
-            ('Y', lambda x, y: y),
+            ('X', lambda x, y: int(x)),
+            ('Y', lambda x, y: int(y)),
             ('Data', self._getActiveImageValue)]
         self._positionWidget = tools.PositionInfo(plot=self, converters=posInfo)
         self.statusBar().addWidget(self._positionWidget)
