@@ -96,12 +96,16 @@ class MapWidget(CustomPlotWindow):
         self.toolBar().addAction(self.positionsAction)
 
         # add the interpolation button
+        self.interpolToolbar = qt.QToolBar('Interpolation options')
         self.interpolBox = qt.QSpinBox(
             toolTip='Map oversampling relative to average step size')
         self.interpolBox.setRange(1, 50)
         self.interpolBox.setValue(5)
-        self.toolBar().addWidget(qt.QLabel(' N:'))
-        self.toolBar().addWidget(self.interpolBox)
+        self.interpolToolbar.addWidget(qt.QLabel(' N:'))
+        self.interpolToolbar.addWidget(self.interpolBox)
+        self.addToolBar(self.interpolToolbar)
+        self.interpolToolbar.hide()
+        a = self.interpolToolbar.toggleViewAction().setChecked(False)
 
         # add a profile tool
         self.profile = ProfileToolBar(plot=self)
