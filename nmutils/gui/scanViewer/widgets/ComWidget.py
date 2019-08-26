@@ -50,14 +50,17 @@ class ComWidget(qt.QWidget):
 
         # the image and map parts
         splitter = qt.QSplitter()
-        self.map = MapWidget(self, mask=False)
+        self.map = MapWidget(self)
         self.image = ImageWidget(self)
         splitter.addWidget(self.image)
         splitter.addWidget(self.map)
         self.layout().addWidget(splitter)
 
-        # connect the interpolation thingies
-        self.map.interpolBox.valueChanged.connect(self.updateMap)
+        # gray out useless buttons
+        self.map.selectAction.setEnabled(False)
+        self.map.roiAction.setEnabled(False)
+        self.map.clearAction.setEnabled(False)
+        self.map.indexBox.setEnabled(False)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)

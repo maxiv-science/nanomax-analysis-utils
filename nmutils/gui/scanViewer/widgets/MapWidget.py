@@ -13,7 +13,7 @@ class MapWidget(CustomPlotWindow):
     indexSelectionChanged = qt.pyqtSignal(int)
     selectionCleared = qt.pyqtSignal()
 
-    def __init__(self, parent=None, mask=True):
+    def __init__(self, parent=None):
 
         super(MapWidget, self).__init__(parent=parent, backend=None,
                                      resetzoom=True, autoScale=False,
@@ -21,7 +21,7 @@ class MapWidget(CustomPlotWindow):
                                      curveStyle=False, colormap=True,
                                      aspectRatio=True, yInverted=True,
                                      copy=True, save=True, print_=False,
-                                     control=False, roi=False, mask=mask)
+                                     control=False, roi=False, mask=True)
         if parent is None:
             self.setWindowTitle('comMapWidget')
 
@@ -79,6 +79,8 @@ class MapWidget(CustomPlotWindow):
         panAction.toggled.connect(setPanMode)
         selectAction.toggled.connect(setSelectMode)
         self.selectAction = selectAction
+        self.roiAction = roiAction
+        self.clearAction = clearAction
         self.sigPlotSignal.connect(self.filterMouseEvents)
         clearAction.triggered.connect(self.selectionCleared)
 
