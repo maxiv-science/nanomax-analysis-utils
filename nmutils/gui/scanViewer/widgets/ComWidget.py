@@ -1,10 +1,8 @@
-from silx.gui.plot import PlotWindow
-from silx.gui.plot.Profile import ProfileToolBar
 from silx.gui import qt
 import scipy.ndimage.measurements
 import numpy as np
 
-from .XrdWidget import MapWidget
+from .MapWidget import MapWidget
 from .Base import CustomPlotWindow
 
 class ImageWidget(CustomPlotWindow):

@@ -1,13 +1,10 @@
-from silx.gui.plot import PlotWindow
-from silx.gui.plot.Profile import ProfileToolBar
-from silx.gui.icons import getQIcon
 from silx.gui import qt
-import scipy.ndimage.measurements
 import numpy as np
 
-from .XrdWidget import MapWidget
+from .MapWidget import MapWidget
+from .Base import PairedWidgetBase
 
-class ScalarWidget(qt.QWidget):
+class ScalarWidget(PairedWidgetBase):
     # This widget defines a MapWidget and and normal text label and describes
     # how they are related by data operations.
     def __init__(self, parent=None):
@@ -26,8 +23,10 @@ class ScalarWidget(qt.QWidget):
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
 
-        # connect the clicker box
-        self.map.indexBox.valueChanged.connect(self.selectByIndex)
+        # connect the selection tools
+        self.map.indexSelectionChanged.connect(self.selectByIndex)
+        self.map.clickSelectionChanged.connect(self.selectByPosition)
+        self.map.selectionCleared.connect(self.clearSelection)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)
@@ -123,28 +122,3 @@ class ScalarWidget(qt.QWidget):
             self.window().statusOutput('Failed to build diffraction pattern. See terminal output.')
             raise
 
-    def togglePositions(self):
-        if self.map.positionsAction.isChecked():
-            self.map.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
-                legend='scan positions', symbol='+', color='red', linestyle=' ',
-                resetzoom=False, replace=False)
-        else:
-            self.map.addCurve([], [], legend='scan positions', resetzoom=False, replace=False)
-
-    def indexMarkerOn(self, on):
-        index = self.map.indexBox.value()
-        if on:
-            self.map.addCurve([self.scan.positions[index, 0]], 
-                [self.scan.positions[index, 1]], symbol='o', color='red', 
-                linestyle=' ', legend='index marker', resetzoom=False,
-                replace=False)
-        else:
-            self.map.addCurve([], [], legend='index marker', 
-                resetzoom=False, replace=False)
-
-    def selectByIndex(self):
-        self.selectionMode = 'ind'
-        self.indexMarkerOn(True)
-        # clearing the mask also invokes self.updateImage():
-        self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
-        self.selectionMode = 'roi'

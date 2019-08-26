@@ -1,63 +1,9 @@
-from silx.gui.plot import PlotWindow
-from silx.gui.plot.Profile import ProfileToolBar
 from silx.gui.icons import getQIcon
 from silx.gui import qt
 import numpy as np
 
-from .Base import CustomPlotWindow
-
-class MapWidget(CustomPlotWindow):
-    """
-    A re-implementation of Plot2D, with customized tools.
-    """
-
-    def __init__(self, parent=None, mask=True):
-
-        super(MapWidget, self).__init__(parent=parent, backend=None,
-                                     resetzoom=True, autoScale=False,
-                                     logScale=False, grid=False,
-                                     curveStyle=False, colormap=True,
-                                     aspectRatio=True, yInverted=True,
-                                     copy=True, save=True, print_=False,
-                                     control=False, roi=False, mask=mask)
-        if parent is None:
-            self.setWindowTitle('comMapWidget')
-
-        self.setGraphTitle('Scan map')
-        self.setKeepDataAspectRatio(True)
-        self.setYAxisInverted(True)
-
-        # add an interpolation toolbar
-        self.interpolToolbar = self.addToolBar('Interpolation')
-        self.interpolBox = qt.QSpinBox(
-            toolTip='Map oversampling relative to average step size')
-        self.interpolBox.setRange(1, 50)
-        self.interpolBox.setValue(5)
-        self.interpolToolbar.addWidget(qt.QLabel(' N:'))
-        self.interpolToolbar.addWidget(self.interpolBox)
-
-        # customize the mask tools for use as ROI selectors
-        # unfortunately, tooltip and icon reset each other, so only changing the icon.
-        self.getMaskToolsDockWidget().setWindowTitle('scan map ROI')
-        self.getMaskAction().setToolTip('Select a scan map region of interest')
-        self.getMaskAction().setIcon(getQIcon('image-select-box'))
-
-        # add an index clicker
-        self.indexBox = qt.QSpinBox(
-            toolTip='Select a specific position by index')
-        self.indexBox.setMinimum(0)
-        self.toolBar().addWidget(self.indexBox)
-
-        # add a button to toggle positions
-        self.positionsAction = qt.QAction('positions', self, checkable=True)
-        self.toolBar().addAction(self.positionsAction)
-
-        # add a profile tool
-        self.profile = ProfileToolBar(plot=self)
-        self.addToolBar(self.profile)
-
-        # set default colormap
-        self.setDefaultColormap({'name':'gray', 'autoscale':True, 'normalization':'linear'})
+from .Base import CustomPlotWindow, PairedWidgetBase
+from .MapWidget import MapWidget
 
 class ImageWidget(CustomPlotWindow):
     """
@@ -86,7 +32,7 @@ class ImageWidget(CustomPlotWindow):
         # set default colormap
         self.setDefaultColormap({'name':'temperature', 'autoscale':True, 'normalization':'log'})
 
-class XrdWidget(qt.QWidget):
+class XrdWidget(PairedWidgetBase):
     # This widget defines a MapWidget and and ImageWidget and describes
     # how they are related by data operations.
     def __init__(self, parent=None):
@@ -103,8 +49,10 @@ class XrdWidget(qt.QWidget):
         # connect the interpolation thingies
         self.map.interpolBox.valueChanged.connect(self.updateMap)
 
-        # connect the clicker box
-        self.map.indexBox.valueChanged.connect(self.selectByIndex)
+        # connect the selection tools
+        self.map.indexSelectionChanged.connect(self.selectByIndex)
+        self.map.clickSelectionChanged.connect(self.selectByPosition)
+        self.map.selectionCleared.connect(self.clearSelection)
 
         # connect the positions button
         self.map.positionsAction.triggered.connect(self.togglePositions)
@@ -223,29 +171,3 @@ class XrdWidget(qt.QWidget):
         except:
             self.window().statusOutput('Failed to build 2D image. See terminal output.')
             raise
-
-    def togglePositions(self):
-        if self.map.positionsAction.isChecked():
-            self.map.addCurve(self.scan.positions[:,0], self.scan.positions[:,1], 
-                legend='scan positions', symbol='+', color='red', linestyle=' ',
-                resetzoom=False, replace=False)
-        else:
-            self.map.addCurve([], [], legend='scan positions', resetzoom=False, replace=False)
-
-    def indexMarkerOn(self, on):
-        index = self.map.indexBox.value()
-        if on:
-            self.map.addCurve([self.scan.positions[index, 0]], 
-                [self.scan.positions[index, 1]], symbol='o', color='red', 
-                linestyle=' ', legend='index marker', resetzoom=False,
-                replace=False)
-        else:
-            self.map.addCurve([], [], legend='index marker', 
-                resetzoom=False, replace=False)
-
-    def selectByIndex(self):
-        self.selectionMode = 'ind'
-        self.indexMarkerOn(True)
-        # clearing the mask also invokes self.updateImage():
-        self.map.getMaskToolsDockWidget().widget().resetSelectionMask()
-        self.selectionMode = 'roi'
