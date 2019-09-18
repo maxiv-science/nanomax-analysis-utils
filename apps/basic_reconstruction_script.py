@@ -36,6 +36,8 @@ p.scans.scan00.data.detector = {'pilatus':'pil100k'}[detector]
 p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
 								'pilatus': None}[detector]
 p.scans.scan00.data.scanNumber = scannr
+p.scans.scan00.data.xMotor = 'sx'
+p.scans.scan00.data.yMotor = 'sy'
 
 p.scans.scan00.data.shape = 256
 p.scans.scan00.data.save = None
