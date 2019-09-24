@@ -7,7 +7,7 @@ import copy as cp
 import os.path
 
 
-class stepscan_sep2019(Scan):
+class pyracy_stepscan(Scan):
     """
     Stepscan format for the Pyracy acquisition software.
     """
