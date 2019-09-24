@@ -205,10 +205,10 @@ class stepscan_sep2019(Scan):
             data = []
             with h5py.File(self.fileName, 'r') as hf:
                 for im in range(self.positions.shape[0]):
-                    dataset = self._safe_get_dataset(hf, 'entry_%04d/measurement/xspress3/data'%im)
+                    dataset = self._safe_get_dataset(hf, 'entry/measurement/xspress3/%06d' % im)
                     if not dataset:
                         break
-                    data.append(np.array(dataset)[0, self.xrfChannel])
+                    data.append(np.array(dataset)[0, self.xrfChannel, :4096])
             data = np.array(data)
             if self.normalize_by_I0:
                 data = data / I0_data[:, None]
