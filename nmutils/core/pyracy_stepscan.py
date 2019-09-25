@@ -96,6 +96,8 @@ class pyracy_stepscan(Scan):
         
         # parse options
         path = opts['path']['value']
+        if path.endswith('h5'):
+            path = os.path.dirname(path)
         scanNr = int(opts['scanNr']['value'])
         self.dataSource = opts['dataSource']['value']
         self.fileName = os.path.join(path, '%06u.h5'%scanNr)
