@@ -7,9 +7,9 @@ import copy as cp
 import os.path
 
 
-class pyracy_flyscan(Scan):
+class contrast_flyscan(Scan):
     """
-    Flyscan format for the pyrace acquisition software
+    Flyscan format for the Contrast acquisition software
     """
 
     pass

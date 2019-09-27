@@ -7,9 +7,9 @@ import copy as cp
 import os.path
 
 
-class pyracy_stepscan(Scan):
+class contrast_stepscan(Scan):
     """
-    Stepscan format for the Pyracy acquisition software.
+    Stepscan format for the Contrast acquisition software.
     """
 
     default_opts = {
