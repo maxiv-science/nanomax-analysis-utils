@@ -195,7 +195,7 @@ class contrast_flyscan(Scan):
                     if self.nMaxLines and (len(data) == self.nMaxLines):
                         break
                     data[i*line_length : (i+1)*line_length] = v
-                print('loaded %u lines'%len(data)+'\r', end='')
+                    print('loaded %u lines'%len(data)+'\r', end='')
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
             if 'counter' in self.dataSource:
