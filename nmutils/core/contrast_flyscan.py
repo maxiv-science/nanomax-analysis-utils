@@ -210,5 +210,5 @@ class contrast_flyscan(Scan):
 
         # select/average the xrf channels
         if self.dataSource == 'xspress3':
-            data = np.mean(data[:, self.xrfChannel], axis=-1)
+            data = np.mean(data[:, self.xrfChannel, :4096], axis=1)
         return data
