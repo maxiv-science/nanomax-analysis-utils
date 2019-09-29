@@ -191,11 +191,10 @@ class contrast_flyscan(Scan):
                 data = np.empty(shape, dtype=dtype)
 
                 # load
-                for i, v in enumerate(fp['entry/measurement/%s'%self.dataSource].values()):
-                    if self.nMaxLines and (len(data) == self.nMaxLines):
-                        break
+                for i in range(lines):
+                    v = fp['entry/measurement/%s/%06u' % (self.dataSource, i)]
                     data[i*line_length : (i+1)*line_length] = v
-                    print('loaded %u lines'%i+'\r', end='')
+                    print('loaded %u/%u lines' % (i, lines) + '\r', end='')
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
             if 'counter' in self.dataSource:
