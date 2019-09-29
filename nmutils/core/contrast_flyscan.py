@@ -176,24 +176,26 @@ class contrast_flyscan(Scan):
 
         if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'xspress3'):
             print("Loading %s data..." % self.dataSource)
-            data = []
-            with h5py.File(self.fileName, 'r') as fp:
-                for v in fp['entry/measurement/%s'%self.dataSource].values():
-                    if self.nMaxLines and (len(data) == self.nMaxLines):
-                        break
-                    data.append(v)
-                print('loaded %u lines'%len(data)+'\r', end='')
-            data = np.array(data).reshape((-1, *data[0].shape[-2:]))
 
-        elif self.dataSource == 'xspress3':
-            print("Loading fluorescence data")
-            data = []
             with h5py.File(self.fileName, 'r') as fp:
-                for v in fp['entry/measurement/%s'%self.dataSource].values():
+
+                # pre-allocate an array, to avoid wasting memory
+                n_lines = len(fp['entry/measurement/%s'%self.dataSource].keys())
+                line1 = self._safe_get_dataset(fp, 'entry/measurement/%s/000000'%self.dataSource)
+                line_length = line1.shape[0]
+                data_shape = line1.shape[1:]
+                dtype = line1.dtype
+                lines = min(self.nMaxLines, n_lines) if self.nMaxLines else n_lines
+                shape = (n_lines*line_length, *data_shape)
+                print('allocating a %s %s array'%(shape, dtype))
+                data = np.empty(shape, dtype=dtype)
+
+                # load
+                for i, v in enumerate(fp['entry/measurement/%s'%self.dataSource].values()):
                     if self.nMaxLines and (len(data) == self.nMaxLines):
                         break
-                    data.append(v)
-            data = np.array(data).reshape((-1, *data[0].shape[-2:]))
+                    data[i*line_length : (i+1)*line_length] = v
+                print('loaded %u lines'%len(data)+'\r', end='')
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
             if 'counter' in self.dataSource:
