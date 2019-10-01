@@ -64,11 +64,11 @@ class contrast_flyscan(Scan):
     #     'type': bool,
     #     'doc': 'attempt to assign global scanning positions',
     #     },
-    # 'normalize_by_I0': {
-    #     'value': False,
-    #     'type': bool,
-    #     'doc': 'whether or not to normalize against I0',
-    #     },
+    'normalize_by_I0': {
+        'value': False,
+        'type': bool,
+        'doc': 'whether or not to normalize (all) data against I0',
+        },
     # 'waxsPath': {
     #     'value': '../../process/radial_integration/<sampledir>',
     #     'type': str,
@@ -107,7 +107,7 @@ class contrast_flyscan(Scan):
         # self.xrdNormalize = list(map(int, opts['xrdNormalize']['value']))
         self.nMaxLines = opts['nMaxLines']['value']
         # self.globalPositions = opts['globalPositions']['value']
-        # self.normalize_by_I0 = opts['normalize_by_I0']['value']
+        self.normalize_by_I0 = opts['normalize_by_I0']['value']
         # self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
         # self.waxsPath = opts['waxsPath']['value']
 
@@ -174,6 +174,10 @@ class contrast_flyscan(Scan):
         path of the Lima hdf5 files.
         """
 
+        if self.normalize_by_I0:
+            with h5py.File(self.fileName, 'r') as fp:
+                I0_data = fp['entry/measurement/ni/counter1'][()].flatten()
+
         if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'xspress3'):
             print("Loading %s data..." % self.dataSource)
 
@@ -207,6 +211,10 @@ class contrast_flyscan(Scan):
 
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
+
+        # normalize
+        if self.normalize_by_I0:
+            data = (data.T / I0_data[:, ]).T # broadcasting
 
         # select/average the xrf channels
         if self.dataSource == 'xspress3':
