@@ -59,11 +59,11 @@ class contrast_flyscan(Scan):
         'type': int,
         'doc': 'load at most N lines - 0 means load all',
         },
-    # 'globalPositions': {
-    #     'value': False,
-    #     'type': bool,
-    #     'doc': 'attempt to assign global scanning positions',
-    #     },
+    'globalPositions': {
+        'value': False,
+        'type': bool,
+        'doc': 'attempt to assign global scanning positions',
+        },
     'normalize_by_I0': {
         'value': False,
         'type': bool,
@@ -106,7 +106,7 @@ class contrast_flyscan(Scan):
         # self.xrdBinning = opts['xrdBinning']['value']
         # self.xrdNormalize = list(map(int, opts['xrdNormalize']['value']))
         self.nMaxLines = opts['nMaxLines']['value']
-        # self.globalPositions = opts['globalPositions']['value']
+        self.globalPositions = opts['globalPositions']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
         # self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
         # self.waxsPath = opts['waxsPath']['value']
@@ -162,6 +162,12 @@ class contrast_flyscan(Scan):
             len(x)
         except TypeError:
             x = np.zeros(y.shape)
+
+        # account for base motors
+        if self.globalPositions:
+            with h5py.File(self.fileName, 'r') as fp:
+                x += self._safe_get_array(fp, 'entry/snapshot/basex')
+                y += self._safe_get_array(fp, 'entry/snapshot/basey')
 
         # save motor labels
         self.positionDimLabels = [xmotor, ymotor]
