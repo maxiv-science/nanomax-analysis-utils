@@ -164,6 +164,7 @@ class LimaLiveViewer1D(PlotWindow):
                     data = data[:, :self.truncate]
                     self.E = self.E[:self.truncate]
                 sums = []
+                exptime = self.lima.acq_expo_time
                 for i in range(self.N):
                     self.addCurve(self.E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
                     self.hasData = True
