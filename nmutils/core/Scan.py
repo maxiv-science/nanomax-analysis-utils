@@ -469,7 +469,7 @@ class Scan(object):
                 # no sense for chunking for this dimension
                 return None
             else:
-                return (int(old_div(maxChunkSz,dsize)),) 
+                return (int(maxChunkSz/dsize),) 
         else:
             # try chunking just on the last dimension
             chunk = self._calcChunkSize(shape[-1:], dsize)
