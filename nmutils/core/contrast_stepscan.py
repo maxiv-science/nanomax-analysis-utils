@@ -112,6 +112,13 @@ class contrast_stepscan(Scan):
         self.burstSum = opts['burstSum']['value']
         self.nMaxPositions = opts['nMaxPositions']['value']
 
+        # Sanity check
+        try:
+            with h5py.File(self.fileName, 'r') as fp:
+                pass
+        except OSError:
+            raise NoDataException('Could not find or open the file %s' % self.fileName)
+
     def _readPositions(self):
         """ 
         Override position reading.

@@ -111,12 +111,18 @@ class contrast_flyscan(Scan):
         # self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
         # self.waxsPath = opts['waxsPath']['value']
 
+        # Sanity check
+        try:
+            with h5py.File(self.fileName, 'r') as fp:
+                pass
+        except OSError:
+            raise NoDataException('Could not find or open the file %s' % self.fileName)
+
     def _readPositions(self):
         """ 
         Override position reading.
         """
 
-        if not os.path.exists(self.fileName): raise NoDataException
         with h5py.File(self.fileName, 'r') as fp:
             # first, work out which is the flyscan axis and load that
             jranges = [self._safe_get_dataset(fp, 'entry/measurement/npoint_buff/%s'%ax)[0, :].ptp() for ax in 'xyz']
@@ -190,7 +196,10 @@ class contrast_flyscan(Scan):
             with h5py.File(self.fileName, 'r') as fp:
 
                 # pre-allocate an array, to avoid wasting memory
-                n_lines = len(fp['entry/measurement/%s'%self.dataSource].keys())
+                try:
+                    n_lines = len(fp['entry/measurement/%s'%self.dataSource].keys())
+                except KeyError:
+                    raise NoDataException
                 line1 = self._safe_get_dataset(fp, 'entry/measurement/%s/000000'%self.dataSource)
                 line_length = line1.shape[0]
                 data_shape = line1.shape[1:]

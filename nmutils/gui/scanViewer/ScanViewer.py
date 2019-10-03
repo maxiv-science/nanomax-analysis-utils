@@ -351,6 +351,11 @@ class ScanViewer(qt.QMainWindow):
                 self.statusOutput("")
                 return
 
+            # maybe there was no data at all
+            if scan_.positions is None:
+                self.statusOutput("No data found")
+                return
+
             # append or store loaded scan as it is
             if self.scan is None:
                 merged = scan_
