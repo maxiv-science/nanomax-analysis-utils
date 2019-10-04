@@ -1,4 +1,9 @@
 """
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+NOTE that this script (and the ptypy class) need updating to the contrast format !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 Offline data preparation and reconstruction for NanoMAX flyscan ptycho.
 
 You typically need a number of incoherent modes for flyscan data.
