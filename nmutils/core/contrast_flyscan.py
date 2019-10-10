@@ -149,7 +149,7 @@ class contrast_flyscan(Scan):
             ymotor = fast
             xmotor = slow
         else:
-            x = -fast_pos # x and z are inverted
+            x = fast_pos
             y = slow_pos
             xmotor = fast
             ymotor = slow
