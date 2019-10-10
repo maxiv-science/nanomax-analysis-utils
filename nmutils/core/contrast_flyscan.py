@@ -26,7 +26,7 @@ class contrast_flyscan(Scan):
         },
     'dataSource': {
         'value': 'pilatus',
-        'type': ['pilatus', 'merlin', 'pil1m', 'xspress3', 'counter1', 'counter2', 'counter3', 'adlink', 'pil1m-waxs'],
+        'type': ['pilatus', 'merlin', 'pilatus1m', 'xspress3', 'counter1', 'counter2', 'counter3', 'adlink', 'pil1m-waxs'],
         'doc': "type of data",
         },
     'slowMotor': {
@@ -79,7 +79,7 @@ class contrast_flyscan(Scan):
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
     sourceDims = {'pilatus':2, 'xspress3':1, 'adlink':0, 'merlin':2,
-                  'pil1m':2, 'counter1':0, 'counter2':0, 'counter3':0,
+                  'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0,
                   'pil1m-waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
