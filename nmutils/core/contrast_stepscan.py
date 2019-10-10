@@ -25,7 +25,7 @@ class contrast_stepscan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'counter1', 'counter2', 'counter3', 'pil1m-waxs'],
+            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'counter1', 'counter2', 'counter3', 'waxs'],
             'doc': "type of data",
             },
         'xMotor': {
@@ -82,7 +82,7 @@ class contrast_stepscan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
-    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'pil1m-waxs':1}
+    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -231,8 +231,23 @@ class contrast_stepscan(Scan):
                 I0_data = I0_data.astype(float)
                 data = I0_data.flatten()
 
-        elif self.dataSource == 'pil1m-waxs':
-            raise NotImplementedError('waxs has to be reimplemented! sorry.')
+        elif self.dataSource == 'waxs':
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            fn = os.path.basename(self.fileName)
+            waxsfn = fn.replace('.h5', '_waxs.h5')
+            waxs_file = os.path.join(path, waxsfn)
+            print('loading waxs data from %s' % waxs_file)
+            with h5py.File(waxs_file, 'r') as fp:
+                q = self._safe_get_array(fp, 'q')
+                I = self._safe_get_array(fp, 'I')
+            data = I
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
 
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
