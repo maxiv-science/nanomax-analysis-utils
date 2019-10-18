@@ -174,6 +174,11 @@ class contrast_stepscan(Scan):
                     if self.nMaxPositions and im == self.nMaxPositions:
                         break
                     dataset = self._safe_get_dataset(hf, hdf_pattern%im)
+                    if dataset.shape[0] == self.positions.shape[0]:
+                        # this is hybrid triggering data!
+                        subframe = im
+                    else:
+                        subframe = 0
                     # for the first frame, determine center of mass
                     if ic is None or jc is None == 0:
                         import scipy.ndimage.measurements
@@ -189,12 +194,12 @@ class contrast_stepscan(Scan):
                         if self.burstSum:
                             data_ = np.sum(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]), axis=0)
                         else:
-                            data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
+                            data_ = np.array(dataset[subframe, ic-delta:ic+delta, jc-delta:jc+delta])
                     else:
                         if self.burstSum:
                             data_ = np.sum(np.array(dataset), axis=0)
                         else:
-                            data_ = np.array(dataset[0])
+                            data_ = np.array(dataset[subframe])
                     if self.xrdBinning > 1:
                         data_ = fastBinPixels(data_, self.xrdBinning)
                     if 'merlin' in hdf_pattern:
