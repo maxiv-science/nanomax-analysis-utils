@@ -44,9 +44,9 @@ class contrast_stepscan(Scan):
             'doc': 'xspress3 channel from which to read XRF',
             },
         'xrdCropping': {
-            'value': 0,
-            'type': int,
-            'doc': 'size of detector area to load, 0 means no cropping',
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
         'xrdBinning': {
             'value': 1,
@@ -104,7 +104,7 @@ class contrast_stepscan(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        self.xrdCropping = int(opts['xrdCropping']['value'])
+        self.xrdCropping = opts['xrdCropping']['value']
         self.xrdBinning = int(opts['xrdBinning']['value'])
         self.normalize_by_I0 = (opts['normalize_by_I0']['value'])
         self.nominalPositions = bool(opts['nominalPositions']['value'])
@@ -190,11 +190,16 @@ class contrast_stepscan(Scan):
                             jc = img.shape[1] // 2
                         print("Estimated center of mass to (%d, %d)"%(ic, jc))
                     if self.xrdCropping:
-                        delta = self.xrdCropping // 2
+                        i0, i1, j0, j1 = self.xrdCropping
+                        if 'merlin' in hdf_pattern:
+                            # Merlin images indexed from the bottom left...
+                            i1_ = i1
+                            i1 = 515 - i0
+                            i0 = 515 - i1_
                         if self.burstSum:
-                            data_ = np.sum(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]), axis=0)
+                            data_ = np.sum(np.array(dataset[:, i0:i1, j0:j1]), axis=0)
                         else:
-                            data_ = np.array(dataset[subframe, ic-delta:ic+delta, jc-delta:jc+delta])
+                            data_ = np.array(dataset[subframe, i0:i1, j0:j1])
                     else:
                         if self.burstSum:
                             data_ = np.sum(np.array(dataset), axis=0)
