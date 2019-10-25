@@ -191,11 +191,6 @@ class contrast_stepscan(Scan):
                         print("Estimated center of mass to (%d, %d)"%(ic, jc))
                     if self.xrdCropping:
                         i0, i1, j0, j1 = self.xrdCropping
-                        if 'merlin' in hdf_pattern:
-                            # Merlin images indexed from the bottom left...
-                            i1_ = i1
-                            i1 = 515 - i0
-                            i0 = 515 - i1_
                         if self.burstSum:
                             data_ = np.sum(np.array(dataset[:, i0:i1, j0:j1]), axis=0)
                         else:
@@ -207,8 +202,6 @@ class contrast_stepscan(Scan):
                             data_ = np.array(dataset[subframe])
                     if self.xrdBinning > 1:
                         data_ = fastBinPixels(data_, self.xrdBinning)
-                    if 'merlin' in hdf_pattern:
-                        data_ = np.flipud(data_) # Merlin images indexed from the bottom left...
                     data.append(data_)
 
             print("loaded %d images"%len(data))
