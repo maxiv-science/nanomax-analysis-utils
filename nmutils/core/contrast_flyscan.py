@@ -26,7 +26,7 @@ class contrast_flyscan(Scan):
         },
     'dataSource': {
         'value': 'pilatus',
-        'type': ['pilatus', 'merlin', 'pil1m', 'xspress3', 'counter1', 'counter2', 'counter3', 'adlink', 'pil1m-waxs'],
+        'type': ['pilatus', 'merlin', 'pilatus1m', 'xspress3', 'counter1', 'counter2', 'counter3', 'adlink', 'waxs'],
         'doc': "type of data",
         },
     'slowMotor': {
@@ -69,18 +69,18 @@ class contrast_flyscan(Scan):
         'type': bool,
         'doc': 'whether or not to normalize (all) data against I0',
         },
-    # 'waxsPath': {
-    #     'value': '../../process/radial_integration/<sampledir>',
-    #     'type': str,
-    #     'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
-    #     },
+    'waxsPath': {
+        'value': '../../process/radial_integration/<sampledir>',
+        'type': str,
+        'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
+        },
     }
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
     sourceDims = {'pilatus':2, 'xspress3':1, 'adlink':0, 'merlin':2,
-                  'pil1m':2, 'counter1':0, 'counter2':0, 'counter3':0,
-                  'pil1m-waxs':1}
+                  'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0,
+                  'waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -108,8 +108,7 @@ class contrast_flyscan(Scan):
         self.nMaxLines = opts['nMaxLines']['value']
         self.globalPositions = opts['globalPositions']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
-        # self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
-        # self.waxsPath = opts['waxsPath']['value']
+        self.waxsPath = opts['waxsPath']['value']
 
         # Sanity check
         try:
@@ -149,7 +148,7 @@ class contrast_flyscan(Scan):
             ymotor = fast
             xmotor = slow
         else:
-            x = -fast_pos # x and z are inverted
+            x = fast_pos
             y = slow_pos
             xmotor = fast
             ymotor = slow
@@ -221,8 +220,23 @@ class contrast_flyscan(Scan):
             with h5py.File(self.fileName, 'r') as fp:
                 data = self._safe_get_array(fp, 'entry/measurement/%s'%self.dataSource).flatten()
 
-        elif self.dataSource == 'pil1m-waxs':
-            raise NotImplementedError('waxs has to be reimplemented! sorry.')
+        elif self.dataSource == 'waxs':
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            fn = os.path.basename(self.fileName)
+            waxsfn = fn.replace('.h5', '_waxs.h5')
+            waxs_file = os.path.join(path, waxsfn)
+            print('loading waxs data from %s' % waxs_file)
+            with h5py.File(waxs_file, 'r') as fp:
+                q = self._safe_get_array(fp, 'q')
+                I = self._safe_get_array(fp, 'I')
+            data = I
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
 
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')

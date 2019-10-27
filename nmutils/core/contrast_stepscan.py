@@ -25,7 +25,7 @@ class contrast_stepscan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'counter1', 'counter2', 'counter3', 'pil1m-waxs'],
+            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'counter1', 'counter2', 'counter3', 'waxs'],
             'doc': "type of data",
             },
         'xMotor': {
@@ -44,9 +44,9 @@ class contrast_stepscan(Scan):
             'doc': 'xspress3 channel from which to read XRF',
             },
         'xrdCropping': {
-            'value': 0,
-            'type': int,
-            'doc': 'size of detector area to load, 0 means no cropping',
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
         'xrdBinning': {
             'value': 1,
@@ -82,7 +82,7 @@ class contrast_stepscan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
-    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'pil1m-waxs':1}
+    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'waxs':1}
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -104,7 +104,7 @@ class contrast_stepscan(Scan):
         self.xMotor = opts['xMotor']['value']
         self.yMotor = opts['yMotor']['value']
         self.xrfChannel = int(opts['xrfChannel']['value'])
-        self.xrdCropping = int(opts['xrdCropping']['value'])
+        self.xrdCropping = opts['xrdCropping']['value']
         self.xrdBinning = int(opts['xrdBinning']['value'])
         self.normalize_by_I0 = (opts['normalize_by_I0']['value'])
         self.nominalPositions = bool(opts['nominalPositions']['value'])
@@ -174,6 +174,11 @@ class contrast_stepscan(Scan):
                     if self.nMaxPositions and im == self.nMaxPositions:
                         break
                     dataset = self._safe_get_dataset(hf, hdf_pattern%im)
+                    if dataset.shape[0] == self.positions.shape[0]:
+                        # this is hybrid triggering data!
+                        subframe = im
+                    else:
+                        subframe = 0
                     # for the first frame, determine center of mass
                     if ic is None or jc is None == 0:
                         import scipy.ndimage.measurements
@@ -185,20 +190,18 @@ class contrast_stepscan(Scan):
                             jc = img.shape[1] // 2
                         print("Estimated center of mass to (%d, %d)"%(ic, jc))
                     if self.xrdCropping:
-                        delta = self.xrdCropping // 2
+                        i0, i1, j0, j1 = self.xrdCropping
                         if self.burstSum:
-                            data_ = np.sum(np.array(dataset[:, ic-delta:ic+delta, jc-delta:jc+delta]), axis=0)
+                            data_ = np.sum(np.array(dataset[:, i0:i1, j0:j1]), axis=0)
                         else:
-                            data_ = np.array(dataset[0, ic-delta:ic+delta, jc-delta:jc+delta])
+                            data_ = np.array(dataset[subframe, i0:i1, j0:j1])
                     else:
                         if self.burstSum:
                             data_ = np.sum(np.array(dataset), axis=0)
                         else:
-                            data_ = np.array(dataset[0])
+                            data_ = np.array(dataset[subframe])
                     if self.xrdBinning > 1:
                         data_ = fastBinPixels(data_, self.xrdBinning)
-                    if 'merlin' in hdf_pattern:
-                        data_ = np.flipud(data_) # Merlin images indexed from the bottom left...
                     data.append(data_)
 
             print("loaded %d images"%len(data))
@@ -231,8 +234,23 @@ class contrast_stepscan(Scan):
                 I0_data = I0_data.astype(float)
                 data = I0_data.flatten()
 
-        elif self.dataSource == 'pil1m-waxs':
-            raise NotImplementedError('waxs has to be reimplemented! sorry.')
+        elif self.dataSource == 'waxs':
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            fn = os.path.basename(self.fileName)
+            waxsfn = fn.replace('.h5', '_waxs.h5')
+            waxs_file = os.path.join(path, waxsfn)
+            print('loading waxs data from %s' % waxs_file)
+            with h5py.File(waxs_file, 'r') as fp:
+                q = self._safe_get_array(fp, 'q')
+                I = self._safe_get_array(fp, 'I')
+            data = I
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
 
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
