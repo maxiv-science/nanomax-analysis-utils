@@ -2,11 +2,13 @@ Installation:
 
 From the main folder, to install for the current user.
  
- python setup.py install --user
+ python3 setup.py install --user
 
 Note that use of scanViewer and other GUIs require the silx
-package, which can be installed for the current userthrough pip.
-pip install silx --user
+package, as well as h5py and other common python packages.
+These can be installed for the current userthrough pip.
 
-Currently, an update in the silx library causes masses of
-deprecation warnings. This will be fixed soon.
+ pip3 install h5py --user
+ pip3 install silx --user
+
+etc.
