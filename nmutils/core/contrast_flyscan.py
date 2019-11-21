@@ -39,21 +39,11 @@ class contrast_flyscan(Scan):
         'type': list,
         'doc': 'xspress3 channels from which to read XRF, averaged',
         },
-    # 'xrfCropping': {
-    #     'value': [],
-    #     'type': list,
-    #     'doc': 'energy channel range to load, [ch0, ch1]',
-    #     },
-    # 'xrdCropping': {
-    #     'value': [],
-    #     'type': list,
-    #     'doc': 'detector area to load, [i0, i1, j0, j1]',
-    #     },
-    # 'xrdBinning': {
-    #     'value': 1,
-    #     'type': int,
-    #     'doc': 'bin xrd pixels n-by-n (after cropping)',
-    #     },
+    'xrdCropping': {
+        'value': [],
+        'type': list,
+        'doc': 'detector area to load, [i0, i1, j0, j1]',
+        },
     'nMaxLines': {
         'value': 0,
         'type': int,
@@ -101,10 +91,7 @@ class contrast_flyscan(Scan):
         self.dataSource = opts['dataSource']['value']
         self.slowMotor = opts['slowMotor']['value']
         self.xrfChannel = list(map(int, opts['xrfChannel']['value']))
-        # self.xrfCropping = list(map(int, opts['xrfCropping']['value']))
-        # self.xrdCropping = list(map(int, opts['xrdCropping']['value']))
-        # self.xrdBinning = opts['xrdBinning']['value']
-        # self.xrdNormalize = list(map(int, opts['xrdNormalize']['value']))
+        self.xrdCropping = list(map(int, opts['xrdCropping']['value']))
         self.nMaxLines = opts['nMaxLines']['value']
         self.globalPositions = opts['globalPositions']['value']
         self.normalize_by_I0 = opts['normalize_by_I0']['value']
@@ -191,28 +178,36 @@ class contrast_flyscan(Scan):
 
         if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'xspress3'):
             print("Loading %s data..." % self.dataSource)
+            crop = (self.dataSource != 'xspress3') and self.xrdCropping
 
             with h5py.File(self.fileName, 'r') as fp:
 
                 # pre-allocate an array, to avoid wasting memory
                 try:
                     n_lines = len(fp['entry/measurement/%s'%self.dataSource].keys())
+                    n_lines = min(self.nMaxLines, n_lines) if self.nMaxLines else n_lines
                 except KeyError:
                     raise NoDataException
                 line1 = self._safe_get_dataset(fp, 'entry/measurement/%s/000000'%self.dataSource)
                 line_length = line1.shape[0]
-                data_shape = line1.shape[1:]
+                if crop:
+                    i0, i1, j0, j1 = self.xrdCropping
+                    data_shape = line1[0, i0:i1, j0:j1].shape
+                else:
+                    data_shape = line1.shape[1:]
                 dtype = line1.dtype
-                lines = min(self.nMaxLines, n_lines) if self.nMaxLines else n_lines
                 shape = (n_lines*line_length, *data_shape)
                 print('allocating a %s %s array'%(shape, dtype))
                 data = np.empty(shape, dtype=dtype)
 
                 # load
-                for i in range(lines):
+                for i in range(n_lines):
                     v = fp['entry/measurement/%s/%06u' % (self.dataSource, i)]
-                    data[i*line_length : (i+1)*line_length] = v
-                    print('loaded %u/%u lines' % (i, lines) + '\r', end='')
+                    if crop:
+                        data[i*line_length : (i+1)*line_length] = v[:, i0:i1, j0:j1]
+                    else:
+                        data[i*line_length : (i+1)*line_length] = v
+                    print('loaded %u/%u lines' % (i, n_lines) + '\r', end='')
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
             if 'counter' in self.dataSource:
