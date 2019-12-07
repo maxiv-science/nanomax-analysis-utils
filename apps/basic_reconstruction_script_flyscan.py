@@ -1,8 +1,4 @@
 """
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-NOTE that this script (and the ptypy class) need updating to the contrast format !!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 Offline data preparation and reconstruction for NanoMAX flyscan ptycho.
 
@@ -26,8 +22,8 @@ from distutils.version import LooseVersion
 
 ## simplest possible input #############################################
 detector = 'pilatus'
-folder = '/data/visitors/nanomax/20180514/2018121908/raw/L1_macro/'
-scannr = 7
+folder = '/data/visitors/nanomax/20191087/2019120708/raw/tomo_Ni_552nm'
+scannr = 55
 distance = 4.0
 ########################################################################
 
@@ -45,19 +41,19 @@ p.scans.scan00.coherence = u.Param()
 p.scans.scan00.coherence.num_probe_modes = 5
 
 p.scans.scan00.data = u.Param()
-p.scans.scan00.data.name = 'NanomaxFlyscanMay2019'
+p.scans.scan00.data.name = 'NanomaxFlyscanDec2019'
 p.scans.scan00.data.dfile = p.run + '.ptyd'
 p.scans.scan00.data.xMotorFlipped = False
 p.scans.scan00.data.yMotorFlipped = False
-p.scans.scan00.data.xMotor = 'samx_buff'
-p.scans.scan00.data.yMotor = 'samy_buff'
-p.scans.scan00.data.nMaxLines = None
+p.scans.scan00.data.xMotor = 'x'
+p.scans.scan00.data.yMotor = 'y'
+p.scans.scan00.data.nMaxLines = 0
 p.scans.scan00.data.firstLine = 0
 p.scans.scan00.data.path = folder
-p.scans.scan00.data.detector = 'pil100k' if detector is 'pilatus' else detector
-p.scans.scan00.data.I0 = 'Ni6602_buff'
+p.scans.scan00.data.I0 = None
 p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
                             'pilatus': None}[detector]
+p.scans.scan00.data.detector = detector
 p.scans.scan00.data.scanNumber = scannr
 p.scans.scan00.data.shape = 128
 p.scans.scan00.data.save = 'append'
@@ -70,7 +66,7 @@ p.scans.scan00.data.orientation = {'merlin':(False, False, True), 'pilatus':None
 ##############
 p.scans.scan00.data.distance = distance
 p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6}[detector]
-p.scans.scan00.data.energy = 10.4
+p.scans.scan00.data.energy = 12.4
 p.scans.scan00.data.min_frames = 10
 p.scans.scan00.data.load_parallel = 'all'
 
