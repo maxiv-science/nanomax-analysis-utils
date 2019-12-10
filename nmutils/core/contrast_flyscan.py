@@ -208,6 +208,9 @@ class contrast_flyscan(Scan):
                     else:
                         data[i*line_length : (i+1)*line_length] = v
                     print('loaded %u/%u lines' % (i, n_lines) + '\r', end='')
+            if self.dataSource == 'xspress3':
+                self.dataDimLabels[name] = ['Approx. energy (keV)']
+                self.dataAxes[name] = [np.arange(4096) * .01]
 
         elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
             if 'counter' in self.dataSource:
