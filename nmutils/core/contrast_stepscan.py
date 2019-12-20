@@ -12,6 +12,7 @@ class contrast_stepscan(Scan):
     Stepscan format for the Contrast acquisition software.
     """
 
+    alba_names = ['alba%u/%u'%(i,j) for i in (0,2) for j in (1,2,3,4)]
     default_opts = {
         'scanNr': {
             'value': 0,
@@ -25,7 +26,7 @@ class contrast_stepscan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'counter1', 'counter2', 'counter3', 'waxs'],
+            'type': ['merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs']+alba_names,
             'doc': "type of data",
             },
         'xMotor': {
@@ -56,7 +57,7 @@ class contrast_stepscan(Scan):
         'normalize_by_I0': {
             'value': False,
             'type': bool,
-            'doc': 'whether to normalize against I0 (counter1)',
+            'doc': 'whether to normalize against I0 (ni/counter1)',
             },
         'nominalPositions': {
             'value': False,
@@ -82,7 +83,9 @@ class contrast_stepscan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
-    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0, 'waxs':1}
+    sourceDims = {'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1}
+    albaDims = {name:0 for name in alba_names}
+    sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -155,7 +158,7 @@ class contrast_stepscan(Scan):
         if self.normalize_by_I0:
             if not os.path.exists(self.fileName): raise NoDataException
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = self._safe_get_array(hf, 'entry/ni/measurement/counter1')
+                I0_data = self._safe_get_array(hf, 'entry/measurement/ni/counter1')
                 I0_data = I0_data.astype(float) * 1e-5
                 print(I0_data)
 
@@ -227,12 +230,12 @@ class contrast_stepscan(Scan):
             self.dataDimLabels[name] = ['Approx. energy (keV)']
             self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
 
-        elif self.dataSource in ('counter1', 'counter2', 'counter3'):
-            entry = 'entry/measurement/ni/%s' % self.dataSource
+        elif 'ni/' in self.dataSource or 'alba' in self.dataSource:
+            entry = 'entry/measurement/%s' % self.dataSource
             with h5py.File(self.fileName, 'r') as hf:
-                I0_data = self._safe_get_array(hf, entry)
-                I0_data = I0_data.astype(float)
-                data = I0_data.flatten()
+                data = self._safe_get_array(hf, entry)
+                data = data.astype(float)
+                data = data.flatten()
 
         elif self.dataSource == 'waxs':
             if self.waxsPath[0] == '/':

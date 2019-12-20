@@ -13,6 +13,7 @@ class contrast_flyscan(Scan):
     """
 
     # the dataSource option is mandatory for use with scanViewer.
+    alba_names = ['alba%u/%u'%(i,j) for i in (0,2) for j in (1,2,3,4)]
     default_opts = {
     'scanNr': {
         'value': 0,
@@ -26,7 +27,7 @@ class contrast_flyscan(Scan):
         },
     'dataSource': {
         'value': 'pilatus',
-        'type': ['pilatus', 'merlin', 'pilatus1m', 'xspress3', 'counter1', 'counter2', 'counter3', 'adlink', 'waxs'],
+        'type': ['pilatus', 'merlin', 'pilatus1m', 'xspress3', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'waxs']+alba_names,
         'doc': "type of data",
         },
     'slowMotor': {
@@ -69,8 +70,10 @@ class contrast_flyscan(Scan):
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities.
     sourceDims = {'pilatus':2, 'xspress3':1, 'adlink':0, 'merlin':2,
-                  'pilatus1m':2, 'counter1':0, 'counter2':0, 'counter3':0,
+                  'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0,
                   'waxs':1}
+    albaDims = {name:0 for name in alba_names}
+    sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
 
     def _prepareData(self, **kwargs):
@@ -212,9 +215,7 @@ class contrast_flyscan(Scan):
                 self.dataDimLabels[name] = ['Approx. energy (keV)']
                 self.dataAxes[name] = [np.arange(4096) * .01]
 
-        elif self.dataSource in ('counter1', 'counter2', 'counter3', 'adlink'):
-            if 'counter' in self.dataSource:
-                self.dataSource = 'ni/' + self.dataSource
+        elif (self.dataSource[:4] == 'alba') or self.dataSource == 'adlink' or self.dataSource[:3] == 'ni/':
             with h5py.File(self.fileName, 'r') as fp:
                 data = self._safe_get_array(fp, 'entry/measurement/%s'%self.dataSource).flatten()
 
