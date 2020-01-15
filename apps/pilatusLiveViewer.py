@@ -53,7 +53,7 @@ class PilatusLiveViewer(ImageView):
         """
         gets and plots the last image
         """
-        self.socket.send_string('give me!')
+        self.socket.send(b'give me a frame (please)\0')
         parts = self.socket.recv_multipart()
         header = json.loads(parts[0])
         image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
