@@ -53,24 +53,21 @@ class PilatusLiveViewer(ImageView):
         """
         gets and plots the last image
         """
-        try:
-            self.socket.send_string('give me!')
-            parts = self.socket.recv_multipart()
-            header = json.loads(parts[0])
-            image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
-            self.setImage(image, copy=False, reset=(not self.hasImage))
-            self.hasImage = True
-            total = np.sum(image)
-            hottest = np.max(image)
-            exptime = np.nan
-            if (self.alarm is not None) and (hottest/exptime > self.alarm):
-                self.setBackgroundColor(qt.QColor(255, 0, 0))
-            else:
-                self.setBackgroundColor(qt.QColor(255, 255, 255))
-            self.setGraphTitle('Total: %.1e (%.1e / s) \n Hottest: %.1e (%.1e / s)' % (total, total/exptime, hottest, hottest/exptime))
-            self._positionWidget.updateInfo()
-        except Exception as e:
-            print(e)
+        self.socket.send_string('give me!')
+        parts = self.socket.recv_multipart()
+        header = json.loads(parts[0])
+        image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
+        self.setImage(image, copy=False, reset=(not self.hasImage))
+        self.hasImage = True
+        total = np.sum(image)
+        hottest = np.max(image)
+        exptime = np.nan
+        if (self.alarm is not None) and (hottest/exptime > self.alarm):
+            self.setBackgroundColor(qt.QColor(255, 0, 0))
+        else:
+            self.setBackgroundColor(qt.QColor(255, 255, 255))
+        self.setGraphTitle('Total: %.1e (%.1e / s) \n Hottest: %.1e (%.1e / s)' % (total, total/exptime, hottest, hottest/exptime))
+        self._positionWidget.updateInfo()
 
     def _getActiveImageValue(self, x, y):
         """
