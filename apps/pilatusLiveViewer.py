@@ -61,7 +61,7 @@ class PilatusLiveViewer(ImageView):
         self.hasImage = True
         total = np.sum(image)
         hottest = np.max(image)
-        exptime = np.nan
+        exptime = header['exposure_time']
         if (self.alarm is not None) and (hottest/exptime > self.alarm):
             self.setBackgroundColor(qt.QColor(255, 0, 0))
         else:
