@@ -9,6 +9,7 @@ from silx.gui.plot import ImageView, PlotWindow, tools
 from silx.gui import qt
 import zmq
 from zmq.utils import jsonapi as json
+import time
 
 
 class PilatusLiveViewer(ImageView):
@@ -23,9 +24,9 @@ class PilatusLiveViewer(ImageView):
         super(PilatusLiveViewer, self).__init__()
 
         # initialize the zmq
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect('tcp://%s:%u' % (hostname, port))
+        self.hostname = hostname
+        self.port = port
+        self.initialize_zmq()
 
         # set some properties
         self.setWindowTitle(hostname)
@@ -34,6 +35,8 @@ class PilatusLiveViewer(ImageView):
         self.setYAxisInverted(True)
         self.hasImage = False
         self.alarm = alarm
+        self.waiting_for_frame = False
+        self.latest_request = time.time()
 
         # a periodic timer triggers the update
         self.timer = qt.QTimer(self)
@@ -49,12 +52,31 @@ class PilatusLiveViewer(ImageView):
         self._positionWidget = tools.PositionInfo(plot=self, converters=posInfo)
         self.statusBar().addWidget(self._positionWidget)
 
+    def initialize_zmq(self):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+
     def _update(self):
         """
         gets and plots the last image
         """
-        self.socket.send(b'give me a frame (please)\0')
-        parts = self.socket.recv_multipart()
+        if not self.waiting_for_frame:
+            self.socket.send(b'give me a frame (please)\0')
+            self.waiting_for_frame = True
+            self.latest_request = time.time()
+        elif time.time() - self.latest_request > 90:
+            # the server must have been down, so start over
+            print('** deciding the server must have been down. going to ask start over.')
+            self.waiting_for_frame = False
+            self.initialize_zmq()
+            return
+        try:
+            parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
+            self.waiting_for_frame = False
+        except zmq.ZMQError:
+            # no frames available yet, move on
+            return
         header = json.loads(parts[0])
         image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
         self.setImage(image, copy=False, reset=(not self.hasImage))
@@ -95,7 +117,7 @@ if __name__ == '__main__':
     hostname = sys.argv[1]
 
     # instantiate the viewer and run
-    viewer = PilatusLiveViewer(hostname, interval=1., alarm=1e6)
+    viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
     viewer.show()
     app.exec_()
 
