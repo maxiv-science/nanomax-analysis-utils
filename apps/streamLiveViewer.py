@@ -9,10 +9,13 @@ from silx.gui.plot import ImageView, PlotWindow, tools
 from silx.gui import qt
 import zmq
 from zmq.utils import jsonapi as json
+import requests
 import time
+from skimage.io import imread
+import io
 
 
-class PilatusLiveViewer(ImageView):
+class LiveViewerBase(ImageView):
     """
     Displays 2d detector images live from the Pilatus zmq streamer.
 
@@ -21,12 +24,12 @@ class PilatusLiveViewer(ImageView):
 
     def __init__(self, hostname, port=9998, interval=.1, alarm=None):
         # run the base class constructor
-        super(PilatusLiveViewer, self).__init__()
+        super().__init__()
 
-        # initialize the zmq
+        # initialize the connection
         self.hostname = hostname
         self.port = port
-        self.initialize_zmq()
+        self.initialize()
 
         # set some properties
         self.setWindowTitle(hostname)
@@ -52,38 +55,23 @@ class PilatusLiveViewer(ImageView):
         self._positionWidget = tools.PositionInfo(plot=self, converters=posInfo)
         self.statusBar().addWidget(self._positionWidget)
 
-    def initialize_zmq(self):
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+    def initialize(self):
+        raise NotImplementedError
+
+    def _get_image(self):
+        """
+        gets the last image
+        """
+        raise NotImplementedError
 
     def _update(self):
-        """
-        gets and plots the last image
-        """
-        if not self.waiting_for_frame:
-            self.socket.send(b'give me a frame (please)\0')
-            self.waiting_for_frame = True
-            self.latest_request = time.time()
-        elif time.time() - self.latest_request > 90:
-            # the server must have been down, so start over
-            print('** deciding the server must have been down. going to ask start over.')
-            self.waiting_for_frame = False
-            self.initialize_zmq()
+        image, exptime = self._get_image()
+        if image is None:
             return
-        try:
-            parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
-            self.waiting_for_frame = False
-        except zmq.ZMQError:
-            # no frames available yet, move on
-            return
-        header = json.loads(parts[0])
-        image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
         self.setImage(image, copy=False, reset=(not self.hasImage))
         self.hasImage = True
         total = np.sum(image)
         hottest = np.max(image)
-        exptime = header['exposure_time']
         if (self.alarm is not None) and (hottest/exptime > self.alarm):
             self.setBackgroundColor(qt.QColor(255, 0, 0))
         else:
@@ -108,6 +96,49 @@ class PilatusLiveViewer(ImageView):
                     return data[row, col]
         return '-'
 
+class PilatusLiveViewer(LiveViewerBase):
+    def initialize(self):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+
+    def _get_image(self):
+        """
+        gets the last image
+        """
+        if not self.waiting_for_frame:
+            self.socket.send(b'give me a frame (please)\0')
+            self.waiting_for_frame = True
+            self.latest_request = time.time()
+        elif time.time() - self.latest_request > 90:
+            # the server must have been down, so start over
+            print('** deciding the server must have been down. going to ask start over.')
+            self.waiting_for_frame = False
+            self.initialize()
+            return None, None
+        try:
+            parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
+            self.waiting_for_frame = False
+        except zmq.ZMQError:
+            # no frames available yet, move on
+            return None, None
+        header = json.loads(parts[0])
+        image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
+        exptime = header['exposure_time']
+        return image, exptime
+
+class EigerLiveViewer(LiveViewerBase):
+    def initialize(self):
+        self.session = requests.Session()
+        self.session.trust_env = False
+
+    def _get_image(self):
+        response = self.session.get('http://%s/monitor/api/1.8.0/images/monitor' % self.hostname)
+        if response:
+            image = imread(io.BytesIO(response.content))
+        exptime = self.session.get('http://%s/detector/api/1.8.0/config/count_time' % self.hostname).json()['value']
+        return image, exptime
+
 if __name__ == '__main__':
     # you always need a qt app     
     app = qt.QApplication(sys.argv)
@@ -117,7 +148,10 @@ if __name__ == '__main__':
     hostname = sys.argv[1]
 
     # instantiate the viewer and run
-    viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
+    if 'eiger' in hostname:
+        viewer = EigerLiveViewer(hostname, interval=.1)
+    else:
+        viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
     viewer.show()
     app.exec_()
 
