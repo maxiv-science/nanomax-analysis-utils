@@ -11,6 +11,4 @@ from .Scan import *
 from .dummy import *
 from .nanomax_nov2017 import flyscan_nov2017
 from .nanomax_nov2018 import *
-from .contrast_stepscan import *
-from .contrast_flyscan import *
-
+from .contrast_old import *
