@@ -1,0 +1,231 @@
+from . import Scan
+from ..utils import fastBinPixels
+from .. import NoDataException
+import numpy as np
+import h5py
+import copy as cp
+import os.path
+
+class contrast_scan(Scan):
+    """
+    General format for Contrast at NanoMAX.
+    """
+
+    alba_names = ['alba%u/%u'%(i,j) for i in (0,2) for j in (1,2,3,4)]
+    default_opts = {
+        'scanNr': {
+            'value': 0,
+            'type': int,
+            'doc': "scan number",
+            },
+        'path': {
+            'value': None,
+            'type': str,
+            'doc': "folder containing the main data file",
+            },
+        'dataSource': {
+            'value': 'merlin',
+            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs']+alba_names,
+            'doc': "type of data",
+            },
+        'xrfChannel': {
+            'value': [3,],
+            'type': list,
+            'doc': 'xspress3 channels from which to read XRF',
+            },
+        'xrfCropping': {
+            'value': [],
+            'type': list,
+            'doc': 'XRF detector range to load, [i0, i1]',
+            },
+        'xrdCropping': {
+            'value': [],
+            'type': list,
+            'doc': 'detector area to load, [i0, i1, j0, j1]',
+            },
+        'I0': {
+            'value': '',
+            'type': str,
+            'doc': 'channel over which to normalize signals, eg "alba2/1"',
+            },
+        'waxsPath': {
+            'value': '../../process/radial_integration/<sampledir>',
+            'type': str,
+            'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
+        },
+        'xMotor': {
+            'value': 'sx',
+            'type': str,
+            'doc': 'scanned motor to plot on the x axis',
+            },
+        'yMotor': {
+            'value': 'sy',
+            'type': str,
+            'doc': 'scanned motor to plot on the y axis',
+            },
+        'nMaxPositions': {
+            'value': 0,
+            'type': int,
+            'doc': 'maximum number of positions to read (0 means all)',
+        },
+        'globalPositions': {
+            'value': False,
+            'type': bool,
+            'doc': 'adds base motor values to piezo positions',
+        },
+    }
+
+    # an optional class attribute which lets scanViewer know what
+    # dataSource options have what dimensionalities. Good for the GUI.
+    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1}
+    albaDims = {name:0 for name in alba_names}
+    sourceDims.update(albaDims)
+    assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
+
+    def _prepareData(self, **kwargs):
+        """ 
+        This method gets the kwargs passed to the addData() method, and
+        stores them for use during this data loading.
+        """
+        # the base class method parses everything
+        super()._prepareData(**kwargs)
+
+        # just join the path and filename
+        if self.path.endswith('h5'):
+            self.path = os.path.dirname(self.path)
+        self.fileName = os.path.join(self.path, '%06u.h5'%self.scanNr)
+
+    def _readPositions(self):
+        """ 
+        Override position reading. Should return N by 2 array [x, y].
+        """
+
+        if not os.path.exists(self.fileName):
+            print('File not found! \n    ', self.filename)
+            raise NoDataException(self.fileName)
+        with h5py.File(self.fileName, 'r') as fp:
+            # replace sx, sy, sz by buffered positions
+            if 'entry/measurement/npoint_buff' in fp:
+                mapping = {'s%s'%dim: 'npoint_buff/%s'%dim for dim in 'xyz'}
+                if self.xMotor in mapping.keys():
+                    self.xMotor = mapping[self.xMotor]
+                if self.yMotor in mapping.keys():
+                    self.yMotor = mapping[self.yMotor]
+
+            if self.globalPositions:
+                xyz = ['npoint_buff/%s'%dim for dim in 'xyz'] + ['s%s'%dim for dim in 'xyz']
+                xbase, ybase = 0, 0
+                if self.xMotor in xyz:
+                    xbase = fp['entry/snapshot/base%s' % self.xMotor[-1]][:]
+                if self.yMotor in xyz:
+                    ybase = fp['entry/snapshot/base%s' % self.yMotor[-1]][:]
+
+            # read the positions
+            try:
+                x = fp['entry/measurement/%s' % self.xMotor][:]
+            except KeyError:
+                print('%s not found in measurement, using snapshot value' % self.xMotor)
+                x = fp['entry/snapshot/%s' % self.xMotor][:]
+            try:
+                y = fp['entry/measurement/%s' % self.yMotor][:]
+            except KeyError:
+                print('%s not found in measurement, using snapshot value' % self.yMotor)
+                y = fp['entry/snapshot/%s' % self.yMotor][:]
+
+        # sometimes flyscans are done with non-buffered slow motors,
+        # or a 1d scan is done with a snapshot motor on the second axis.
+        if len(x) < len(y):
+            x = np.repeat(x, len(y) // len(x))
+        if len(x) > len(y):
+            y = np.repeat(y, len(x) // len(y))
+
+        # limit the number of positions
+        self.nAvailablePositions = len(x)
+        if self.nMaxPositions:
+            x = x[:self.nMaxPositions]
+            y = y[:self.nMaxPositions]
+
+        # optionally add add base motor positions
+        if self.globalPositions:
+            x[:] = x + xbase
+            y[:] = y + ybase
+
+        # save motor labels
+        self.positionDimLabels = [self.xMotor, self.yMotor]
+
+        print('loaded %u positions'%x.shape)
+        return np.vstack((x, y)).T
+
+    def _readData(self, name):
+        """ 
+        Override data reading.
+        """
+
+        if self.I0:
+            with h5py.File(self.fileName, 'r') as fp:
+                I0_data = fp['entry/measurement/%s' % self.I0][:]
+
+        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger'):
+            print('loading %s data...' % self.dataSource)
+
+            with h5py.File(self.fileName, 'r') as fp:
+                dset = fp['entry/measurement/%s/frames' % self.dataSource]
+
+                # find out what to load
+                if self.xrdCropping:
+                    i0, i1, j0, j1 = self.xrdCropping
+                else:
+                    i0, i1 = 0, dset.shape[-2]
+                    j0, j1 = 0, dset.shape[-1]                    
+
+                # maybe there were detector bursts - then no need to allocate the whole thing
+                if dset.shape[0] > self.nAvailablePositions:
+                    print('more images than positions, assuming bursts were made and summing these')
+                    raise NotImplementedError
+                elif self.nMaxPositions:
+                    data = dset[:self.nMaxPositions, i0:i1, j0:j1]
+                else:
+                    data = dset[:, i0:i1, j0:j1]
+
+            if self.I0:
+                data = data / I0_data[:, None, None]
+
+        elif self.dataSource == 'xspress3':
+            raise NotImplementedError
+
+            self.xrfChannel
+            self.xrfCropping
+
+            if self.I0:
+                data = data / I0_data[:, None]
+
+            self.dataDimLabels[name] = ['Approx. energy (keV)']
+            self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
+
+        elif self.sourceDims[self.dataSource] == 0:
+            print('1D!!!! %s' % self.dataSource)
+            raise NotImplementedError
+
+        elif self.dataSource == 'waxs':
+            raise NotImplementedError
+            if self.waxsPath[0] == '/':
+                path = self.waxsPath
+            else:
+                sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
+                self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
+                path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
+            fn = os.path.basename(self.fileName)
+            waxsfn = fn.replace('.h5', '_waxs.h5')
+            waxs_file = os.path.join(path, waxsfn)
+            print('loading waxs data from %s' % waxs_file)
+            with h5py.File(waxs_file, 'r') as fp:
+                q = self._safe_get_array(fp, 'q')
+                I = self._safe_get_array(fp, 'I')
+            data = I
+            self.dataAxes[name] = [q,]
+            self.dataDimLabels[name] = ['q (1/nm)']
+
+        else:
+            raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')
+        
+        return data
