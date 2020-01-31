@@ -94,6 +94,9 @@ class ScanViewer(qt.QMainWindow):
         # dummy scan
         self._scan = None
 
+        # select the last class and emit a signal
+        self.ui.scanClassBox.setCurrentIndex(len(self.ui.scanClassBox)-1)
+
         # the ipython button
         self.ui.ipythonButton.setCheckable(True)
         self.ui.ipythonButton.setChecked(False)
@@ -383,3 +386,4 @@ if __name__ == '__main__':
     viewer.show()
     # run the app
     app.exec_()
+
