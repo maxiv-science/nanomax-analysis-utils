@@ -70,13 +70,19 @@ class Scan(object):
 
     def _prepareData(self, **kwargs):
         """
-        Placeholder method to be subclassed. Private method which is 
-        passed the kwargs from addData, and uses these to set up all
-        optional parameters for the next dataset to be read. Note that
-        these parameters are not kept, and are only used for data 
-        loading.
+        Private method which is passed the kwargs from addData, and
+        uses these to set up all parameters for the next dataset to
+        be read. Note that parameters are not kept, and are only used
+        for data loading. By default attaches all options as
+        attributes on self.
         """
-        raise NotImplementedError
+        # copy defaults, then update with kwarg options
+        opts = cp.deepcopy(self.default_opts)
+        opts = self._updateOpts(opts, **kwargs)
+        
+        # parse options
+        for k, dct in opts.items():
+            exec("self.%s = dct['value']" % k)
 
     def _readPositions(self):
         """ 
