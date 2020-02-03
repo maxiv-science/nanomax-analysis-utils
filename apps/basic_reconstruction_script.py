@@ -13,8 +13,8 @@ from ptypy import utils as u
 from distutils.version import LooseVersion
 
 ## simplest possible input #############################################
-detector = 'pilatus' # or 'merlin'
-folder = '/data/staff/nanomax/commissioning_2019-2/20190929/raw/flux/'
+detector = 'eiger' # or 'merlin' or 'pilatus'
+folder = '/data/staff/nanomax/commissioning_2020-1/20200130/raw/sample'
 scannr = int(sys.argv[1])
 distance = 4.05
 energy = 10.0
@@ -31,22 +31,23 @@ p.scans = u.Param()
 p.scans.scan00 = u.Param()
 p.scans.scan00.name = 'Full'
 p.scans.scan00.data = u.Param()
-p.scans.scan00.data.name = 'NanomaxStepscanSep2019'
+p.scans.scan00.data.name = 'NanomaxContrast'
 p.scans.scan00.data.path = folder
 p.scans.scan00.data.detector = detector
-p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin_mask.h5',
-								'pilatus': None}[detector]
+p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/merlin/latest.h5',
+								'pilatus': None,
+                                'eiger': None,}[detector]
 p.scans.scan00.data.scanNumber = scannr
 p.scans.scan00.data.xMotor = 'sx'
 p.scans.scan00.data.yMotor = 'sy'
-
-p.scans.scan00.data.shape = 128
+p.scans.scan00.data.shape = 256
 p.scans.scan00.data.save = None
 p.scans.scan00.data.center = None # auto, you can also set (i, j) center here.
-p.scans.scan00.data.orientation = {'merlin': (False, True, False), 'pilatus': None}[detector]
+p.scans.scan00.data.orientation = {'merlin': (False, False, True), 'pilatus': None, 'eiger': None}[detector]
 p.scans.scan00.data.distance = distance
-p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6}[detector]
+p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6, 'eiger': 75e-6}[detector]
 p.scans.scan00.data.energy = energy
+p.scans.scan00.data.I0 = None # can be like 'alba2/1'
 p.scans.scan00.data.min_frames = 10
 p.scans.scan00.data.load_parallel = 'all'
 
