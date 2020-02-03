@@ -28,7 +28,7 @@ class contrast_scan(Scan):
             'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs']+alba_names,
             'doc': "type of data",
             },
-        'xrfChannel': {
+        'xrfChannels': {
             'value': [3,],
             'type': list,
             'doc': 'xspress3 channels from which to read XRF',
@@ -158,18 +158,28 @@ class contrast_scan(Scan):
 
     def _readData(self, name):
         """ 
-        Override data reading.
+        Override data reading. In principle these are the same for
+        all data sources (except WAXS), it's just that there are
+        some detector-specific cropping and channel options to respect.
         """
 
         if self.I0:
             with h5py.File(self.fileName, 'r') as fp:
-                I0_data = fp['entry/measurement/%s' % self.I0][:]
+                try:
+                    I0_data = fp['entry/measurement/%s' % self.I0][:]
+                except KeyError:
+                    print('I0 data %s not found'%self.I0)
+                    raise NoDataException()
 
         if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger'):
             print('loading %s data...' % self.dataSource)
 
             with h5py.File(self.fileName, 'r') as fp:
-                dset = fp['entry/measurement/%s/frames' % self.dataSource]
+                try:
+                    dset = fp['entry/measurement/%s/frames' % self.dataSource]
+                except KeyError:
+                    print('couldnt find %s'%self.dataSource)
+                    raise NoDataException()
 
                 # find out what to load
                 if self.xrdCropping:
@@ -179,9 +189,16 @@ class contrast_scan(Scan):
                     j0, j1 = 0, dset.shape[-1]                    
 
                 # maybe there were detector bursts - then no need to allocate the whole thing
+                im_per_pos = None
                 if dset.shape[0] > self.nAvailablePositions:
-                    print('more images than positions, assuming bursts were made and summing these')
-                    raise NotImplementedError
+                    nmax = self.nAvailablePositions
+                    if self.nMaxPositions:
+                        nmax = self.nMaxPositions
+                    im_per_pos = dset.shape[0] // self.nAvailablePositions
+                    print('more images than positions, assuming bursts of %u were made and summing these'%im_per_pos)
+                    data = np.empty(dtype=dset.dtype, shape=(nmax, *dset.shape[1:]))
+                    for i in range(nmax):
+                        data[i] = np.sum(dset[i*im_per_pos:(i+1)*im_per_pos], axis=0)
                 elif self.nMaxPositions:
                     data = dset[:self.nMaxPositions, i0:i1, j0:j1]
                 else:
@@ -191,20 +208,37 @@ class contrast_scan(Scan):
                 data = data / I0_data[:, None, None]
 
         elif self.dataSource == 'xspress3':
-            raise NotImplementedError
 
-            self.xrfChannel
-            self.xrfCropping
+            with h5py.File(self.fileName, 'r') as fp:
+                try:
+                    dset = fp['entry/measurement/%s/frames' % self.dataSource]
+                except KeyError:
+                    print('couldnt find %s'%self.dataSource)
+                    raise NoDataException
+                if self.xrfCropping:
+                    i0, i1 = self.xrfCropping
+                else:
+                    i0, i1 = 0, dset.shape[-1]-10 # last bins annoying
+                data = np.sum(dset[:, self.xrfChannels, i0:i1], axis=1)
 
             if self.I0:
+                print('****, %s, %s, %s'%(data.shape, I0_data.shape, I0_data[:, None].shape))
                 data = data / I0_data[:, None]
 
             self.dataDimLabels[name] = ['Approx. energy (keV)']
             self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
 
         elif self.sourceDims[self.dataSource] == 0:
-            print('1D!!!! %s' % self.dataSource)
-            raise NotImplementedError
+            with h5py.File(self.fileName, 'r') as fp:
+                try:
+                    data = fp['entry/measurement/%s' % self.dataSource][:]
+                    print('couldnt find %s'%self.dataSource)
+                except KeyError:
+                    print('couldnt find %s'%self.dataSource)
+                    raise NoDataException
+
+            if self.I0:
+                data = data / I0_data
 
         elif self.dataSource == 'waxs':
             raise NotImplementedError
