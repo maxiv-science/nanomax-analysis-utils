@@ -520,7 +520,7 @@ def air_mu(E):
 
 class Ionchamber(object):
 
-     def __init__(self, length, energy, gas='air'):
+     def __init__(self, length, gas='air'):
           """
           Takes a length in cm and an energy in eV.
           """

@@ -25,5 +25,5 @@ if __name__ == '__main__':
     print("Current %.2e" % args.current)
     print("Length  %.2f" % args.length)
 
-    ic = Ionchamber(length=args.length, energy=args.energy)
+    ic = Ionchamber(length=args.length)
     print('\nCalculated flux: %.2e\n' % ic.flux(args.current, args.energy))
