@@ -525,20 +525,18 @@ class Ionchamber(object):
           Takes a length in cm and an energy in eV.
           """
           self.length = length
-          self.energy = energy
           if gas == 'air':
                self.mu = air_mu
           else:
                raise NotImplementedError('Only air is supported!')
 
-     @property
-     def current_per_flux(self):
+     def current_per_flux(self, energy):
           e = 1.602e-19
-          T = np.exp(-self.mu(self.energy) * self.length)
-          return self.energy * e * (1 - T) / 34.4
+          T = np.exp(-self.mu(energy) * self.length)
+          return energy * e * (1 - T) / 34.4
 
-     def flux(self, current):
+     def flux(self, current, energy):
           """
           Returns the flux as function of the measured current.
           """
-          return current / self.current_per_flux
+          return current / self.current_per_flux(energy)
