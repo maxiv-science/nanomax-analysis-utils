@@ -241,7 +241,6 @@ class contrast_scan(Scan):
                 data = data / I0_data
 
         elif self.dataSource == 'waxs':
-            raise NotImplementedError
             if self.waxsPath[0] == '/':
                 path = self.waxsPath
             else:
@@ -252,10 +251,15 @@ class contrast_scan(Scan):
             waxsfn = fn.replace('.h5', '_waxs.h5')
             waxs_file = os.path.join(path, waxsfn)
             print('loading waxs data from %s' % waxs_file)
+            if not os.path.exists(waxs_file):
+                raise NoDataException('%s doesnt exist!'%waxs_file)
             with h5py.File(waxs_file, 'r') as fp:
                 q = self._safe_get_array(fp, 'q')
                 I = self._safe_get_array(fp, 'I')
             data = I
+            if self.I0:
+                print('****, %s, %s, %s'%(data.shape, I0_data.shape, I0_data[:, None].shape))
+                data = data / I0_data[:, None]
             self.dataAxes[name] = [q,]
             self.dataDimLabels[name] = ['q (1/nm)']
 

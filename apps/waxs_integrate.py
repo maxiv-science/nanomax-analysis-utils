@@ -1,8 +1,6 @@
 """
 Script which radially integrates the 2D data contained in a hdf5 file
 or list of files.
-
-This is still python 2! Waiting for pyfai installation.
 """
 
 import pyFAI, fabio
@@ -18,11 +16,11 @@ parser.add_argument('poni_file', type=str,
                     help='The pyFAI calibration file. Determines what data to take from the input file.')
 parser.add_argument('input_files', type=str, nargs='*',
                     help='The file(s) containing the input data. They all have to be in the same folder unless an absolute output path is given.')
-parser.add_argument('--mask_file', type=str, dest='mask_file',
+parser.add_argument('mask_file', type=str,
                     help='Mask file, edf format from pyFAI.')
 parser.add_argument('--output_folder', type=str, dest='output_folder', default=None,
                     help='Output folder. If relative, it refers to the input folder. By default uses the an analog of the input folder under ../../process/radial_integration/<sample name>.')
-parser.add_argument('--nbins', type=int, dest='nbins', default=2000,
+parser.add_argument('--nbins', type=int, dest='nbins', default=2048,
                     help='Number of q bins.')
 args = parser.parse_args()
 
@@ -56,7 +54,7 @@ def dict_walk(dct, ignore=[]):
     if str(ignore) == ignore:
         ignore = [ignore,]
     for k, v in dct.items():
-        if hasattr(v, 'iteritems'):
+        if hasattr(v, 'items'):
             if v.name.split('/')[-1] in ignore:
                 continue
             for v_ in dict_walk(v, ignore=ignore):
@@ -71,9 +69,10 @@ def images(fp, shape=None, ignore=[]):
     """
     for v in dict_walk(fp, ignore=ignore):
         if len(v.shape) >= 2 and (shape is None or v.shape[-2:] == shape):
-            # make an array (n, M, N) where n is the number of images
-            arr = np.reshape(v, (-1,)+v.shape[-2:])
-            for im in arr:
+            if len(v.shape) == 2:
+                v = np.reshape(v, (1,)+v.shape)
+            for i, im in enumerate(v):
+                print('image %i'%i)
                 yield im
 
 
@@ -81,23 +80,22 @@ def images(fp, shape=None, ignore=[]):
 integrator = pyFAI.load(args.poni_file)
 for input_file in args.input_files:
     inputfn = os.path.basename(input_file)
-    print '*** Integrating %s' % inputfn
+    print('*** Integrating %s' % inputfn)
     outputfn = inputfn.split('.')[0] + '_waxs.' + inputfn.split('.')[-1]
     output_file = os.path.join(output_folder, outputfn)
     assert '/raw/' not in output_file
 
     if not os.path.exists(os.path.dirname(output_file)):
-        print '****** Creating directory %s' % os.path.dirname(output_file)
+        print('****** Creating directory %s' % os.path.dirname(output_file))
         os.makedirs(os.path.dirname(output_file))
 
-    if args.mask_file:
-        mask = fabio.open(args.mask_file).data
-    else:
-        mask = None
+    mask = fabio.open(args.mask_file).data
+    shape = mask.shape
+    print('looking for images of shape %s' % str(shape))
 
     intensities = []
     with h5py.File(input_file, 'r') as fpin:    
-        for im in images(fpin, ignore='instrument'):
+        for im in images(fpin, ignore='instrument', shape=shape):
             if not im.shape == integrator.get_shape():
                 print('skipping data %s' % (str(im.shape)))
                 continue
