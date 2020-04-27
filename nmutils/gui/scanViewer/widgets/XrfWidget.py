@@ -103,8 +103,8 @@ class XrfWidget(PairedWidgetBase):
                 print("building 1D data map from the whole spectrum")
                 average = np.mean(self.scan.data['1d'], axis=1)
             else:
-                lowerval = int(np.floor(roi.getFrom()))
-                upperval = int(np.ceil(roi.getTo()))
+                lowerval = roi.getFrom()
+                upperval = roi.getTo()
                 xvector = self.scan.dataAxes['1d'][0]
                 upper = (np.abs(xvector - upperval)).argmin()
                 lower = (np.abs(xvector - lowerval)).argmin()
