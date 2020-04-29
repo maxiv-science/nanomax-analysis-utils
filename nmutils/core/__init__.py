@@ -13,4 +13,4 @@ from .nanomax_nov2017 import flyscan_nov2017
 from .nanomax_nov2018 import *
 from .contrast_old import *
 from .contrast import contrast_scan
-
+from .softimax import *
