@@ -49,14 +49,11 @@ class Plane(object):
         normal = self.normal.reshape((-1,) + (1,)*extra_dims)
         return np.sum(normal * point, axis=0) - self.dist
 
-    def contains(self, point, tol=1e-6):
+    def contains(self, point, tol=1e-10):
         """
         Checks whether the plane contains the given point.
         """
-#        if np.abs(self.side(point)) > tol:
-#            return False
-#        return True
-        return np.abs(self.side(point)) > tol
+        return np.abs(self.side(point)) < tol
 
     def _recalculate(self):
         """
@@ -96,19 +93,15 @@ class Solid(object):
     def __init__(self, planes=[]):
         self.planes = planes
 
-    def contains(self, points):
+    def contains(self, points, tol=1e-10):
         """
         Checks whether the solid contains the given point.
         """
-#        for plane in self.planes:
-#            if plane.side(point) > tol:
-#                return False
-#        return True
         results = []
         for plane in self.planes:
-            results.append(plane.side(points))
+            results.append(plane.side(points) <= tol)
         results = np.array(results)
-        return np.all(results < 0, axis=0)
+        return np.all(results, axis=0)
 
     def rotate(self, *args, **kwargs):
         for p in self.planes:
@@ -146,6 +139,7 @@ class Solid(object):
                             pass
                     except np.linalg.LinAlgError:
                         pass
+        assert len(vertices), 'No vertices found!'
         vertices = np.unique(vertices, axis=0)
         return tuple(vertices)
 
