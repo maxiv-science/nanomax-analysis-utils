@@ -6,7 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-# #from PyQt5 import QtCore, QtGui, QtWidgets
+#from PyQt5 import QtCore, QtGui, QtWidgets
 from silx.gui import qt as QtCore
 QtGui = QtCore
 QtWidgets = QtCore
@@ -216,7 +216,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2d), _translate("MainWindow", "2D data"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2dCom), _translate("MainWindow", "2D center of mass"))
         self.label_3.setText(_translate("MainWindow", "data source"))
-        self.pymcaButton.setText(_translate("MainWindow", "Open in PyMCA"))
+        self.pymcaButton.setText(_translate("MainWindow", "Export for PyMCA"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1d), _translate("MainWindow", "1D data"))
         self.label_4.setText(_translate("MainWindow", "data source"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab0d), _translate("MainWindow", "Scalar data"))

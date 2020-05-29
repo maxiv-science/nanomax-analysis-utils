@@ -308,7 +308,7 @@
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>Open in PyMCA</string>
+           <string>Export for PyMCA</string>
           </property>
          </widget>
         </item>

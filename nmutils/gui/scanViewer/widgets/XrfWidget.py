@@ -59,9 +59,6 @@ class XrfWidget(PairedWidgetBase):
         # workaround to avoid multiple updates
         self.last_map_update = 0.0
 
-        # a list of pymca windows to keep then in scope
-        self.pymcaWindows = []
-
     def setScan(self, scan):
         self.scan = scan
         if not scan:
@@ -169,49 +166,41 @@ class XrfWidget(PairedWidgetBase):
             self.window().statusOutput('Failed to build 1D curve. See terminal output.')
             raise
 
-    def launchPyMCA(self):
+    def exportPyMCA(self):
         """
-        Exports the current scan, loads it, and launches a PyMCA QStackWidget.
-        The data is written to disk so that the Scan.export method can be used
-        as it is. This allows discarding the held data before launching PyMCA,
-        avoiding double memory usage.
+        Exports the current scan in a format readable by PyMCA.
         """
-        filename = os.path.join(tempfile.gettempdir(), 'tmp.hdf5')
-        method, shape, oversampling, equal, discard, ok = PymcaLaunchDialog().getValues()
-        if ok:
-            self.window().statusOutput("Exporting data and launching PyMCA...")
-            try:
-                from PyMca5.PyMca.QStackWidget import QStackWidget
-            except ImportError:
-                self.window().statusOutput('PyMCA python module not found!')
-                return
-            # reshape/resample and export data to temporary hdf5
-            if os.path.exists(filename):
-                os.remove(filename)
-            try:
-                self.scan.export(filename, method=method, shape=shape,
-                    oversampling=oversampling, equal=equal)
-            except Exception as e:
-                print(e)
-                self.window().statusOutput("Failed to export data, see terminal for info.")
-                return
-            if discard:
-                # discard all data on the parent widget
-                self.window().scan = None
-            # launch a PyMCA widget with that data
-            w = QStackWidget()
-            with h5py.File(filename) as fp:
-                data = fp['entry0/data/1d'][:]
-            if data.ndim == 2:
-                data = data.reshape((1,) + data.shape)
-            w.setStack(data)
-            w.show()
-            self.pymcaWindows.append(w)
-            self.window().statusOutput("")
+        self.window().statusOutput("Exporting data for PyMCA...")
+        method, shape, oversampling, equal, ok = PymcaExportDialog().getValues()
+        if not ok: return
 
-class PymcaLaunchDialog(qt.QDialog):
+        basepath = str(self.window().ui.filenameBox.text())
+        defaultpath = os.path.abspath(os.path.join(basepath, os.path.join(os.pardir, os.pardir)))
+        filename = qt.QFileDialog.getSaveFileName(parent=self,
+                                                  caption='Select output file',
+                                                  directory=defaultpath)
+        # PyQt5 gives a tuple here...
+        if type(filename) == tuple:
+            filename = filename[0]
+
+        # reshape/resample and export data to temporary hdf5
+        if os.path.exists(filename):
+            print('Overwriting %s'%filename)
+            os.remove(filename)
+        try:
+            self.scan.export(filename, method=method, shape=shape,
+                oversampling=oversampling, equal=equal)
+        except Exception as e:
+            print(e)
+            self.window().statusOutput("Failed to export data, see terminal for info.")
+            return
+
+        self.window().statusOutput("")
+
+class PymcaExportDialog(qt.QDialog):
     """
-    Dialog box for getting options before launching PyMCA.
+    Dialog box for getting options before exporting to a PyMCA-adapted
+    special needs file.
     """
     def setupUi(self):
         # form layout for grid scan inputs
@@ -234,13 +223,6 @@ class PymcaLaunchDialog(qt.QDialog):
         self.formGroupBox = qt.QGroupBox("PyMCA needs data layed out on a regular grid.")
         self.formGroupBox.setLayout(layout)
 
-        # another form layout for an option to discard the data
-        layout = qt.QFormLayout()
-        self.discardBox = qt.QCheckBox()
-        layout.addRow(qt.QLabel("Discard data in scanviewer before launching"), self.discardBox)
-        self.discardGroupBox = qt.QGroupBox("Opening the data in PyMCA might double memory use.")
-        self.discardGroupBox.setLayout(layout)
-
         # ok/cancel buttons
         buttonBox = qt.QDialogButtonBox(qt.QDialogButtonBox.Ok | qt.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
@@ -249,11 +231,10 @@ class PymcaLaunchDialog(qt.QDialog):
         # put everything together
         mainLayout = qt.QVBoxLayout()
         mainLayout.addWidget(self.formGroupBox)
-        mainLayout.addWidget(self.discardGroupBox)
         mainLayout.addWidget(buttonBox)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle("Launch PyMCA...")
+        self.setWindowTitle("Export for PyMCA...")
 
     def getValues(self):
         self.setupUi()
@@ -270,5 +251,4 @@ class PymcaLaunchDialog(qt.QDialog):
         shape = [int(s) for s in shape] if len(shape) == 2 else None
         oversampling = self.oversamplingBox.value()
         equal = self.equalBox.isChecked()
-        discard = self.discardBox.isChecked()
-        return method, shape, oversampling, equal, discard, ok
+        return method, shape, oversampling, equal, ok

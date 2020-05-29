@@ -1,7 +1,7 @@
 # If the gui is modified, the .ui file has to be compiled. First
 # compile the gui using either pyuic4/pyrcc4 or pyuic5/pyrcc5
-pyuic5 design.ui -o design.py --import-from
-pyrcc4 design.qrc -o design_rc.py
+pyuic5 design.ui -o design.py --from-imports
+pyrcc5 design.qrc -o design_rc.py
 
 # and then adjust the imports to use silx rather than PyQt, in both
 # design.py and design_rc.py.

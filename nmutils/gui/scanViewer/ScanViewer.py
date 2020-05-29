@@ -89,7 +89,7 @@ class ScanViewer(qt.QMainWindow):
         self.ui.loadButton.clicked.connect(self.load)
 
         # connect the PyMCA button to the slot on that widget
-        self.ui.pymcaButton.clicked.connect(self.ui.xrfWidget.launchPyMCA)
+        self.ui.pymcaButton.clicked.connect(self.ui.xrfWidget.exportPyMCA)
 
         # dummy scan
         self._scan = None
