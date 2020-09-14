@@ -17,7 +17,6 @@ detector = 'eiger' # or 'merlin' or 'pilatus'
 folder = '/data/staff/nanomax/commissioning_2020-1/20200130/raw/sample'
 scannr = int(sys.argv[1])
 distance = 4.05
-energy = 10.0
 ########################################################################
 
 
@@ -46,7 +45,6 @@ p.scans.scan00.data.center = None # auto, you can also set (i, j) center here.
 p.scans.scan00.data.orientation = {'merlin': (False, False, True), 'pilatus': None, 'eiger': None}[detector]
 p.scans.scan00.data.distance = distance
 p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6, 'eiger': 75e-6}[detector]
-p.scans.scan00.data.energy = energy
 p.scans.scan00.data.I0 = None # can be like 'alba2/1'
 p.scans.scan00.data.min_frames = 10
 p.scans.scan00.data.load_parallel = 'all'
