@@ -54,12 +54,12 @@ class contrast_scan(Scan):
             'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
         },
         'xMotor': {
-            'value': 'sx',
+            'value': 'pseudo/x',
             'type': str,
             'doc': 'scanned motor to plot on the x axis',
             },
         'yMotor': {
-            'value': 'sy',
+            'value': 'pseudo/y',
             'type': str,
             'doc': 'scanned motor to plot on the y axis',
             },
