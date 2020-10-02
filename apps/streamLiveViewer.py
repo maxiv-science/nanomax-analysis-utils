@@ -110,12 +110,6 @@ class PilatusLiveViewer(LiveViewerBase):
             self.socket.send(b'give me a frame (please)\0')
             self.waiting_for_frame = True
             self.latest_request = time.time()
-#        elif time.time() - self.latest_request > 90:
-#            # the server must have been down, so start over
-#            print('** deciding the server must have been down. going to ask start over.')
-#            self.waiting_for_frame = False
-#            self.initialize()
-#            return None, None
         try:
             parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
             self.waiting_for_frame = False
@@ -151,9 +145,11 @@ if __name__ == '__main__':
     hostname = sys.argv[1]
 
     # instantiate the viewer and run
-    if 'eiger' in hostname:
+    if hostname in ('eiger', '172.16.126.91'):
+        print('Making an EigerLiveViewer instance')
         viewer = EigerLiveViewer(hostname, interval=.1)
     else:
+        print('Making a PilatusLiveViewer instance')
         viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
     viewer.show()
     app.exec_()
