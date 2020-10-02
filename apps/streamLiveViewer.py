@@ -110,12 +110,12 @@ class PilatusLiveViewer(LiveViewerBase):
             self.socket.send(b'give me a frame (please)\0')
             self.waiting_for_frame = True
             self.latest_request = time.time()
-        elif time.time() - self.latest_request > 90:
-            # the server must have been down, so start over
-            print('** deciding the server must have been down. going to ask start over.')
-            self.waiting_for_frame = False
-            self.initialize()
-            return None, None
+#        elif time.time() - self.latest_request > 90:
+#            # the server must have been down, so start over
+#            print('** deciding the server must have been down. going to ask start over.')
+#            self.waiting_for_frame = False
+#            self.initialize()
+#            return None, None
         try:
             parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
             self.waiting_for_frame = False
@@ -133,9 +133,12 @@ class EigerLiveViewer(LiveViewerBase):
         self.session.trust_env = False
 
     def _get_image(self):
-        response = self.session.get('http://%s/monitor/api/1.8.0/images/monitor' % self.hostname)
-        if response:
-            image = imread(io.BytesIO(response.content))
+        try:
+            response = self.session.get('http://%s/monitor/api/1.8.0/images/monitor' % self.hostname, timeout=1)
+        except requests.exceptions.Timeout:
+            print('request timed out, returning dummy data')
+            return np.zeros((100,100)), 1.0
+        image = imread(io.BytesIO(response.content))
         exptime = self.session.get('http://%s/detector/api/1.8.0/config/count_time' % self.hostname).json()['value']
         return image, exptime
 
