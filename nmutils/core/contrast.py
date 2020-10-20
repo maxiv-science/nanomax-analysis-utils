@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink']+alba_names,
+            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor']+alba_names,
             'doc': "type of data",
             },
         'xrfChannels': {
@@ -77,7 +77,7 @@ class contrast_scan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities. Good for the GUI.
-    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0}
+    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
@@ -121,16 +121,29 @@ class contrast_scan(Scan):
                     ybase = fp['entry/snapshot/base%s' % self.yMotor[-1]][:]
 
             # read the positions
-            try:
-                x = fp['entry/measurement/%s' % self.xMotor][:]
-            except KeyError:
+            xkey = 'entry/measurement/%s' % self.xMotor
+            xsnapkey = 'entry/snapshot/%s' % self.xMotor
+            if xkey in fp:
+                x = fp[xkey][:]
+            elif xsnapkey in fp:
                 print('%s not found in measurement, using snapshot value' % self.xMotor)
-                x = fp['entry/snapshot/%s' % self.xMotor][:]
-            try:
-                y = fp['entry/measurement/%s' % self.yMotor][:]
-            except KeyError:
+                x = fp[xsnapkey][:]
+            else:
+                msg = 'Cannot find any positions for motor %s' % self.xMotor
+                print(msg)
+                raise NoDataException(msg)
+                
+            ykey = 'entry/measurement/%s' % self.yMotor
+            ysnapkey = 'entry/snapshot/%s' % self.yMotor
+            if ykey in fp:
+                y = fp[ykey][:]
+            elif ysnapkey in fp:
                 print('%s not found in measurement, using snapshot value' % self.yMotor)
-                y = fp['entry/snapshot/%s' % self.yMotor][:]
+                y = fp[ysnapkey][:]
+            else:
+                msg = 'Cannot find any positions for motor %s' % self.yMotor
+                print(msg)
+                raise NoDataException(msg)
 
         # sometimes flyscans are done with non-buffered slow motors,
         # or a 1d scan is done with a snapshot motor on the second axis.
@@ -171,13 +184,16 @@ class contrast_scan(Scan):
                     print('I0 data %s not found'%self.I0)
                     raise NoDataException()
 
-        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger'):
+        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger', 'andor'):
             print('loading %s data...' % self.dataSource)
 
             with h5py.File(self.fileName, 'r') as fp:
-                try:
-                    dset = fp['entry/measurement/%s/frames' % self.dataSource]
-                except KeyError:
+                group = fp['entry/measurement/%s' % self.dataSource]
+                if 'frames' in group:
+                    dset = group['frames']
+                elif 'data' in group:
+                    dset = group['data']
+                else:
                     print('couldnt find %s'%self.dataSource)
                     raise NoDataException()
 
