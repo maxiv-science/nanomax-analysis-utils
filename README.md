@@ -2,12 +2,29 @@
 
 ### From conda
 
-For the easiest installation, including dependencies, use conda. Install Anaconda3, miniconda3, or so (Google knows how). Then,
+For the easiest installation, including dependencies, use conda. Install Anaconda3, miniconda3, or so (Google knows how).
+
+First, set up the conda-forge and maxiv software channels.
 
 ```
+conda config --add channels conda-forge
 conda config --add channels maxiv
+```
+
+Next, create and activate your conda environment, name it what you like (my_env here).
+
+```
+conda create -n my_env
+conda activate my_env
+```
+
+Now, installing the nmutils package will install all the dependencies.
+
+```
 conda install -c maxiv nanomax-analysis-utils
 ```
+
+When that's done, you can use the library or run the `scanViewer` application directly.
 
 ### From git
 
