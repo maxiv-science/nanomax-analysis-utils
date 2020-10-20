@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 
 """
 This application loads ptypy reconstruction files and displays them nicely.
