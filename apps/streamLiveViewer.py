@@ -136,21 +136,36 @@ class EigerLiveViewer(LiveViewerBase):
         exptime = self.session.get('http://%s/detector/api/1.8.0/config/count_time' % self.hostname).json()['value']
         return image, exptime
 
+class AndorLiveViewer(PilatusLiveViewer):
+    def _get_image(self):
+        """
+        gets the last image
+        """
+        self.socket.send(b'give me a frame (please)\0')
+        parts = self.socket.recv_multipart()
+        header = json.loads(parts[0])
+        image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
+        exptime = 1.
+        return image, exptime
+
 if __name__ == '__main__':
     # you always need a qt app     
     app = qt.QApplication(sys.argv)
     app.setStyle('Fusion')
 
     # parse arguments
-    hostname = sys.argv[1]
+    dettype = sys.argv[1].lower()
+    hostname = sys.argv[2]
 
     # instantiate the viewer and run
-    if hostname in ('eiger', '172.16.126.91'):
+    if dettype == 'eiger':
         print('Making an EigerLiveViewer instance')
         viewer = EigerLiveViewer(hostname, interval=.1)
-    else:
+    elif dettype == 'pilatus':
         print('Making a PilatusLiveViewer instance')
         viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
+    elif dettype in ('andor', 'krytur', 'zyla'):
+        viewer = AndorLiveViewer(hostname, interval=.1)
     viewer.show()
     app.exec_()
 
