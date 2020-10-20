@@ -13,10 +13,12 @@ from ptypy import utils as u
 from distutils.version import LooseVersion
 
 ## simplest possible input #############################################
-detector = 'eiger' # or 'merlin' or 'pilatus'
-folder = '/data/staff/nanomax/commissioning_2020-1/20200130/raw/sample'
-scannr = int(sys.argv[1])
-distance = 4.05
+detector   = 'eiger' # or 'merlin' or 'pilatus'
+folder     = '/data/staff/nanomax/commissioning_2020-1/20200130/raw/sample'
+distance_m = 4.55	# distance between the sample and the detector in meters
+defocus_um = 500	# distance between the focus and the sample plane in micro meters -> used for inital probe
+#energy_keV = 12.0	# incident photon energy in keV ... now read from scan file
+scannr     = int(sys.argv[1])
 ########################################################################
 
 
@@ -29,6 +31,9 @@ p.run = 'scan%d' % scannr
 p.scans = u.Param()
 p.scans.scan00 = u.Param()
 p.scans.scan00.name = 'Full'
+p.scans.scan00.coherence = u.Param()
+#p.scans.scan00.coherence.num_probe_modes = 4		# Number of probe modes
+
 p.scans.scan00.data = u.Param()
 p.scans.scan00.data.name = 'NanomaxContrast'
 p.scans.scan00.data.path = folder
@@ -39,12 +44,14 @@ p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/m
 p.scans.scan00.data.scanNumber = scannr
 p.scans.scan00.data.xMotor = 'sx'
 p.scans.scan00.data.yMotor = 'sy'
+p.scans.scan00.data.zDetectorAngle = +0.78 # [deg]  # +0.78 measured Sep 2020
 p.scans.scan00.data.shape = 256
 p.scans.scan00.data.save = None
 p.scans.scan00.data.center = None # auto, you can also set (i, j) center here.
 p.scans.scan00.data.orientation = {'merlin': (False, False, True), 'pilatus': None, 'eiger': None}[detector]
-p.scans.scan00.data.distance = distance
+p.scans.scan00.data.distance = distance_m
 p.scans.scan00.data.psize = {'pilatus': 172e-6, 'merlin': 55e-6, 'eiger': 75e-6}[detector]
+#p.scans.scan00.data.energy = energy_keV
 p.scans.scan00.data.I0 = None # can be like 'alba2/1'
 p.scans.scan00.data.min_frames = 10
 p.scans.scan00.data.load_parallel = 'all'
@@ -53,8 +60,11 @@ p.scans.scan00.data.load_parallel = 'all'
 p.scans.scan00.illumination = u.Param()
 p.scans.scan00.illumination.model = None
 p.scans.scan00.illumination.aperture = u.Param()
-p.scans.scan00.illumination.aperture.form = 'circ'
-p.scans.scan00.illumination.aperture.size = 500e-9
+p.scans.scan00.illumination.aperture.form = 'rect'
+p.scans.scan00.illumination.aperture.size = 100e-9			           # at the focus
+p.scans.scan00.illumination.propagation = u.Param()
+p.scans.scan00.illumination.propagation.parallel = -1.*defocus_um*1e-6 # somehow this has to be negative to the basez axis 
+															           # -> being downstream of the focus means negative distance
 
 # Reconstruction parameters
 p.engines = u.Param()
