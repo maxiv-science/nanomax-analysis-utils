@@ -2,7 +2,11 @@
 
 ### From conda
 
-For the easiest installation, including dependencies, use conda. Install Anaconda3, miniconda3, or so (Google knows how).
+For the easiest installation, including dependencies, use conda. Install Anaconda3, miniconda3, or so (Google knows how). If you're working at the MAX IV compute cluster, Anaconda is already installed and the installation is loaded with:
+
+```
+module load Anaconda3
+```
 
 First, set up the conda-forge and maxiv software channels.
 
