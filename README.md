@@ -28,7 +28,7 @@ Now, installing the nmutils package will install all the dependencies.
 conda install -c maxiv nanomax-analysis-utils
 ```
 
-When that's done, you can use the library or run the `scanViewer` application directly.
+When that's done, you can use the library or run the `scanViewer` application directly. For Eiger images, it's good to have `bitshuffle` or `hdf5plugin` installed.
 
 ### From git
 
