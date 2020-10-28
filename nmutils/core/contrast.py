@@ -113,7 +113,7 @@ class contrast_scan(Scan):
                     self.yMotor = mapping[self.yMotor]
 
             if self.globalPositions:
-                xyz = ['npoint_buff/%s'%dim for dim in 'xyz'] + ['s%s'%dim for dim in 'xyz']
+                xyz = ['npoint_buff/%s'%dim for dim in 'xyz'] + ['pseudo/%s'%dim for dim in 'xyz'] + ['s%s'%dim for dim in 'xyz']
                 xbase, ybase = 0, 0
                 if self.xMotor in xyz:
                     xbase = fp['entry/snapshot/base%s' % self.xMotor[-1]][:]
