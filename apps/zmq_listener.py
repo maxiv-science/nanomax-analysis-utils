@@ -114,5 +114,5 @@ if __name__ == "__main__":
     known_hosts['cc1'] = '172.16.125.11'
     known_hosts['cc2'] = '172.16.125.18'
 
-    recv = zmq_listener(host=known_hosts['cc1'], port=5556) 
+    recv = zmq_listener(host=known_hosts['cc2'], port=5556) 
     recv.run()
