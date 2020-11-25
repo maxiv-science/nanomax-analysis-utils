@@ -96,7 +96,6 @@ class XRF_scanliveview():
 
             # xspress3 did send a message
             if self.sock_xspress3 in events and events[self.sock_xspress3] == zmq.POLLIN:
-                print('xspress3 frame available')
                 meta = self.sock_xspress3.recv_json()
 
                 if meta['htype'] == 'image':
@@ -139,7 +138,6 @@ class XRF_scanliveview():
                 # must be a data point then
                 else:
                     sx, sy = meta['pseudo']['x'], meta['pseudo']['y']
-                    print(sx, sy)
                     for i, x in enumerate(sx):
                         self.add_new_position([sy[i],sx[i]])
             
