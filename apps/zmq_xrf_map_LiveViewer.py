@@ -228,7 +228,7 @@ class XRF_scanliveview():
         xmax = np.max(positions[:,1])+self.pixel_resolution_nm/1000.
         ymin = np.min(positions[:,0])-self.pixel_resolution_nm/1000.
         ymax = np.max(positions[:,0])+self.pixel_resolution_nm/1000.
-        self.extent = [xmin, xmax, ymin, ymax]
+        self.extent = [xmin, xmax, ymax, ymin]
         lpos = len(positions)
 
         # ToDo : make this smarter 
