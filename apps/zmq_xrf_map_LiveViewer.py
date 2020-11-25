@@ -96,6 +96,7 @@ class XRF_scanliveview():
 
             # xspress3 did send a message
             if self.sock_xspress3 in events and events[self.sock_xspress3] == zmq.POLLIN:
+                print('xspress3 frame available')
                 meta = self.sock_xspress3.recv_json()
 
                 if meta['htype'] == 'image':
@@ -138,6 +139,7 @@ class XRF_scanliveview():
                 # must be a data point then
                 else:
                     sx, sy = meta['pseudo']['x'], meta['pseudo']['y']
+                    print(sx, sy)
                     for i, x in enumerate(sx):
                         self.add_new_position([sy[i],sx[i]])
             
@@ -236,7 +238,8 @@ class XRF_scanliveview():
         dy_um         = ymax-ymin
         nx = int(dx_um*1000./self.pixel_resolution_nm)
         ny = int(dy_um*1000./self.pixel_resolution_nm)
-        grid_x, grid_y = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j]
+        #grid_x, grid_y = np.mgrid[xmin:xmax:nx*1j, ymin:ymax:ny*1j]
+        grid_y, grid_x = np.mgrid[ymin:ymax:ny*1j, xmin:xmax:nx*1j]
 
         # interpolate the map for each ROI
         for key in self.ROIs.keys():
@@ -244,7 +247,7 @@ class XRF_scanliveview():
             lpos = len(positions)
             ldat = len(values)
             l    = min(lpos,ldat)
-            self.element_maps[key] = griddata(positions[:l], values[:l], (grid_x, grid_y), method='nearest')
+            self.element_maps[key] = griddata(positions[:l], values[:l], (grid_y, grid_x), method='nearest')
 
     def add_new_spectrum(self, new_spectrum):
         # update the last buffered spectrum
@@ -429,7 +432,7 @@ if __name__ == "__main__":
     liveviewer = XRF_scanliveview(fpath_ROI_ini    = fpath,
                                   host_xspress3    = '172.16.126.70', #b303a-a100380-cab-dia-detxfcu-01
                                   port_xspress3    = 9999,
-                                  host_contrast    = '172.16.125.11', #b-nanomax-controlroom-cc-1
+                                  host_contrast    = '172.16.125.18', #b-nanomax-controlroom-cc-2
                                   port_contrast    = 5556,
                                   channel_xspress3 = 3,
                                   plot_intervall_s = 2, 
