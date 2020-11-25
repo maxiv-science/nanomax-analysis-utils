@@ -134,7 +134,11 @@ class XRF_scanliveview():
                             self.update_line_plots()
                         except:
                             self.pretty_print_error('could not update maps at the end of the scan')
-                   
+
+                # just a heartbeat?
+                elif meta == {}:
+                    pass
+
                 # must be a data point then
                 else:
                     sx, sy = meta['pseudo']['x'], meta['pseudo']['y']
