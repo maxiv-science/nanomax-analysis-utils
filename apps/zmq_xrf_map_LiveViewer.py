@@ -293,7 +293,7 @@ class XRF_scanliveview():
         self.fig_0 = plt.figure(figsize=(8,4), facecolor='white')
         self.fig_0_ax = plt.subplot(1,1,1)
         self.fig_0_line_avg,  = self.fig_0_ax.plot(np.arange(self.max_spectrum_length), lw=1, c='b')
-        self.fig_0_line_last, = self.fig_0_ax.plot(np.arange(self.max_spectrum_length), lw=2, c='r', alpha=0.5)
+        self.fig_0_line_last, = self.fig_0_ax.plot(np.arange(self.max_spectrum_length), lw=1, c='r', alpha=0.5)
         self.fig_0_title = plt.title('scan #'+str(self.current_scan))
         self.fig_0.canvas.set_window_title('average and most recent spectrum')
         # also plot the ROIs
@@ -304,6 +304,8 @@ class XRF_scanliveview():
                 plt.axvspan(self.ROIs[key][0], self.ROIs[key][1], facecolor='y', alpha=0.4)
         plt.xlim(0,self.max_spectrum_length)
         plt.yscale('log')
+        plt.xlabel('channel')
+        plt.ylabel('counts')
         plt.grid()
         
         #figure out how many subplots lines and rows are needed for the elemental maps
@@ -426,7 +428,7 @@ if __name__ == "__main__":
 
     # check if a file path to a ini file for XRF ROIs was given
     if len(sys.argv)>=2:
-        fpath = sys.argv[2]
+        fpath = sys.argv[1]
     else:
         fpath = './ROIs_test.ini'            
 
