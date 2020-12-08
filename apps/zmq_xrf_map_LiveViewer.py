@@ -419,19 +419,19 @@ class XRF_scanliveview():
     def set_out_dir_from_path(self, path):
         sample       = path.split('/')[-1]
         base_visit   = path.split('raw')[0]
-        self.out_dir = base_visit+sample+'/scan_' + str(self.scannr).zfill(6) + '/zmq_xrf_livemap/'
+        self.out_dir = base_visit+'process/'+sample+'/scan_' + str(self.current_scan).zfill(6) + '/zmq_xrf_livemap/'
         if self.verbosity >=5:
-            self.pretty_print_message(self, 'set new save path', self.out_dir)
+            self.pretty_print_message('set new save path', self.out_dir)
 
         if os.path.exists(self.out_dir):
             pass
         else:
             try: 
-                os.makedirs(out_dir, exist_ok=True)
+                os.makedirs(self.out_dir, exist_ok=True)
             except:
-                self.out_dir = None
-                self.pretty_print_error('could not create directory: '+self.out_dir)
+                self.pretty_print_error('could not create directory: '+str(self.out_dir))
                 self.pretty_print_warning('plots will not be saved')
+                self.out_dir = None
 
     def save_both_plots(self):
         if self.out_dir!=None:
