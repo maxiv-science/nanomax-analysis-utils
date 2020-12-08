@@ -106,56 +106,82 @@ class XRF_scanliveview():
             if self.sock_contrast in events and events[self.sock_contrast] == zmq.POLLIN:
                 meta = self.sock_contrast.recv_pyobj()
 
-                # scan started or finished
-                if 'scannr' in meta.keys():
+                # a scan has started
+                if meta['status'] == 'started':
+                    # throw away the (now) old data from the previous scan 
+                    self.empty_data()
+                    if self.verbosity >=3:
+                        self.pretty_print_message('new scan', 'old data deleted')
 
-                    # a scan has started
-                    if meta['status'] == 'started':
-                        # throw away the (now) old data from the previous scan 
-                        self.empty_data()
-                        if self.verbosity >=3:
-                            self.pretty_print_message('new scan', 'old data deleted')
+                    self.current_scan = meta['scannr']
+                    self.update_scannumber_in_plots()
+                    if self.verbosity >=3:
+                        self.pretty_print_message('new scan', 'number #'+str(self.current_scan))
 
-                        self.current_scan = meta['scannr']
-                        self.update_scannumber_in_plots()
-                        if self.verbosity >=3:
-                            self.pretty_print_message('new scan', 'number #'+str(self.current_scan))
+                    # set a new directory for data to be written
+                    self.set_out_dir_from_path(meta['path'])
                         
 
-                    # scan has finished / interrupted / aborted
-                    elif meta['status'] in ['finished', 'interrupted']:
-                        if self.verbosity >=3:
-                            self.pretty_print_message('scan over', 'updating one last time')
+                # scan has finished / interrupted / aborted
+                elif meta['status'] in ['finished', 'interrupted']:
+                    if self.verbosity >=3:
+                        self.pretty_print_message('scan over', 'updating one last time')
 
-                        # update the plots
-                        try:
-                            self.calc_elemental_maps()
-                            self.update_image_plots()
-                            self.update_line_plots()
-                        except:
-                            self.pretty_print_error('could not update maps at the end of the scan')
+                    # update the plots one last time as there will be no more data for this plot
+                    try:
+                        self.calc_elemental_maps()
+                        self.update_image_plots()
+                        self.update_line_plots()
+                    except:
+                        self.pretty_print_error('could not update maps at the end of the scan')
 
-                # just a heartbeat?
-                elif meta == {}:
-                    pass
+                    # save the last status of the shown figures
+                    try:
+                        self.save_both_plots()
+                    except:
+                        pass
 
-                # must be a data point then
-                else:
+                    # clear the data 
+                    # ... there might be a live view afterwards that we do not want to to mix into the scan
+                    try:
+                        self.empty_data()
+                    except:
+                        self.pretty_print_error('could not clear data at the end of the scan')
+
+                # a data point was send
+                elif meta['status'] == 'running':
                     sx, sy = meta['pseudo']['x'], meta['pseudo']['y']
                     for i, x in enumerate(sx):
                         self.add_new_position([sy[i],sx[i]])
             
-            # is it time to plot again?
-            if self.time_of_last_plot==None or (time.time() - self.time_of_last_plot) >= self.plot_intervall_s:
+                # just a heartbeat
+                elif meta['status'] == 'heartbeat':
+                    pass
+
+            #####
+            #   checking various things that would make an update of the plots unecessary 
+            ####
+
+            # is it not yet time to plot again?
+            if not( self.time_of_last_plot==None or (time.time() - self.time_of_last_plot) >= self.plot_intervall_s):
+                continue # start the loop from the beginning 
                     
-                # are there enough data points to plot?
-                if self.n_data_points_xrf>=self.plot_min_data_n and self.n_data_points_xrf >= self.plot_min_data_n and self.n_data_points_pos >= self.plot_min_data_n:
-                        
-                    # yes... updat everything
-                    self.calc_elemental_maps()
-                    self.update_image_plots()
-                    self.update_line_plots()
-                    self.time_of_last_plot = time.time() 
+            # are there not enough data points to plot?
+            if not(self.n_data_points_xrf>=self.plot_min_data_n and self.n_data_points_xrf >= self.plot_min_data_n and self.n_data_points_pos >= self.plot_min_data_n):
+                continue # start the loop from the beginning 
+                    
+            # has the data not changed since the last time the plot was done?
+            if self.data_has_changed == False:
+                continue # start the loop from the beginning 
+
+            # ... update everything
+            self.calc_elemental_maps()
+            self.update_image_plots()
+            self.update_line_plots()
+            self.time_of_last_plot = time.time() 
+
+            # ... and save the plots
+            self.save_both_plots()
             
 
     ############################################################################
@@ -222,6 +248,8 @@ class XRF_scanliveview():
         self.n_data_points_xrf = 0
         self.n_data_points_pos = 0
         self.time_of_last_plot = 0
+        self.data_has_changed = False
+        self.out_dir = None 
 
     def calc_elemental_maps(self):
         # get minimum and maximum position in each direaction
@@ -266,11 +294,13 @@ class XRF_scanliveview():
             self.element_data[key].append(np.sum(new_spectrum[channel_from:channel_to]))
         # increase the counter for the number of recieved data points
         self.n_data_points_xrf +=1
+        self.data_has_changed = True
 
     def add_new_position(self, new_position):
         # add the new position to the position list
         self.positions.append(new_position)
         self.n_data_points_pos +=1
+        self.data_has_changed = True
 
     def running_on_compute_node(self):
         # define a check function to make sure the viewer is running on a machine
@@ -354,6 +384,7 @@ class XRF_scanliveview():
         # draw the figures
         plt.draw()
         plt.pause(0.001)
+        self.data_has_changed = False
 
     def update_image_plots(self):
         # update the average and last recorded spectrum plot
@@ -372,12 +403,53 @@ class XRF_scanliveview():
         # draw the figures
         plt.draw()
         plt.pause(0.001)
+        self.data_has_changed = False
 
     def update_scannumber_in_plots(self):
         self.fig_0_title.set_text('scan #'+str(self.current_scan))
         self.fig_1_suptitle.set_text('scan #'+str(self.current_scan))
         plt.draw()
         plt.pause(0.001)
+
+
+    ############################################################################
+    #   methods for saving the plots
+    ############################################################################
+
+    def set_out_dir_from_path(self, path):
+        sample       = path.split('/')[-1]
+        base_visit   = path.split('raw')[0]
+        self.out_dir = base_visit+sample+'/scan_' + str(self.scannr).zfill(6) + '/zmq_xrf_livemap/'
+        if self.verbosity >=5:
+            self.pretty_print_message(self, 'set new save path', self.out_dir)
+
+        if os.path.exists(self.out_dir):
+            pass
+        else:
+            try: 
+                os.makedirs(out_dir, exist_ok=True)
+            except:
+                self.out_dir = None
+                self.pretty_print_error('could not create directory: '+self.out_dir)
+                self.pretty_print_warning('plots will not be saved')
+
+    def save_both_plots(self):
+        if self.out_dir!=None:
+            time_str   = time.strftime("%Y-%m-%d_%H%M%S") 
+            fout_path0 = self.out_dir+'fig0_XRF_spectrum_'+time_str+'.png'
+            fout_path1 = self.out_dir+'fig0_XRF_maps_'+time_str+'.png'
+
+            try:
+                self.fig_0.savefig(fout_path0, dpi=300)
+            except:
+                if self.verbosity>=5:
+                    self.pretty_print_error('could not save plot of the XRF spectrum: '+str(fout_path0))
+
+            try:
+                self.fig_1.savefig(fout_path1, dpi=300)
+            except:
+                if self.verbosity>=5:
+                    self.pretty_print_error('could not save plot of the XRf maps: '+str(fout_path1))
 
     ############################################################################
     #### methods for outputting text stuff
