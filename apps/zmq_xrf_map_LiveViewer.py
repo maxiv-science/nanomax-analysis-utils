@@ -8,9 +8,6 @@ The ROIs can be defined by a ini file created by the scanViewer.
 I suggest to limit yourself to a few ROIs for this liveViewer.
 Better run on a cluster compute node, as the repeated calculation of the maps can
 be computationally demanding.
-
-WARNING:
-    Not extensively tested ... yet.
 """
 
 import os
@@ -24,6 +21,13 @@ import numpy as np
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt 
 
+# Todo:
+#   ... using the indexing of the data points in the streamed messag
+#       -> when the streamer is started during the scan, there is no confusion between 
+#       the individually streamed spectra and the positions streamed as lines
+#       -> would also allow for a progressbar and time estimate to scan end
+#   ... figure out why it is blocking between the updates ... maybe use plt.ion()  and plt.draw()/plt.pause()
+#   ... checking with the latest matplotlib version ... otherwise maybe also use silx widgets
 
 class XRF_scanliveview():
     """ 
@@ -75,8 +79,9 @@ class XRF_scanliveview():
         self.plot_intervall_s = plot_intervall_s  # wait how many data points before replotting
         self.plot_min_data_n  = plot_min_data_n   # minimum number of data points before maps are plottet
         self.verbosity        = verbosity         # how much print
-        self.max_spectrum_length = 4096
-        self.pixel_resolution_nm = 100            # ToDo: make smarter
+        
+        # what to expect
+        self.max_spectrum_length = 4096         
 
         self.load_ROI_ini()
         self.empty_data()
@@ -84,14 +89,7 @@ class XRF_scanliveview():
         self.run()
 
     def run(self):
-        # Todo:
-        #   ... maybe adjust zmqrecorder messages to always send scan number and status, also
-        #       for the data points, but then use "running" as status
-        #   ... also sending the index of the data point would allow a proper ordering of the
-        #       recieved spectra from the other stream and could be used for a progress bar /
-        #       percentage meter in the plot windows.
         while True:
-
             events = dict(self.poller.poll())
 
             # xspress3 did send a message
@@ -236,7 +234,7 @@ class XRF_scanliveview():
         return channel
 
     def empty_data(self):
-        # empty the stored data ... to be used once a new scan has been started
+        # empty the stored data and parmeters
         self.current_scan = None
         self.element_data = {}
         for ROI_name in self.ROIs.keys():
@@ -250,10 +248,21 @@ class XRF_scanliveview():
         self.time_of_last_plot = 0
         self.data_has_changed = False
         self.out_dir = None 
+        self.pixel_resolution_nm = None  
+
+    def get_resolution(self, f=0.25):
+        # define a resolution to be used as pixel size in the interpolated maps
+        # currently: a fraction of the distance between the first data points
+        positions = np.array(self.positions)
+        d_12 = np.sqrt( (positions[1,0]-positions[0,0])**2 + (positions[1,1]-positions[0,1])**2 )
+        self.pixel_resolution_nm = f*d_12
 
     def calc_elemental_maps(self):
-        # get minimum and maximum position in each direaction
         positions = np.array(self.positions)
+        if self.pixel_resolution_nm==None: 
+            self.get_resolution()
+
+        # get minimum and maximum position in each direaction
         xmin = np.min(positions[:,1])-self.pixel_resolution_nm/1000.
         xmax = np.max(positions[:,1])+self.pixel_resolution_nm/1000.
         ymin = np.min(positions[:,0])-self.pixel_resolution_nm/1000.
@@ -261,8 +270,6 @@ class XRF_scanliveview():
         self.extent = [xmin, xmax, ymax, ymin]
         lpos = len(positions)
 
-        # ToDo : make this smarter 
-        #        ... maybe adjust the zmq recorders messages to also send the step size
         # decide on many pixels to use for the maps
         dx_um         = xmax-xmin
         dy_um         = ymax-ymin
