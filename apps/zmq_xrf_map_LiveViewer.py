@@ -255,7 +255,8 @@ class XRF_scanliveview():
         # currently: a fraction of the distance between the first data points
         positions = np.array(self.positions)
         d_12 = np.sqrt( (positions[1,0]-positions[0,0])**2 + (positions[1,1]-positions[0,1])**2 )
-        self.pixel_resolution_nm = f*d_12
+        self.pixel_resolution_nm = f*d_12*1000.
+        self.pretty_print_message('resolution set', str(self.pixel_resolution_nm)+' nm')
 
     def calc_elemental_maps(self):
         positions = np.array(self.positions)
