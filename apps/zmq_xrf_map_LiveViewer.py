@@ -43,6 +43,7 @@ class XRF_scanliveview():
                  channel_xspress3 = 3,
                  plot_intervall_s = 2, 
                  plot_min_data_n  = 5,
+                 save_png         = False,
                  verbosity        = 5):
 
         # checking that the listener is running on a compute nope
@@ -79,7 +80,8 @@ class XRF_scanliveview():
         self.plot_intervall_s = plot_intervall_s  # wait how many data points before replotting
         self.plot_min_data_n  = plot_min_data_n   # minimum number of data points before maps are plottet
         self.verbosity        = verbosity         # how much print
-        
+        self.save_png         = save_png
+
         # what to expect
         self.max_spectrum_length = 4096         
 
@@ -442,7 +444,7 @@ class XRF_scanliveview():
                 self.out_dir = None
 
     def save_both_plots(self):
-        if self.out_dir!=None:
+        if self.save_png and self.out_dir!=None:
             time_str   = time.strftime("%Y-%m-%d_%H%M%S") 
             fout_path0 = self.out_dir+'fig0_XRF_spectrum_'+time_str+'.png'
             fout_path1 = self.out_dir+'fig0_XRF_maps_'+time_str+'.png'
