@@ -4,6 +4,13 @@ plt.ion()
 from PyTango import DeviceProxy, DevFailed
 from nmutils.utils.ion_chamber import Ionchamber
 
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option('-t', '--tight',
+                  action='store_true', dest = 'tight', default=False,
+                  help='Keep tight limits for y axis.')
+(options, args) = parser.parse_args()
+
 NMAX = 50
 
 mono = DeviceProxy('pseudomotor/nanomaxenergy_ctrl/1')
@@ -37,6 +44,11 @@ while True:
         l = lines.pop(0)[0].remove()
     ax.set_xlim(max(0, n-NMAX), max(NMAX, n))
     #ax.set_ylim(bottom=0) # ruins autoscaling
+    if options.tight:
+        Y = [lines[0][0].get_ydata()[0]] +\
+            [line[    0].get_ydata()[1] for line in lines]
+        Ye = (max(Y)-min(Y)) * .1
+        ax.set_ylim(min(Y)-Ye,max(Y)+Ye)
     last = flux
     fig.suptitle('Flux: %.2e photons/s' % flux, fontsize=24)
     fig.canvas.start_event_loop(.001)
