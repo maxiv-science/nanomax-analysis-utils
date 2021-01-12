@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 plt.ion()
 from PyTango import DeviceProxy, DevFailed
 from nmutils.utils.ion_chamber import Ionchamber
+from contrast.detectors.AlbaEM import Electrometer
 
 NMAX = 50
 
 mono = DeviceProxy('pseudomotor/nanomaxenergy_ctrl/1')
-em = DeviceProxy('test/alebjo/alba2')
+em = Electrometer(host='b-nanomax-em2-2')
 ic = Ionchamber(length=1.5, gas='air')
 
 def on_close(evt):
@@ -23,7 +24,7 @@ last = None
 n = 0
 while True:
     try:
-        current = em.instant_current_1
+        current = em.get_instant_current(1)
         energy = mono.position
     except DevFailed:
         continue
