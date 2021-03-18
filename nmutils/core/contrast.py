@@ -43,6 +43,11 @@ class contrast_scan(Scan):
             'type': list,
             'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
+        'xrdBinning': {
+            'value': 1,
+            'type': int,
+            'doc': 'bin pixels n by n (disables cropping)',
+            },
         'I0': {
             'value': '',
             'type': str,
@@ -101,7 +106,7 @@ class contrast_scan(Scan):
         """
 
         if not os.path.exists(self.fileName):
-            print('File not found! \n    ', self.filename)
+            print('File not found! \n    ', self.fileName)
             raise NoDataException(self.fileName)
         with h5py.File(self.fileName, 'r') as fp:
             # replace sx, sy, sz by buffered positions
@@ -217,8 +222,15 @@ class contrast_scan(Scan):
                         data[i] = np.sum(dset[i*im_per_pos:(i+1)*im_per_pos], axis=0)
                 elif self.nMaxPositions:
                     data = dset[:self.nMaxPositions, i0:i1, j0:j1]
-                else:
+                elif self.xrdBinning == 1:
                     data = dset[:, i0:i1, j0:j1]
+                else:
+                    shape = fastBinPixels(dset[0], self.xrdBinning).shape
+                    new_data_ = np.zeros((dset.shape[0],) + shape)
+                    for ii in range(dset.shape[0]):
+                        print('binning frame %u'%ii)
+                        new_data_[ii] = fastBinPixels(dset[ii], self.xrdBinning)
+                    data = new_data_
 
             if self.I0:
                 data = data / I0_data[:, None, None]
