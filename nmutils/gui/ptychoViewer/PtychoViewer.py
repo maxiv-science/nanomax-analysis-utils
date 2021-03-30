@@ -81,15 +81,17 @@ class PtychoViewer(qt.QMainWindow):
                 energy = np.array(hf.get('content/probe/%s/_energy' % scanid))
                 origin = np.array(hf.get('content/probe/%s/_origin' % scanid))
 
+                probes = probe[:]
                 probe = probe[0]
                 obj = obj[0]
                 psize = psize[0]
 
-            print("Loaded probe %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%(probe.shape + obj.shape + (psize*1e9, energy)))
+            print("Loaded %u probes %d x %d and object %d x %d, pixel size %.1f nm, energy %.2f keV"%((probes.shape[0],) + probe.shape + obj.shape + (psize*1e9, energy)))
             
             # give loaded data to the widgets
             self.ui.objectWidget.set_data(obj, origin, psize)
             self.probeManager.set_data(probe, psize, energy)
+            self.ui.modeWidget.set_data(probes, psize)
 
             self.statusOutput("")
         except Exception as e:

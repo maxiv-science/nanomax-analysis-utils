@@ -21,6 +21,28 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="browseButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>1000000</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse for data files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLineEdit" name="filenameBox">
         <property name="sizePolicy">
@@ -46,28 +68,6 @@
         </property>
         <property name="placeholderText">
          <string extracomment="file to load"/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="browseButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>1000000</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Browse for data files&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Browse...</string>
         </property>
        </widget>
       </item>
@@ -382,11 +382,15 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="fourier">
+      <widget class="QWidget" name="modes">
        <attribute name="title">
-        <string>Fourier shell correlation</string>
+        <string>Modes</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="ModeView" name="modeWidget" native="true"/>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -398,7 +402,7 @@
      <x>0</x>
      <y>0</y>
      <width>1082</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
@@ -427,6 +431,12 @@
    <class>Histogram</class>
    <extends>QWidget</extends>
    <header>widgets/Probe.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ModeView</class>
+   <extends>QWidget</extends>
+   <header>widgets/ModeView.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
