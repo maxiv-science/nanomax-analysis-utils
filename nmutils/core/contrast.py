@@ -54,7 +54,7 @@ class contrast_scan(Scan):
             'doc': 'channel over which to normalize signals, eg "alba2/1"',
             },
         'waxsPath': {
-            'value': '../../process/radial_integration/<sampledir>',
+            'value': '../../process/frameprocessing/<sampledir>',
             'type': str,
             'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
         },
@@ -275,8 +275,13 @@ class contrast_scan(Scan):
                 sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
                 self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
                 path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
-            fn = os.path.basename(self.fileName)
-            waxsfn = fn.replace('.h5', '_waxs.h5')
+            hint = '%06u'%self.scanNr
+            files = os.listdir(path)
+            matches = [f for f in files if hint in f]
+            try:
+                waxsfn = matches[0]
+            except:
+                print('no waxs file matching %s found at %s'%(hint, path))
             waxs_file = os.path.join(path, waxsfn)
             print('loading waxs data from %s' % waxs_file)
             if not os.path.exists(waxs_file):
