@@ -13,7 +13,7 @@ import requests
 import time
 from skimage.io import imread
 import io
-
+import _cbf
 
 class LiveViewer2dBase(ImageView):
     """
@@ -165,20 +165,16 @@ class PilatusLiveViewer(LiveViewer2dBase):
         """
         gets the last image
         """
-        if not self.waiting_for_frame:
-            self.socket.send(b'give me a frame (please)\0')
-            self.waiting_for_frame = True
-            self.latest_request = time.time()
-        try:
-            parts = self.socket.recv_multipart(flags=zmq.NOBLOCK)
-            self.waiting_for_frame = False
-        except zmq.ZMQError:
-            # no frames available yet, move on
-            return None, None
-        header = json.loads(parts[0])
-        image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
-        exptime = header['exposure_time']
-        return image, exptime
+        self.socket.send(b'give me a frame\0')
+        parts = self.socket.recv_multipart(copy=False)
+        header = json.loads(parts[0].bytes)
+        shape = header['shape']
+        length = shape[0] * shape[1]
+        output_buffer = _cbf.ffi.new('int32_t[]', length)
+        exptime = _cbf.ffi.new('double*')
+        _cbf.lib.read_cbf(_cbf.ffi.from_buffer(parts[1]), output_buffer, exptime)
+        image = np.frombuffer(_cbf.ffi.buffer(output_buffer, length*4), dtype=np.int32).reshape(shape)
+        return image, exptime[0]
 
 
 class EigerLiveViewer(LiveViewer2dBase):
