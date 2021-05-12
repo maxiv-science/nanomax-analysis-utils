@@ -13,7 +13,6 @@ import requests
 import time
 from skimage.io import imread
 import io
-import _cbf
 
 class LiveViewer2dBase(ImageView):
     """
@@ -170,6 +169,7 @@ class PilatusLiveViewer(LiveViewer2dBase):
         header = json.loads(parts[0].bytes)
         shape = header['shape']
         length = shape[0] * shape[1]
+        import _cbf
         output_buffer = _cbf.ffi.new('int32_t[]', length)
         exptime = _cbf.ffi.new('double*')
         _cbf.lib.read_cbf(_cbf.ffi.from_buffer(parts[1]), output_buffer, exptime)
