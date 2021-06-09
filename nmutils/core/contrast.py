@@ -198,7 +198,10 @@ class contrast_scan(Scan):
             print('loading %s data...' % self.dataSource)
 
             with h5py.File(self.fileName, 'r') as fp:
-                group = fp['entry/measurement/%s' % self.dataSource]
+                try:
+                    group = fp['entry/measurement/%s' % self.dataSource]
+                except KeyError:
+                    raise NoDataException()
                 if 'frames' in group:
                     dset = group['frames']
                 elif 'data' in group:
@@ -295,7 +298,7 @@ class contrast_scan(Scan):
             if self.nMaxPositions:
                 nmax = self.nMaxPositions
             with h5py.File(waxs_file, 'r') as fp:
-                q = fp['q'][:nmax]
+                q = fp['q'][:]
                 if self.dataSource == 'cake':
                     phi = fp['phi'][:nmax]
                 dset = fp['I']
