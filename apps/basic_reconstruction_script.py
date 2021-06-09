@@ -14,10 +14,9 @@ from distutils.version import LooseVersion
 
 ## simplest possible input #############################################
 detector   = 'eiger' # or 'merlin' or 'pilatus'
-folder     = '/data/staff/nanomax/commissioning_2020-1/20200130/raw/sample'
-distance_m = 4.55	# distance between the sample and the detector in meters
+folder     = '../../raw/sample'
+distance_m = 3.71	# distance between the sample and the detector in meters
 defocus_um = 500	# distance between the focus and the sample plane in micro meters -> used for inital probe
-#energy_keV = 12.0	# incident photon energy in keV ... now read from scan file
 scannr     = int(sys.argv[1])
 ########################################################################
 
@@ -26,13 +25,17 @@ scannr     = int(sys.argv[1])
 p = u.Param()
 p.verbose_level = 3
 p.run = 'scan%d' % scannr
+p.io = u.Param()
+p.io.rfile = 'recons/%(run)s_%(engine)s.ptyr'
+p.io.autoplot = u.Param()
+p.io.autoplot.active = False
 
 # Scan parameters
 p.scans = u.Param()
 p.scans.scan00 = u.Param()
 p.scans.scan00.name = 'Full'
 p.scans.scan00.coherence = u.Param()
-#p.scans.scan00.coherence.num_probe_modes = 4		# Number of probe modes
+p.scans.scan00.coherence.num_probe_modes = 1		# Number of probe modes
 
 p.scans.scan00.data = u.Param()
 p.scans.scan00.data.name = 'NanomaxContrast'
@@ -64,6 +67,9 @@ p.scans.scan00.illumination.aperture.form = 'rect'
 p.scans.scan00.illumination.aperture.size = 100e-9			           # at the focus
 p.scans.scan00.illumination.propagation = u.Param()
 p.scans.scan00.illumination.propagation.parallel = -1.*defocus_um*1e-6 # somehow this has to be negative to the basez axis 
+p.scans.scan00.illumination.diversity = u.Param()
+p.scans.scan00.illumination.diversity.noise = (.5, 1.0)
+p.scans.scan00.illumination.diversity.power = .1
 															           # -> being downstream of the focus means negative distance
 
 # Reconstruction parameters
