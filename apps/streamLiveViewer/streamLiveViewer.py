@@ -225,7 +225,7 @@ class Xspress3LiveViewer(LiveViewer1dBase):
         m, n = meta['shape'][:2]
         print(meta, '\n')
         frame = np.frombuffer(parts[1], dtype=meta['type']).reshape((m, n))
-        exptime = 0.1 ##### header['exposure_time']
+        exptime = meta['exptime']
         return frame, exptime
 
 if __name__ == '__main__':
