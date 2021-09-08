@@ -74,12 +74,8 @@ class ScanViewer(qt.QMainWindow):
             self.ui.scanClassBox.addItem(subclass.__name__)
             if subclass.__name__ == default_text:
                 default_index = self.ui.scanClassBox.count() - 1
-                print('bingo, we want %u' % default_index)
-            else:
-                print('no, %s isnt %s' % (subclass.__name__, default_text))
             for subclass_ in subclass.__subclasses__():
                 self.ui.scanClassBox.addItem(subclass_.__name__)
-        self.ui.scanClassBox.setCurrentIndex(default_index)
 
         # connect browse button
         def wrap():
@@ -92,6 +88,9 @@ class ScanViewer(qt.QMainWindow):
 
         # populate the options tab
         self.ui.scanClassBox.currentIndexChanged.connect(self.populateOptions)
+
+        # set the default and emit a signal
+        self.ui.scanClassBox.setCurrentIndex(default_index)
 
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
