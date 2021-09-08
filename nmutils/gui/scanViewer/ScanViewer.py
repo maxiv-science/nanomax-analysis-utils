@@ -59,6 +59,7 @@ class ScanViewer(qt.QMainWindow):
         self.ui.setupUi(self)
 
         # possibly set initial values
+        self.guessPath()
         if filename:
             self.ui.filenameBox.setText(filename)
 
@@ -79,11 +80,13 @@ class ScanViewer(qt.QMainWindow):
 
         # connect browse button
         def wrap():
-            result = qt.QFileDialog.getOpenFileName()
+            old = self.ui.filenameBox.text()
+            result = qt.QFileDialog.getOpenFileName(directory=old)
             # PyQt5 gives a tuple here...
             if type(result) == tuple:
                 result = result[0]
-            self.ui.filenameBox.setText(result)
+            if result:
+                self.ui.filenameBox.setText(result)
         self.ui.browseButton.clicked.connect(wrap)
 
         # populate the options tab
@@ -133,6 +136,20 @@ class ScanViewer(qt.QMainWindow):
         except AttributeError:
             opts = {}
         return opts
+
+    def guessPath(self):
+        """
+        As a beamline convenience, sees if there's an SDM path available
+        to start with.
+        """
+        try:
+            import tango, os
+            dev = tango.DeviceProxy('b303a/ctl/sdm-01')
+            path = dev.path
+            if os.path.exists(path):
+                self.ui.filenameBox.setText(path)
+        except Exception as e:
+            print("couldn't find path from tango - but that's ok")
 
     def gatherOptions(self):
         # collect options from the options tab:

@@ -43,17 +43,20 @@ class PtychoViewer(qt.QMainWindow):
         self.probeManager = ProbeManager(self.ui)
 
         # possibly set initial values
+        self.guessPath()
         if filename:
             self.ui.filenameBox.setText(filename)
             self.load()
 
         # connect browse button
         def wrap():
-            result = qt.QFileDialog.getOpenFileName()
+            old = self.ui.filenameBox.text()
+            result = qt.QFileDialog.getOpenFileName(directory=old)
             # PyQt5 gives a tuple here...
             if type(result) == tuple:
                 result = result[0]
-            self.ui.filenameBox.setText(result)
+            if result:
+                self.ui.filenameBox.setText(result)
         self.ui.browseButton.clicked.connect(wrap)
 
         # connect load button
@@ -61,6 +64,21 @@ class PtychoViewer(qt.QMainWindow):
 
         # dummy scan
         self.scan = None
+
+    def guessPath(self):
+        """
+        As a beamline convenience, sees if there's an SDM path available
+        to start with.
+        """
+        try:
+            import tango, os
+            dev = tango.DeviceProxy('b303a/ctl/sdm-01')
+            path = dev.path
+            if os.path.exists(path):
+                path = os.path.join(path.split('raw')[0], 'process')
+                self.ui.filenameBox.setText(path)
+        except Exception as e:
+            print("couldn't find path from tango - but that's ok")
 
     def statusOutput(self, msg):
         self.ui.statusbar.showMessage(msg)
