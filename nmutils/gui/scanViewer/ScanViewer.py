@@ -68,10 +68,18 @@ class ScanViewer(qt.QMainWindow):
 
         # populate the scan class list
         self.ui.scanClassBox.addItem('select scan type')
+        default_text = 'contrast_scan'
+        default_index = 0
         for subclass in nmutils.core.Scan.__subclasses__():
             self.ui.scanClassBox.addItem(subclass.__name__)
+            if subclass.__name__ == default_text:
+                default_index = self.ui.scanClassBox.count() - 1
+                print('bingo, we want %u' % default_index)
+            else:
+                print('no, %s isnt %s' % (subclass.__name__, default_text))
             for subclass_ in subclass.__subclasses__():
                 self.ui.scanClassBox.addItem(subclass_.__name__)
+        self.ui.scanClassBox.setCurrentIndex(default_index)
 
         # connect browse button
         def wrap():
@@ -93,9 +101,6 @@ class ScanViewer(qt.QMainWindow):
 
         # dummy scan
         self._scan = None
-
-        # select the last class and emit a signal
-        self.ui.scanClassBox.setCurrentIndex(len(self.ui.scanClassBox)-1)
 
         # the ipython button
         self.ui.ipythonButton.setCheckable(True)
