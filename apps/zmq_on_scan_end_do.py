@@ -54,10 +54,10 @@ class zmq_on_scan_end_do(object):
                 #check what the message said
                 if 'scannr' in _message.keys():        # scan either started, finished or interrupted
                     
-                    scannr      = _message['scannr']
-                    status      = _message['status']
-                    path        = _message['path']
-                    snapshot    = _message['snapshot']
+                    scannr = _message['scannr']
+                    status = _message['status']
+                    path = _message['path']
+                    snapshot = _message['snapshot']
                     description = _message['description']
 
                     if status=='finished': # scan finished properly                        
@@ -78,19 +78,19 @@ class zmq_on_scan_end_do(object):
 
     def make_color_code(self, style='none', text_color='black', background_color='white'):
         dict_style = {'none':'0', 'bold':'1', 'underline':'2', 'negative1':'3', 'negative2':'5'}
-        dict_c     = {'black':'30',  'k':'30', 
-                      'red':'31',    'r':'31',
-                      'green':'32',  'g':'32',
-                      'yellow':'33', 'y':'33',
-                      'blue':'34',   'b':'34',
-                      'purple':'35', 'm':'35',
-                      'cyan':'36',   'c':'36',
-                      'gray':'37',   'gr':'37',
-                      'white':'38',  'w':'38'} 
+        dict_c = {'black':'30',  'k':'30', 
+                  'red':'31',    'r':'31',
+                  'green':'32',  'g':'32',
+                  'yellow':'33', 'y':'33',
+                  'blue':'34',   'b':'34',
+                  'purple':'35', 'm':'35',
+                  'cyan':'36',   'c':'36',
+                  'gray':'37',   'gr':'37',
+                  'white':'38',  'w':'38'} 
         return '\033['+dict_style[style]+';'+dict_c[text_color]+';4'+dict_c[background_color][1]+'m'
 
     def pretty_print_error(self, error_message):
-        line  = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
+        line = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
         line += self.make_color_code('none','c','r') + '\u25B6 '
         line += self.make_color_code('none','k','r') + 'error '
         line += self.make_color_code('none','r','w') + '\u25B6 '
@@ -98,7 +98,7 @@ class zmq_on_scan_end_do(object):
         print(line)
 
     def pretty_print_warning(self, warning_message):
-        line  = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
+        line = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
         line += self.make_color_code('none','c','y') + '\u25B6 '
         line += self.make_color_code('none','k','y') + 'warning '
         line += self.make_color_code('none','y','w') + '\u25B6 '
@@ -106,7 +106,7 @@ class zmq_on_scan_end_do(object):
         print(line)
 
     def pretty_print_message(self, header, message):
-        line  = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
+        line = self.make_color_code('bold','k','c') + ' ' + sys.argv[0] + ' '
         line += self.make_color_code('none','c','g') + '\u25B6 '
         line += self.make_color_code('none','k','g') + header+' '
         line += self.make_color_code('none','g','w') + '\u25B6 '
@@ -124,10 +124,10 @@ class zmq_push_ptycho_rec_on_cluster(zmq_on_scan_end_do):
 
     def do_on_scan_finished(self, _message):
 
-        scannr       = _message['scannr']
-        status       = _message['status']
-        path         = _message['path']
-        snapshot     = _message['snapshot']
+        scannr = _message['scannr']
+        status = _message['status']
+        path = _message['path']
+        snapshot = _message['snapshot']
         scan_command = _message['description']
 
         if 'slurm_rec=True' in scan_command:
