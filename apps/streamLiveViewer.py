@@ -15,7 +15,7 @@ from skimage.io import imread
 import io
 
 
-class LiveViewerBase(ImageView):
+class LiveViewer2dBase(ImageView):
     """
     Displays 2d detector images live from the Pilatus zmq streamer.
 
@@ -96,7 +96,66 @@ class LiveViewerBase(ImageView):
                     return data[row, col]
         return '-'
 
-class PilatusLiveViewer(LiveViewerBase):
+
+class LiveViewer1dBase(PlotWindow):
+    """
+    Displays stacks of 1d spectra live from zmq streamers.
+
+    alarm is the maximum photon flux per curve allowed.
+    """
+
+    def __init__(self, hostname, port=9998, interval=.1, alarm=None):
+        # run the base class constructor
+        super().__init__()
+
+        # initialize the connection
+        self.hostname = hostname
+        self.port = port
+        self.initialize()
+
+        # set some properties
+        self.setWindowTitle(hostname)
+        self.hasData = False
+        self.alarm = alarm
+#        self.waiting_for_frame = False
+#        self.latest_request = time.time()
+
+        # a periodic timer triggers the update
+        self.timer = qt.QTimer(self)
+        self.timer.setInterval(interval * 1000.0)
+        self.timer.timeout.connect(self._update)
+        self.timer.start()
+
+        # a periodic timer triggers the update
+        self.timer = qt.QTimer(self)
+        self.timer.setInterval(interval * 1000.0)
+        self.timer.timeout.connect(self._update)
+        self.timer.start()
+
+    def initialize(self):
+        raise NotImplementedError
+
+    def _get_data(self):
+        """
+        gets the last image
+        """
+        raise NotImplementedError
+
+    def _update(self):
+        data, exptime = self._get_data()
+        E = np.arange(data.shape[1]) * 10 # ad hoc
+        for i in range(data.shape[0]):
+            self.addCurve(E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
+            self.hasData = True
+        sums = np.sum(data, axis=1)
+        self.setGraphTitle('max(Channels 0,1,2): %.1e (%.1e / s)\nChannel 3: %.1e (%.1e / s)' % (np.max(sums[0:3]), np.max(sums[0:3])/exptime, sums[3], sums[3]/exptime))
+        if (self.alarm is not None) and (sums.max()/exptime > self.alarm):
+            self.setBackgroundColor(qt.QColor(255, 0, 0))
+        else:
+            self.setBackgroundColor(qt.QColor(255, 255, 255))
+
+
+class PilatusLiveViewer(LiveViewer2dBase):
     def initialize(self):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
@@ -121,7 +180,8 @@ class PilatusLiveViewer(LiveViewerBase):
         exptime = header['exposure_time']
         return image, exptime
 
-class EigerLiveViewer(LiveViewerBase):
+
+class EigerLiveViewer(LiveViewer2dBase):
     def initialize(self):
         self.session = requests.Session()
         self.session.trust_env = False
@@ -136,6 +196,7 @@ class EigerLiveViewer(LiveViewerBase):
         exptime = self.session.get('http://%s/detector/api/1.8.0/config/count_time' % self.hostname).json()['value']
         return image, exptime
 
+
 class AndorLiveViewer(PilatusLiveViewer):
     def _get_image(self):
         """
@@ -147,6 +208,29 @@ class AndorLiveViewer(PilatusLiveViewer):
         image = np.frombuffer(parts[1], dtype=header['type']).reshape(header['shape'])
         exptime = 1.
         return image, exptime
+
+
+class Xspress3LiveViewer(LiveViewer1dBase):
+    def initialize(self):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+
+    def _get_data(self):
+        """
+        gets the last image
+        """
+        self.socket.send_string('give us a frame please!')
+        print('asked for a frame...')
+        parts = self.socket.recv_multipart() # blocks
+        print('...got this:')
+        meta = json.loads(parts[0])
+        frameno = meta['frame']
+        m, n = meta['shape'][:2]
+        print(meta, '\n')
+        frame = np.frombuffer(parts[1], dtype=meta['type']).reshape((m, n))
+        exptime = 0.1 ##### header['exposure_time']
+        return frame, exptime
 
 if __name__ == '__main__':
     # you always need a qt app     
@@ -166,6 +250,7 @@ if __name__ == '__main__':
         viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
     elif dettype in ('andor', 'krytur', 'zyla'):
         viewer = AndorLiveViewer(hostname, interval=.1)
+    elif 'xspress' in dettype.lower():
+        viewer = Xspress3LiveViewer(hostname, interval=.1, alarm=2e6)
     viewer.show()
     app.exec_()
-

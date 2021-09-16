@@ -90,21 +90,11 @@ def binPixels(image, n=2):
     return new
 
 def fastBinPixels(image, n=2):
-    """ Downsamples an image by convolution followed by stride-tricks downsampling. """
-    # first a convolution
-    kernel = np.ones((n, n))
-    image_conv = scipy.signal.convolve2d(image, kernel, mode='valid')
-
-    # then downsampling by picking every n:th pixel
-    # this function taken from stackoverflow:
-    def strided_rescale(g, bin_fac):
-        strided = as_strided(g,
-            shape=(g.shape[0]//bin_fac, g.shape[1]//bin_fac, bin_fac, bin_fac),
-            strides=((g.strides[0]*bin_fac, g.strides[1]*bin_fac)+g.strides))
-        return strided.mean(axis=-1).mean(axis=-1)
-    image_downsampled = strided_rescale(image_conv, n)
-
-    return image_downsampled
+    """ Downsamples an image by stride-tricks downsampling. """
+    strided = as_strided(image,
+                shape=(image.shape[0]//n, image.shape[1]//n, n, n),
+                strides=((image.strides[0]*n, image.strides[1]*n)+image.strides))
+    return strided.sum(axis=-1).sum(axis=-1)
 
 def gaussian2D(n, sigma):
     """ Returns an n-by-n matrix containing a circular 2d gaussian with variance sigma**2 in pixels. """
