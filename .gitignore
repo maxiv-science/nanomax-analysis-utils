@@ -2,4 +2,7 @@
 *egg-info
 build
 dist
+_cbf.c
+*.o
+*.so
 

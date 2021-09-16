@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor']+alba_names,
+            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
             'doc': "type of data",
             },
         'xrfChannels': {
@@ -43,13 +43,18 @@ class contrast_scan(Scan):
             'type': list,
             'doc': 'detector area to load, [i0, i1, j0, j1]',
             },
+        'xrdBinning': {
+            'value': 1,
+            'type': int,
+            'doc': 'bin pixels n by n (disables cropping)',
+            },
         'I0': {
             'value': '',
             'type': str,
             'doc': 'channel over which to normalize signals, eg "alba2/1"',
             },
         'waxsPath': {
-            'value': '../../process/radial_integration/<sampledir>',
+            'value': '../../process/frameprocessing/<sampledir>',
             'type': str,
             'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
         },
@@ -73,11 +78,16 @@ class contrast_scan(Scan):
             'type': bool,
             'doc': 'adds base motor values to piezo positions',
         },
+        'cake_downsample': {
+            'value': 1,
+            'type': int,
+            'doc': 'how to downsample cake data to save memory (1 for no binning)',
+        },
     }
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities. Good for the GUI.
-    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2}
+    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
@@ -101,7 +111,7 @@ class contrast_scan(Scan):
         """
 
         if not os.path.exists(self.fileName):
-            print('File not found! \n    ', self.filename)
+            print('File not found! \n    ', self.fileName)
             raise NoDataException(self.fileName)
         with h5py.File(self.fileName, 'r') as fp:
             # replace sx, sy, sz by buffered positions
@@ -188,7 +198,10 @@ class contrast_scan(Scan):
             print('loading %s data...' % self.dataSource)
 
             with h5py.File(self.fileName, 'r') as fp:
-                group = fp['entry/measurement/%s' % self.dataSource]
+                try:
+                    group = fp['entry/measurement/%s' % self.dataSource]
+                except KeyError:
+                    raise NoDataException()
                 if 'frames' in group:
                     dset = group['frames']
                 elif 'data' in group:
@@ -217,8 +230,15 @@ class contrast_scan(Scan):
                         data[i] = np.sum(dset[i*im_per_pos:(i+1)*im_per_pos], axis=0)
                 elif self.nMaxPositions:
                     data = dset[:self.nMaxPositions, i0:i1, j0:j1]
-                else:
+                elif self.xrdBinning == 1:
                     data = dset[:, i0:i1, j0:j1]
+                else:
+                    shape = fastBinPixels(dset[0], self.xrdBinning).shape
+                    new_data_ = np.zeros((dset.shape[0],) + shape)
+                    for ii in range(dset.shape[0]):
+                        print('binning frame %u'%ii)
+                        new_data_[ii] = fastBinPixels(dset[ii], self.xrdBinning)
+                    data = new_data_
 
             if self.I0:
                 data = data / I0_data[:, None, None]
@@ -256,28 +276,51 @@ class contrast_scan(Scan):
             if self.I0:
                 data = data / I0_data
 
-        elif self.dataSource == 'waxs':
+        elif self.dataSource in ('waxs', 'cake'):
             if self.waxsPath[0] == '/':
                 path = self.waxsPath
             else:
                 sampledir = os.path.basename(os.path.dirname(os.path.abspath(self.fileName)))
                 self.waxsPath = self.waxsPath.replace('<sampledir>', sampledir)
                 path = os.path.abspath(os.path.join(os.path.dirname(self.fileName), self.waxsPath))
-            fn = os.path.basename(self.fileName)
-            waxsfn = fn.replace('.h5', '_waxs.h5')
+            hint = '%06u'%self.scanNr
+            files = os.listdir(path)
+            matches = [f for f in files if hint in f]
+            try:
+                waxsfn = matches[0]
+            except:
+                print('no waxs file matching %s found at %s'%(hint, path))
             waxs_file = os.path.join(path, waxsfn)
-            print('loading waxs data from %s' % waxs_file)
+            print('loading %s data from %s' % (self.dataSource, waxs_file))
             if not os.path.exists(waxs_file):
                 raise NoDataException('%s doesnt exist!'%waxs_file)
+            nmax = self.nAvailablePositions
+            if self.nMaxPositions:
+                nmax = self.nMaxPositions
             with h5py.File(waxs_file, 'r') as fp:
-                q = self._safe_get_array(fp, 'q')
-                I = self._safe_get_array(fp, 'I')
-            data = I
+                q = fp['q'][:]
+                if self.dataSource == 'cake':
+                    phi = fp['phi'][:nmax]
+                dset = fp['I']
+                if self.cake_downsample == 1:
+                    data = dset[:nmax]
+                else:
+                    shape = fastBinPixels(dset[0], self.cake_downsample).shape
+                    new_data_ = np.zeros((nmax,) + shape)
+                    for ii in range(nmax):
+                        new_data_[ii] = fastBinPixels(dset[ii], self.cake_downsample)
+                        print('downsampling cake frame %u'%ii)
+                    data = new_data_
+
             if self.I0:
                 print('****, %s, %s, %s'%(data.shape, I0_data.shape, I0_data[:, None].shape))
                 data = data / I0_data[:, None]
-            self.dataAxes[name] = [q,]
-            self.dataDimLabels[name] = ['q (1/nm)']
+            if self.dataSource == 'waxs':
+                self.dataAxes[name] = [q,]
+                self.dataDimLabels[name] = ['q (1/nm)']
+            elif self.dataSource == 'cake':
+                self.dataAxes[name] = [phi, q]
+                self.dataDimLabels[name] = ['phi (rad.)', 'q (1/nm)']
 
         else:
             raise RuntimeError('Something is seriously wrong, we should never end up here since _updateOpts checks the options.')

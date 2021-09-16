@@ -59,6 +59,7 @@ class ScanViewer(qt.QMainWindow):
         self.ui.setupUi(self)
 
         # possibly set initial values
+        self.guessPath()
         if filename:
             self.ui.filenameBox.setText(filename)
 
@@ -68,22 +69,31 @@ class ScanViewer(qt.QMainWindow):
 
         # populate the scan class list
         self.ui.scanClassBox.addItem('select scan type')
+        default_text = 'contrast_scan'
+        default_index = 0
         for subclass in nmutils.core.Scan.__subclasses__():
             self.ui.scanClassBox.addItem(subclass.__name__)
+            if subclass.__name__ == default_text:
+                default_index = self.ui.scanClassBox.count() - 1
             for subclass_ in subclass.__subclasses__():
                 self.ui.scanClassBox.addItem(subclass_.__name__)
 
         # connect browse button
         def wrap():
-            result = qt.QFileDialog.getOpenFileName()
+            old = self.ui.filenameBox.text()
+            result = qt.QFileDialog.getOpenFileName(directory=old)
             # PyQt5 gives a tuple here...
             if type(result) == tuple:
                 result = result[0]
-            self.ui.filenameBox.setText(result)
+            if result:
+                self.ui.filenameBox.setText(result)
         self.ui.browseButton.clicked.connect(wrap)
 
         # populate the options tab
         self.ui.scanClassBox.currentIndexChanged.connect(self.populateOptions)
+
+        # set the default and emit a signal
+        self.ui.scanClassBox.setCurrentIndex(default_index)
 
         # connect load button
         self.ui.loadButton.clicked.connect(self.load)
@@ -93,9 +103,6 @@ class ScanViewer(qt.QMainWindow):
 
         # dummy scan
         self._scan = None
-
-        # select the last class and emit a signal
-        self.ui.scanClassBox.setCurrentIndex(len(self.ui.scanClassBox)-1)
 
         # the ipython button
         self.ui.ipythonButton.setCheckable(True)
@@ -129,6 +136,20 @@ class ScanViewer(qt.QMainWindow):
         except AttributeError:
             opts = {}
         return opts
+
+    def guessPath(self):
+        """
+        As a beamline convenience, sees if there's an SDM path available
+        to start with.
+        """
+        try:
+            import tango, os
+            dev = tango.DeviceProxy('b303a/ctl/sdm-01')
+            path = dev.path
+            if os.path.exists(path):
+                self.ui.filenameBox.setText(path)
+        except Exception as e:
+            print("couldn't find path from tango - but that's ok")
 
     def gatherOptions(self):
         # collect options from the options tab:
