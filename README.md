@@ -30,6 +30,12 @@ conda install -c maxiv nanomax-analysis-utils
 
 When that's done, you can use the library or run the `scanViewer` application directly. For Eiger images, it's good to have `bitshuffle` or `hdf5plugin` installed.
 
+NOTE: Windows users have noticed that silx does not play well with glymur 0.9.5 (one of its dependencies). To get around this, they have downgraded glymur after the above installation steps, as follows.
+
+```
+conda install glymur=0.9.4
+```
+
 ### From git
 
 For the latest verision, clone this git repository.
