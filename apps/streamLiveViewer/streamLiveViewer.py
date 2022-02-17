@@ -147,7 +147,7 @@ class LiveViewer1dBase(PlotWindow):
             self.addCurve(E, data[i, :], legend=str(i), resetzoom=(not self.hasData))
             self.hasData = True
         sums = np.sum(data, axis=1)
-        self.setGraphTitle('max(Channels 0,1,2): %.1e (%.1e / s)\nChannel 3: %.1e (%.1e / s)' % (np.max(sums[0:3]), np.max(sums[0:3])/exptime, sums[3], sums[3]/exptime))
+        self.setGraphTitle('max: %.1e (%.1e / s)' % (np.max(sums), np.max(sums)/exptime))
         if (self.alarm is not None) and (sums.max()/exptime > self.alarm):
             self.setBackgroundColor(qt.QColor(255, 0, 0))
         else:
@@ -227,6 +227,7 @@ class Xspress3LiveViewer(LiveViewer1dBase):
         frame = np.frombuffer(parts[1], dtype=meta['type']).reshape((m, n))
         exptime = meta['exptime']
         return frame, exptime
+
 
 if __name__ == '__main__':
     # you always need a qt app     
