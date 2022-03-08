@@ -81,7 +81,7 @@ integrator = pyFAI.load(args.poni_file)
 for input_file in args.input_files:
     inputfn = os.path.basename(input_file)
     print('*** Integrating %s' % inputfn)
-    outputfn = inputfn.split('.')[0] + '_waxs.' + inputfn.split('.')[-1]
+    outputfn = inputfn.split('.')[0] + '.h5'
     output_file = os.path.join(output_folder, outputfn)
     assert '/raw/' not in output_file
 
