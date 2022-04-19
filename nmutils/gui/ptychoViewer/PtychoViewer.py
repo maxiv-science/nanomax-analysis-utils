@@ -72,7 +72,7 @@ class PtychoViewer(qt.QMainWindow):
         """
         try:
             import tango, os
-            dev = tango.DeviceProxy('b303a/ctl/sdm-01')
+            dev = tango.DeviceProxy('b303a-e02/ctl/sdm-01')
             path = dev.path
             if os.path.exists(path):
                 path = os.path.join(path.split('raw')[0], 'process')

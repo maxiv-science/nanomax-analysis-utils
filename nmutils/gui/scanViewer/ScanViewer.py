@@ -144,7 +144,7 @@ class ScanViewer(qt.QMainWindow):
         """
         try:
             import tango, os
-            dev = tango.DeviceProxy('b303a/ctl/sdm-01')
+            dev = tango.DeviceProxy('b303a-e02/ctl/sdm-01')
             path = dev.path
             if os.path.exists(path):
                 self.ui.filenameBox.setText(path)
