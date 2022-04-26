@@ -289,7 +289,9 @@ class contrast_scan(Scan):
             with h5py.File(self.fileName, 'r') as fp:
                 try:
                     data = fp['entry/measurement/%s' % self.dataSource][:]
-                    print('couldnt find %s'%self.dataSource)
+                    print('#'*20)
+                    print(f'did load {self.dataSource} ({np.shape(data)})')
+                    data = data.flatten()
                 except KeyError:
                     print('couldnt find %s'%self.dataSource)
                     raise NoDataException
