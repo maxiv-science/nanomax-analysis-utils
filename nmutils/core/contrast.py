@@ -25,13 +25,13 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger', 'merlin', 'xspress3', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
+            'type': ['eiger', 'merlin', 'xspress3', 'x3m', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
             'doc': "type of data",
             },
         'xrfChannels': {
             'value': [3,],
             'type': list,
-            'doc': 'xspress3 channels from which to read XRF',
+            'doc': 'xspress3 / x3m channels from which to read XRF',
             },
         'xrfCropping': {
             'value': [],
@@ -87,7 +87,7 @@ class contrast_scan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities. Good for the GUI.
-    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
+    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'x3m':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
@@ -264,11 +264,34 @@ class contrast_scan(Scan):
             self.dataDimLabels[name] = ['Approx. energy (keV)']
             self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
 
+        elif self.dataSource == 'x3m':
+
+            with h5py.File(self.fileName, 'r') as fp:
+                try:
+                    dset = fp['entry/measurement/%s/entry/instrument/xspress3/data' % self.dataSource]
+                except KeyError:
+                    print('couldnt find %s'%self.dataSource)
+                    raise NoDataException
+                if self.xrfCropping:
+                    i0, i1 = self.xrfCropping
+                else:
+                    i0, i1 = 0, dset.shape[-1]-10 # last bins annoying
+                data = np.sum(dset[:, self.xrfChannels, i0:i1], axis=1)
+
+            if self.I0:
+                print('****, %s, %s, %s'%(data.shape, I0_data.shape, I0_data[:, None].shape))
+                data = data / I0_data[:, None]
+
+            self.dataDimLabels[name] = ['Approx. energy (keV)']
+            self.dataAxes[name] = [np.arange(data.shape[-1]) * .01]
+
         elif self.sourceDims[self.dataSource] == 0:
             with h5py.File(self.fileName, 'r') as fp:
                 try:
                     data = fp['entry/measurement/%s' % self.dataSource][:]
-                    print('couldnt find %s'%self.dataSource)
+                    print('#'*20)
+                    print(f'did load {self.dataSource} ({np.shape(data)})')
+                    data = data.flatten()
                 except KeyError:
                     print('couldnt find %s'%self.dataSource)
                     raise NoDataException
