@@ -22,6 +22,8 @@ class ProbeManager(object):
         self.ui.probePlot2.getPlot().setGraphXLabel(label)
         self.ui.probePlot.setGraphTitle('Plane of interest')
         self.ui.probePlot2.setGraphTitle('Sample plane')
+        self.ui.FTfocus1.setGraphTitle('FT (focus)')
+        self.ui.FTfocus2.setGraphTitle('FT (focus)')
         self.ui.probeHist.setGraphTitle('Probe histogram')
         self.ui.probeHist.setGraphXLabel('micrometers')
         self.ui.probeHist.setGraphYLabel(' ')
@@ -35,6 +37,8 @@ class ProbeManager(object):
         self.energy = energy
         self.ui.probePlot.setScale(psize * 1e6)
         self.ui.probePlot2.setScale(psize * 1e6)
+        #self.ui.FTfocus1.setScale(psize * 1e6)
+        #self.ui.FTfocus2.setScale(psize * 1e6)
         self.ui.probePlot2.set_data(self.probe2d)
         self.ui.verticalFocusView.addXMarker(0., legend='sample', text='sample', color='g')
         self.ui.horizontalFocusView.addXMarker(0., legend='sample', text='', color='g')
@@ -86,6 +90,8 @@ class ProbeManager(object):
             self.ui.probeHist.addCurve(self.xtrans, yh, legend='horizontal')
             self.ui.probeHist.addCurve(self.xtrans, yv, legend='vertical')
 
+            return data
+
         except AttributeError:
             pass # no data yet
 
@@ -133,11 +139,17 @@ class ProbeManager(object):
         self.realFocus = dist[focus_ind] * 1e6
         self.autofocus()
 
+    def calculate_FT_focus(self, focus2D):
+        FTfocus2D = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(focus2D)))/np.shape(focus2D)[0]
+        self.ui.FTfocus1.set_data(FTfocus2D)
+        self.ui.FTfocus2.set_data(FTfocus2D)
+
     def autofocus(self):
         try:
             self.ui.focusSlider.setValue(int(np.round(self.realFocus)))
-            self.updatePlane()
+            focus2D = self.updatePlane()
             self.calculateFWHM()
+            self.calculate_FT_focus(focus2D)
         except AttributeError:
             pass # no data yet
 

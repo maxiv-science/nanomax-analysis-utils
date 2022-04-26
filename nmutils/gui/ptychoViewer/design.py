@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'design.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -199,10 +199,33 @@ class Ui_MainWindow(object):
         self.modeWidget.setObjectName("modeWidget")
         self.horizontalLayout_3.addWidget(self.modeWidget)
         self.tabWidget.addTab(self.modes, "")
+        self.fourierfocus = QtWidgets.QWidget()
+        self.fourierfocus.setObjectName("fourierfocus")
+        self.FTfocus2 = ProbeView(self.fourierfocus)
+        self.FTfocus2.setGeometry(QtCore.QRect(540, 20, 500, 501))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(2)
+        sizePolicy.setHeightForWidth(self.FTfocus2.sizePolicy().hasHeightForWidth())
+        self.FTfocus2.setSizePolicy(sizePolicy)
+        self.FTfocus2.setMinimumSize(QtCore.QSize(0, 200))
+        self.FTfocus2.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.FTfocus2.setObjectName("FTfocus2")
+        self.FTfocus1 = ProbeView(self.fourierfocus)
+        self.FTfocus1.setGeometry(QtCore.QRect(20, 20, 500, 501))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(2)
+        sizePolicy.setHeightForWidth(self.FTfocus1.sizePolicy().hasHeightForWidth())
+        self.FTfocus1.setSizePolicy(sizePolicy)
+        self.FTfocus1.setMinimumSize(QtCore.QSize(0, 200))
+        self.FTfocus1.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.FTfocus1.setObjectName("FTfocus1")
+        self.tabWidget.addTab(self.fourierfocus, "")
         self.gridLayout_2.addWidget(self.tabWidget, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1082, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1082, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -233,6 +256,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "Steps"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.modes), _translate("MainWindow", "Modes"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourierfocus), _translate("MainWindow", "FT(focus)"))
 from .widgets.ModeView import ModeView
 from .widgets.ObjectView import ObjectView
 from .widgets.Probe import Histogram, ProbeView, PropagationView

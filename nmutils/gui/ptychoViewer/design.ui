@@ -392,6 +392,67 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="fourierfocus">
+       <attribute name="title">
+        <string>FT(focus)</string>
+       </attribute>
+       <widget class="ProbeView" name="FTfocus2" native="true">
+        <property name="geometry">
+         <rect>
+          <x>540</x>
+          <y>20</y>
+          <width>500</width>
+          <height>501</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>2</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>200</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>500</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+       <widget class="ProbeView" name="FTfocus1" native="true">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>500</width>
+          <height>501</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>2</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>200</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>500</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -402,7 +463,7 @@
      <x>0</x>
      <y>0</y>
      <width>1082</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

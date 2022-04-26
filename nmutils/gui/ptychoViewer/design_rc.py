@@ -6,8 +6,11 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-# from PyQt5 import QtCore
+
+#from PyQt5 import QtCore, QtGui, QtWidgets
 from silx.gui import qt as QtCore
+QtGui = QtCore
+QtWidgets = QtCore
 
 qt_resource_data = b"\
 \x00\x00\x19\x3d\
