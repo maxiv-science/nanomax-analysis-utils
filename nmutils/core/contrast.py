@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger', 'merlin', 'xspress3', 'x3mini', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
+            'type': ['eiger(old)', 'eiger1m', 'eiger4m', 'merlin', 'xspress3', 'x3mini', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
             'doc': "type of data",
             },
         'xspress3Channels': {
@@ -92,7 +92,7 @@ class contrast_scan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities. Good for the GUI.
-    sourceDims = {'eiger': 2, 'pilatus':2, 'xspress3':1, 'x3mini':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
+    sourceDims = {'eiger(old)':2, 'eiger1m':2, 'eiger4m':2, 'pilatus':2, 'xspress3':1, 'x3mini':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
@@ -199,9 +199,10 @@ class contrast_scan(Scan):
                     print('I0 data %s not found'%self.I0)
                     raise NoDataException()
 
-        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger', 'andor'):
+        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger(old)', 'eiger1m', 'eiger4m', 'andor'):
             print('loading %s data...' % self.dataSource)
-
+            if self.dataSource == 'eiger(old)':
+                self.dataSource = 'eiger' # legacy thing
             with h5py.File(self.fileName, 'r') as fp:
                 try:
                     group = fp['entry/measurement/%s' % self.dataSource]
