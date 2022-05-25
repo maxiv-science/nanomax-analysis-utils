@@ -38,7 +38,7 @@ class XRF_scanliveview():
                  fpath_ROI_ini, 
                  host_xspress3='172.16.126.70', #b303a-a100380-cab-dia-detxfcu-01
                  port_xspress3=9999,
-                 host_contrast='172.16.125.11', #b-nanomax-controlroom-cc-1
+                 host_contrast='172.16.125.30', #b-nanomax-controlroom-cc-3
                  port_contrast=5556,
                  channel_xspress3=3,
                  plot_intervall_s=2, 
