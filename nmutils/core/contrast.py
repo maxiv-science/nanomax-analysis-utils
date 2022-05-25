@@ -28,10 +28,15 @@ class contrast_scan(Scan):
             'type': ['eiger', 'merlin', 'xspress3', 'x3mini', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
             'doc': "type of data",
             },
-        'xrfChannels': {
+        'xspress3Channels': {
             'value': [3,],
             'type': list,
-            'doc': 'xspress3 / x3mini channels from which to read XRF',
+            'doc': 'xspress3 channels from which to read XRF',
+            },
+        'x3miniChannels': {
+            'value': [0,],
+            'type': list,
+            'doc': 'x3mini channels from which to read XRF',
             },
         'xrfCropping': {
             'value': [],
@@ -259,7 +264,11 @@ class contrast_scan(Scan):
                     i0, i1 = self.xrfCropping
                 else:
                     i0, i1 = 0, dset.shape[-1]-10 # last bins annoying
-                data = np.sum(dset[:, self.xrfChannels, i0:i1], axis=1)
+                if self.dataSource == 'xspress3':
+                    chans = self.xspress3Channels
+                else:
+                    chans = self.x3miniChannels
+                data = np.sum(dset[:, chans, i0:i1], axis=1)
 
             if self.I0:
                 print('****, %s, %s, %s'%(data.shape, I0_data.shape, I0_data[:, None].shape))
