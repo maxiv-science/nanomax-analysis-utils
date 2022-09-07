@@ -15,7 +15,7 @@ parser.add_option('-t', '--tight',
 NMAX = 50
 
 mono = DeviceProxy('pseudomotor/nanomaxenergy_ctrl/1')
-em = Electrometer(host='b-nanomax-em2-2')
+em = Electrometer(host='b-nanomax-em2-2', streaming=False)
 ic = Ionchamber(length=1.5, gas='air')
 
 def on_close(evt):
