@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'design.ui'
+# Form implementation generated from reading ui file './design.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
 
-#from PyQt5 import QtCore, QtGui, QtWidgets
-from silx.gui import qt as QtCore
-QtGui = QtCore
-QtWidgets = QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MainWindow(object):
@@ -130,7 +127,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.backwardBox.sizePolicy().hasHeightForWidth())
         self.backwardBox.setSizePolicy(sizePolicy)
-        self.backwardBox.setMaximum(10000)
+        self.backwardBox.setMaximum(1000000)
         self.backwardBox.setProperty("value", 1000)
         self.backwardBox.setObjectName("backwardBox")
         self.gridLayout_3.addWidget(self.backwardBox, 0, 1, 1, 1)
@@ -143,7 +140,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.forwardBox.sizePolicy().hasHeightForWidth())
         self.forwardBox.setSizePolicy(sizePolicy)
-        self.forwardBox.setMaximum(10000)
+        self.forwardBox.setMaximum(1000000)
         self.forwardBox.setProperty("value", 1000)
         self.forwardBox.setObjectName("forwardBox")
         self.gridLayout_3.addWidget(self.forwardBox, 0, 4, 1, 1)
@@ -201,18 +198,9 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.modes, "")
         self.fourierfocus = QtWidgets.QWidget()
         self.fourierfocus.setObjectName("fourierfocus")
-        self.FTfocus2 = ProbeView(self.fourierfocus)
-        self.FTfocus2.setGeometry(QtCore.QRect(540, 20, 500, 501))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(2)
-        sizePolicy.setHeightForWidth(self.FTfocus2.sizePolicy().hasHeightForWidth())
-        self.FTfocus2.setSizePolicy(sizePolicy)
-        self.FTfocus2.setMinimumSize(QtCore.QSize(0, 200))
-        self.FTfocus2.setMaximumSize(QtCore.QSize(500, 16777215))
-        self.FTfocus2.setObjectName("FTfocus2")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.fourierfocus)
+        self.gridLayout_4.setObjectName("gridLayout_4")
         self.FTfocus1 = ProbeView(self.fourierfocus)
-        self.FTfocus1.setGeometry(QtCore.QRect(20, 20, 500, 501))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(2)
@@ -221,6 +209,17 @@ class Ui_MainWindow(object):
         self.FTfocus1.setMinimumSize(QtCore.QSize(0, 200))
         self.FTfocus1.setMaximumSize(QtCore.QSize(500, 16777215))
         self.FTfocus1.setObjectName("FTfocus1")
+        self.gridLayout_4.addWidget(self.FTfocus1, 0, 0, 1, 1)
+        self.FTfocus2 = ProbeView(self.fourierfocus)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(2)
+        sizePolicy.setHeightForWidth(self.FTfocus2.sizePolicy().hasHeightForWidth())
+        self.FTfocus2.setSizePolicy(sizePolicy)
+        self.FTfocus2.setMinimumSize(QtCore.QSize(0, 200))
+        self.FTfocus2.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.FTfocus2.setObjectName("FTfocus2")
+        self.gridLayout_4.addWidget(self.FTfocus2, 0, 1, 1, 1)
         self.tabWidget.addTab(self.fourierfocus, "")
         self.gridLayout_2.addWidget(self.tabWidget, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -257,7 +256,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.modes), _translate("MainWindow", "Modes"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourierfocus), _translate("MainWindow", "FT(focus)"))
-from .widgets.ModeView import ModeView
-from .widgets.ObjectView import ObjectView
-from .widgets.Probe import Histogram, ProbeView, PropagationView
-from . import design_rc
+from widgets.ModeView import ModeView
+from widgets.ObjectView import ObjectView
+from widgets.Probe import Histogram, ProbeView, PropagationView
+import design_rc
