@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1082</width>
+    <width>838</width>
     <height>758</height>
    </rect>
   </property>
@@ -396,8 +396,8 @@
        <attribute name="title">
         <string>FT(focus)</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
          <widget class="ProbeView" name="FTfocus1" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -413,13 +413,13 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>500</width>
+            <width>16000000</width>
             <height>16777215</height>
            </size>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item>
          <widget class="ProbeView" name="FTfocus2" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -435,7 +435,7 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>500</width>
+            <width>16000000</width>
             <height>16777215</height>
            </size>
           </property>
@@ -452,7 +452,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1082</width>
+     <width>838</width>
      <height>22</height>
     </rect>
    </property>

@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1082, 758)
+        MainWindow.resize(838, 758)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/logos/icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -198,8 +198,8 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.modes, "")
         self.fourierfocus = QtWidgets.QWidget()
         self.fourierfocus.setObjectName("fourierfocus")
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.fourierfocus)
-        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout(self.fourierfocus)
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.FTfocus1 = ProbeView(self.fourierfocus)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -207,9 +207,9 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.FTfocus1.sizePolicy().hasHeightForWidth())
         self.FTfocus1.setSizePolicy(sizePolicy)
         self.FTfocus1.setMinimumSize(QtCore.QSize(0, 200))
-        self.FTfocus1.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.FTfocus1.setMaximumSize(QtCore.QSize(16000000, 16777215))
         self.FTfocus1.setObjectName("FTfocus1")
-        self.gridLayout_4.addWidget(self.FTfocus1, 0, 0, 1, 1)
+        self.horizontalLayout_4.addWidget(self.FTfocus1)
         self.FTfocus2 = ProbeView(self.fourierfocus)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -217,14 +217,14 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.FTfocus2.sizePolicy().hasHeightForWidth())
         self.FTfocus2.setSizePolicy(sizePolicy)
         self.FTfocus2.setMinimumSize(QtCore.QSize(0, 200))
-        self.FTfocus2.setMaximumSize(QtCore.QSize(500, 16777215))
+        self.FTfocus2.setMaximumSize(QtCore.QSize(16000000, 16777215))
         self.FTfocus2.setObjectName("FTfocus2")
-        self.gridLayout_4.addWidget(self.FTfocus2, 0, 1, 1, 1)
+        self.horizontalLayout_4.addWidget(self.FTfocus2)
         self.tabWidget.addTab(self.fourierfocus, "")
         self.gridLayout_2.addWidget(self.tabWidget, 1, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1082, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 838, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -256,7 +256,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.modes), _translate("MainWindow", "Modes"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourierfocus), _translate("MainWindow", "FT(focus)"))
-from widgets.ModeView import ModeView
-from widgets.ObjectView import ObjectView
-from widgets.Probe import Histogram, ProbeView, PropagationView
-import design_rc
+from .widgets.ModeView import ModeView
+from .widgets.ObjectView import ObjectView
+from .widgets.Probe import Histogram, ProbeView, PropagationView
+from . import design_rc
