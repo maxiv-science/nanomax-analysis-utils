@@ -1,18 +1,25 @@
 """
 Offline data preparation and reconstruction for standard NanoMAX ptycho.
 
-This script is adapted for and requires ptypy 0.3. It is tested with
-MPI on the compute cluster.
+This script is adapted for and requires at least ptypy 0.3. 
+It is tested with MPI on the compute cluster.
 """
 
 import os
 import sys
+# sys.path.insert(0, '/data/visitors/nanomax/common/sw/ptypy-0.4-cc/build/lib/')  # to run ptypy0.4
 import time
 import ptypy
 from ptypy.core import Ptycho
 from ptypy import utils as u
 from distutils.version import LooseVersion
 from mpi4py import MPI
+
+if LooseVersion(ptypy.version) >= LooseVersion('0.5.0'):
+    ptypy.load_ptyscan_module("nanomax")
+    hostname = os.uname()[1]
+    if hostname.startswith('g'):
+        ptypy.load_gpu_engines(arch="cuda")
 
 ############################################################################
 # hard coded user input 
@@ -103,8 +110,8 @@ p.scans.scan00.data.maskfile = {'merlin': '/data/visitors/nanomax/common/masks/m
 p.scans.scan00.data.scanNumber = scannr
 p.scans.scan00.data.xMotor = 'pseudo/x'
 p.scans.scan00.data.yMotor = 'pseudo/y'
-p.scans.scan00.data.zDetectorAngle = 0.0    # rotation of the detector around the beam axis in [deg]
-p.scans.scan00.data.xyAxisSkewOffset = -1.8
+p.scans.scan00.data.zDetectorAngle = 1.5    # rotation of the detector around the beam axis in [deg]
+p.scans.scan00.data.xyAxisSkewOffset = 3.0
 p.scans.scan00.data.shape = cropping        # size of the window of the diffraction patterns to be used in pixel
 p.scans.scan00.data.save = 'append'
 p.scans.scan00.data.dfile = path_data       # once all data is collected, save it as .ptyd file
@@ -113,7 +120,7 @@ p.scans.scan00.data.cropOnLoad = True       # only load used part of detector fr
                                             # requires center to be set explicitly
 p.scans.scan00.data.xMotorFlipped = True
 p.scans.scan00.data.yMotorFlipped = False
-p.scans.scan00.data.orientation = {'merlin':  (False, False, True), 
+p.scans.scan00.data.orientation = {'merlin':  (False, False, False), 
                                    'pilatus': (False, True, False), 
                                    'eiger':   (False, True, False), # legacy
                                    'eiger1m': (False, True, False),
@@ -130,13 +137,13 @@ p.scans.scan00.data.I0 = None              # can be like 'alba2/1'
 p.scans.scan00.data.min_frames = 10
 p.scans.scan00.data.load_parallel = 'all'
 
-# scan parameters: il500lumination
+# scan parameters: illumination
 p.scans.scan00.illumination = u.Param()
 
 p.scans.scan00.illumination.model = None                              # option 1: probe is initialized from a guess
 p.scans.scan00.illumination.aperture = u.Param()
-p.scans.scan00.illumination.aperture.form = 'circ'                    # initial probe is a rectangle (KB focus)
-p.scans.scan00.illumination.aperture.size = 60e-9                     # of this size in [m] the focus
+p.scans.scan00.illumination.aperture.form = 'rect'                    # initial probe is a rectangle (KB focus)
+p.scans.scan00.illumination.aperture.size = 100e-9                     # of this size in [m] the focus
 p.scans.scan00.illumination.propagation = u.Param()
 p.scans.scan00.illumination.propagation.parallel = 1.*defocus_um*1e-6 # propagate the inital guess -> gives phase curvature
 
@@ -190,4 +197,3 @@ if LooseVersion(ptypy.version) < LooseVersion('0.3.0'):
     raise Exception('Use ptypy 0.3.0 or better!')
 
 P = Ptycho(p,level=5)
-
