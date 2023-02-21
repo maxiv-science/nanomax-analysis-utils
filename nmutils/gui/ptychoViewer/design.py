@@ -256,7 +256,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.probe), _translate("MainWindow", "Probe"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.modes), _translate("MainWindow", "Probe Modes"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fourierfocus), _translate("MainWindow", "Pupil Function"))
-from widgets.ModeView import ModeView
-from widgets.ObjectView import ObjectView
-from widgets.Probe import Histogram, ProbeView, PropagationView
-import design_rc
+from .widgets.ModeView import ModeView
+from .widgets.ObjectView import ObjectView
+from .widgets.Probe import Histogram, ProbeView, PropagationView
+from . import design_rc
