@@ -1,6 +1,7 @@
 import numpy as np
 from silx.gui.plot import PlotWidget, PlotWindow
 from silx.gui.plot.ComplexImageView import ComplexImageView
+from silx.gui import colors
 from silx.gui import qt
 import nmutils
 import scipy.interpolate
@@ -22,8 +23,8 @@ class ProbeManager(object):
         self.ui.probePlot2.getPlot().setGraphXLabel(label)
         self.ui.probePlot.setGraphTitle('Plane of interest')
         self.ui.probePlot2.setGraphTitle('Sample plane')
-        self.ui.FTfocus1.setGraphTitle('FT (focus)')
-        self.ui.FTfocus2.setGraphTitle('FT (focus)')
+        self.ui.FTfocus1.setGraphTitle('Pupil Function')
+        self.ui.FTfocus2.setGraphTitle('Pupil Function')
         self.ui.probeHist.setGraphTitle('Probe histogram')
         self.ui.probeHist.setGraphXLabel('micrometers')
         self.ui.probeHist.setGraphYLabel(' ')
@@ -99,18 +100,22 @@ class ProbeManager(object):
         # get the parameters
         nn = self.ui.numberBox.value()
         fw = self.ui.forwardBox.value()
-        bw = self.ui.backwardBox.value()
+        bw = -1. * self.ui.backwardBox.value()
         # update the range
         self.ui.focusSlider.setMaximum(fw)
-        self.ui.focusSlider.setMinimum(-bw)
+        self.ui.focusSlider.setMinimum(bw)
+
+        print(f'fw {fw}')
+        print(f'bw {bw}')
+
 
         # define distances and propagate
-        self.zdist = np.linspace(-bw, fw, nn) * 1e-6
+        self.zdist = np.linspace(fw, bw, nn) * 1e-6
         dist = self.zdist
         dx = dist[1] - dist[0]
         print("propagating to %d positions separated by %.1f um..."\
             % (len(dist), dx*1e6))
-        self.probe3d = nmutils.utils.propagateNearfield(self.probe2d, self.psize, -dist, self.energy)
+        self.probe3d = nmutils.utils.propagateNearfield(self.probe2d, self.psize, dist, self.energy)
 
         # get intensities and focii
         power3d = np.abs(self.probe3d)**2
@@ -123,11 +128,11 @@ class ProbeManager(object):
 
         # show top and side views
         scale = [(self.zdist[1]-self.zdist[0])*1e6, self.psize*1e6]
-        origin = [-bw, -self.psize*self.probe2d.shape[0]/2.0*1e6]
+        origin = [fw, -self.psize*self.probe2d.shape[0]/2.0*1e6]
         self.ui.verticalFocusView.addImage(power_vertical, replace=True,
-            xlabel='beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
+            xlabel='relative beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
         self.ui.horizontalFocusView.addImage(power_horizontal, replace=True,
-            xlabel='beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
+            xlabel='relative beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
 
         # indicate vertical and horizontal foci
         y = self.ui.verticalFocusView.getYAxis().getLimits()
@@ -136,6 +141,8 @@ class ProbeManager(object):
 
         # autofocus
         focus_ind = np.argmax(np.sum(power3d**2, axis=(1,2)))
+        print(f'focus_ind {focus_ind}')
+        print(f'dist[focus_ind] {dist[focus_ind]}')
         self.realFocus = dist[focus_ind] * 1e6
         self.autofocus()
 
@@ -143,6 +150,9 @@ class ProbeManager(object):
         FTfocus2D = np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(focus2D)))/np.shape(focus2D)[0]
         self.ui.FTfocus1.set_data(FTfocus2D)
         self.ui.FTfocus2.set_data(FTfocus2D)
+        self.ui.FTfocus2.setComplexMode(self.ui.FTfocus2.Mode.ABSOLUTE)
+        self.ui.FTfocus2.setColormap(colormap=colors.Colormap(name='reversed gray'),
+                                     mode=self.ui.FTfocus2.Mode.ABSOLUTE)
 
     def autofocus(self):
         try:

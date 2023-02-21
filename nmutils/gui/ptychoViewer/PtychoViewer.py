@@ -10,10 +10,10 @@ try:
 except:
     raise Exception('This application requires silx >= 0.11')
 
-from .widgets.Probe import ProbeManager
+from widgets.Probe import ProbeManager
 from silx.gui import qt
 from silx.gui.icons import getQIcon
-from . import design
+import design
 import sys
 import numpy as np
 import h5py
