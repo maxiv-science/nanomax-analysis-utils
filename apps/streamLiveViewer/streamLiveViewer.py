@@ -55,6 +55,12 @@ class LiveViewer2dBase(ImageView):
         self._positionWidget = tools.PositionInfo(plot=self, converters=posInfo)
         self.statusBar().addWidget(self._positionWidget)
 
+        # having a function that allows to change how it looks by default
+        self.set_prefered_startup_settings()
+
+    def set_prefered_startup_settings(self):
+        pass
+
     def initialize(self):
         raise NotImplementedError
 
@@ -160,6 +166,8 @@ class PilatusLiveViewer(LiveViewer2dBase):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
         res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+        
+    def set_prefered_startup_settings(self):
         self.setColormap(colormap=colors.Colormap(name='magma'),
                          normalization='log')
 
@@ -184,6 +192,8 @@ class EigerLiveViewer(LiveViewer2dBase):
     def initialize(self):
         self.session = requests.Session()
         self.session.trust_env = False
+        
+    def set_prefered_startup_settings(self):
         self.setColormap(colormap=colors.Colormap(name='viridis'),
                          normalization='log')
 
@@ -199,7 +209,7 @@ class EigerLiveViewer(LiveViewer2dBase):
 
 
 class AndorLiveViewer(PilatusLiveViewer):
-    def initialize(self):
+    def set_prefered_startup_settings(self):
         self.setColormap(colormap=colors.Colormap(name='viridis'),
                          normalization='linear')
 
