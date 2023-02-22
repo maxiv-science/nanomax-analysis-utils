@@ -11,7 +11,7 @@ class contrast_scan(Scan):
     General format for Contrast at NanoMAX.
     """
 
-    alba_names = ['alba%u/%u'%(i,j) for i in (0,2) for j in (1,2,3,4)]
+    alba_names = ['alba%u/%u'%(i,j) for i in (2,0) for j in (1,2,3,4)]
     default_opts = {
         'scanNr': {
             'value': 0,
@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger(old)', 'eiger1m', 'eiger4m', 'merlin', 'xspress3', 'x3mini', 'pilatus', 'pilatus1m', 'ni/counter1', 'ni/counter2', 'ni/counter3', 'waxs', 'adlink', 'andor','cake']+alba_names,
+            'type': ['eiger1m', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink'],
             'doc': "type of data",
             },
         'xspress3Channels': {
@@ -110,6 +110,25 @@ class contrast_scan(Scan):
             self.path = os.path.dirname(self.path)
         self.fileName = os.path.join(self.path, '%06u.h5'%self.scanNr)
 
+    def find_snapshot_path(self, fp):
+        """
+        added to be backwards compatible, as snapshots inside the scan file 
+        could be in
+            entry/snapshot               # old
+            entry/snapshots/pre_scan     # new possibility 1
+            entry/snapshots/pre_scan     # new possibility 2
+        """
+        path_options = ['entry/snapshot/energy',
+                        'entry/snapshots/pre_scan/energy',
+                        'entry/snapshots/prost_scan/energy']
+        with h5py.File(fp, 'r') as F:
+            existing_paths = [x for x in path_options if x in F.keys()]
+        if existing_paths==[]:
+            print('[!] no snapshot found in scan file')
+            self.snapshot_path = ''
+        else:
+            self.snapshot_path = existing_paths[0]
+
     def _readPositions(self):
         """ 
         Override position reading. Should return N by 2 array [x, y].
@@ -130,14 +149,16 @@ class contrast_scan(Scan):
             if self.globalPositions:
                 xyz = ['npoint_buff/%s'%dim for dim in 'xyz'] + ['pseudo/%s'%dim for dim in 'xyz'] + ['s%s'%dim for dim in 'xyz']
                 xbase, ybase = 0, 0
+                self.find_snapshot_path(fp)
                 if self.xMotor in xyz:
-                    xbase = fp['entry/snapshot/base%s' % self.xMotor[-1]][:]
+                    xbase = fp[f'{self.snapshot_path}/base{self.xMotor[-1]}'][:]
                 if self.yMotor in xyz:
-                    ybase = fp['entry/snapshot/base%s' % self.yMotor[-1]][:]
+                    ybase = fp[f'{self.snapshot_path}/base{self.yMotor[-1]}'][:]
 
             # read the positions
+            self.find_snapshot_path(fp)
             xkey = 'entry/measurement/%s' % self.xMotor
-            xsnapkey = 'entry/snapshot/%s' % self.xMotor
+            xsnapkey = f'{self.snapshot_path}/{self.xMotor}' 
             if xkey in fp:
                 x = fp[xkey][:]
             elif xsnapkey in fp:
@@ -149,7 +170,7 @@ class contrast_scan(Scan):
                 raise NoDataException(msg)
                 
             ykey = 'entry/measurement/%s' % self.yMotor
-            ysnapkey = 'entry/snapshot/%s' % self.yMotor
+            ysnapkey = f'{self.snapshot_path}/{self.yMotor}' 
             if ykey in fp:
                 y = fp[ykey][:]
             elif ysnapkey in fp:
