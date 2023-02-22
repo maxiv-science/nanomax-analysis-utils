@@ -6,6 +6,7 @@ and plots them in a silx widget.
 import sys
 import numpy as np
 from silx.gui.plot import ImageView, PlotWindow, tools
+from silx.gui import colors
 from silx.gui import qt
 import zmq
 from zmq.utils import jsonapi as json
@@ -159,6 +160,8 @@ class PilatusLiveViewer(LiveViewer2dBase):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
         res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
+        self.setColormap(colormap=colors.Colormap(name='magma'),
+                         normalization='log')
 
     def _get_image(self):
         """
@@ -181,6 +184,8 @@ class EigerLiveViewer(LiveViewer2dBase):
     def initialize(self):
         self.session = requests.Session()
         self.session.trust_env = False
+        self.setColormap(colormap=colors.Colormap(name='viridis'),
+                         normalization='log')
 
     def _get_image(self):
         try:
@@ -194,6 +199,10 @@ class EigerLiveViewer(LiveViewer2dBase):
 
 
 class AndorLiveViewer(PilatusLiveViewer):
+    def initialize(self):
+        self.setColormap(colormap=colors.Colormap(name='viridis'),
+                         normalization='linear')
+
     def _get_image(self):
         """
         gets the last image
@@ -246,8 +255,10 @@ if __name__ == '__main__':
         print('Making a PilatusLiveViewer instance')
         viewer = PilatusLiveViewer(hostname, interval=.1, alarm=1e6)
     elif dettype in ('andor', 'krytur', 'zyla'):
+        print('Making a AndorLiveViewer instance')
         viewer = AndorLiveViewer(hostname, interval=.1)
     elif 'xspress' in dettype.lower():
+        print('Making a Xspress3LiveViewer instance')
         viewer = Xspress3LiveViewer(hostname, interval=.1, alarm=2e6)
     viewer.show()
     app.exec_()
