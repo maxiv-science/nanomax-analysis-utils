@@ -168,8 +168,8 @@ class PilatusLiveViewer(LiveViewer2dBase):
         res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
         
     def set_prefered_startup_settings(self):
-        self.setColormap(colormap=colors.Colormap(name='magma'),
-                         normalization='log')
+        self.setColormap(colormap=colors.Colormap(name='magma'))
+        self.setColormap(normalization='log')
 
     def _get_image(self):
         """
@@ -194,8 +194,8 @@ class EigerLiveViewer(LiveViewer2dBase):
         self.session.trust_env = False
         
     def set_prefered_startup_settings(self):
-        self.setColormap(colormap=colors.Colormap(name='viridis'),
-                         normalization='log')
+        self.setColormap(colormap=colors.Colormap(name='viridis'))
+        self.setColormap(normalization='log')
 
     def _get_image(self):
         try:
@@ -210,8 +210,8 @@ class EigerLiveViewer(LiveViewer2dBase):
 
 class AndorLiveViewer(PilatusLiveViewer):
     def set_prefered_startup_settings(self):
-        self.setColormap(colormap=colors.Colormap(name='viridis'),
-                         normalization='linear')
+        self.setColormap(colormap=colors.Colormap(name='viridis'))
+        self.setColormap(normalization='linear')
 
     def _get_image(self):
         """

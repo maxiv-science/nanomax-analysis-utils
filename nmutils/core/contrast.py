@@ -110,7 +110,7 @@ class contrast_scan(Scan):
             self.path = os.path.dirname(self.path)
         self.fileName = os.path.join(self.path, '%06u.h5'%self.scanNr)
 
-    def find_snapshot_path(self, fp):
+    def find_snapshot_path(self):
         """
         added to be backwards compatible, as snapshots inside the scan file 
         could be in
@@ -118,10 +118,10 @@ class contrast_scan(Scan):
             entry/snapshots/pre_scan     # new possibility 1
             entry/snapshots/pre_scan     # new possibility 2
         """
-        path_options = ['entry/snapshot/energy',
-                        'entry/snapshots/pre_scan/energy',
-                        'entry/snapshots/prost_scan/energy']
-        with h5py.File(fp, 'r') as F:
+        path_options = ['entry/snapshot/',
+                        'entry/snapshots/pre_scan/',
+                        'entry/snapshots/prost_scan/']
+        with h5py.File(self.fileName, 'r') as F:
             existing_paths = [x for x in path_options if x in F.keys()]
         if existing_paths==[]:
             print('[!] no snapshot found in scan file')
@@ -149,14 +149,14 @@ class contrast_scan(Scan):
             if self.globalPositions:
                 xyz = ['npoint_buff/%s'%dim for dim in 'xyz'] + ['pseudo/%s'%dim for dim in 'xyz'] + ['s%s'%dim for dim in 'xyz']
                 xbase, ybase = 0, 0
-                self.find_snapshot_path(fp)
+                self.find_snapshot_path()
                 if self.xMotor in xyz:
                     xbase = fp[f'{self.snapshot_path}/base{self.xMotor[-1]}'][:]
                 if self.yMotor in xyz:
                     ybase = fp[f'{self.snapshot_path}/base{self.yMotor[-1]}'][:]
 
             # read the positions
-            self.find_snapshot_path(fp)
+            self.find_snapshot_path()
             xkey = 'entry/measurement/%s' % self.xMotor
             xsnapkey = f'{self.snapshot_path}/{self.xMotor}' 
             if xkey in fp:
