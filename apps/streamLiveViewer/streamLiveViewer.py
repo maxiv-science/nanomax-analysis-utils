@@ -168,7 +168,7 @@ class PilatusLiveViewer(LiveViewer2dBase):
         res = self.socket.connect('tcp://%s:%u' % (self.hostname, self.port))
         
     def set_prefered_startup_settings(self):
-        self.setColormap(colormap=colors.Colormap(name='magma'))
+        self.setColormap(colormap=colors.Colormap(name='inferno'))
         self.setColormap(normalization='log')
 
     def _get_image(self):
