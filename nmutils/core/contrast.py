@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger1m', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink'],
+            'type': ['eiger1m', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'pseudo/xbic'],
             'doc': "type of data",
             },
         'xspress3Channels': {
@@ -92,7 +92,7 @@ class contrast_scan(Scan):
 
     # an optional class attribute which lets scanViewer know what
     # dataSource options have what dimensionalities. Good for the GUI.
-    sourceDims = {'eiger(old)':2, 'eiger1m':2, 'eiger4m':2, 'pilatus':2, 'xspress3':1, 'x3mini':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'andor':2, 'cake':2}
+    sourceDims = {'eiger(old)':2, 'eiger1m':2, 'eiger4m':2, 'pilatus':2, 'xspress3':1, 'x3mini':1, 'merlin':2, 'pilatus1m':2, 'ni/counter1':0, 'ni/counter2':0, 'ni/counter3':0, 'waxs':1, 'adlink':0, 'pseudo/xbic':0, 'andor':2, 'cake':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
     assert sorted(sourceDims.keys()) == sorted(default_opts['dataSource']['type'])
@@ -338,7 +338,7 @@ class contrast_scan(Scan):
                 q = fp['q'][:]
                 if self.dataSource == 'cake':
                     if 'phi' in fp:
-                    phi = fp['phi'][:nmax]
+                        phi = fp['phi'][:nmax]
                     elif 'azi' in fp:
                         phi = fp['azi'][:nmax]
                     else:
