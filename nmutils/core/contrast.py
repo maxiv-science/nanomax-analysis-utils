@@ -59,7 +59,7 @@ class contrast_scan(Scan):
             'doc': 'channel over which to normalize signals, eg "alba2/1"',
             },
         'waxsPath': {
-            'value': '../../process/frameprocessing/<sampledir>',
+            'value': '../../process/azint/<sampledir>',
             'type': str,
             'doc': 'path to waxs data, absolute or relative to h5 folder, <sampledir> is replaced',
         },
@@ -337,7 +337,12 @@ class contrast_scan(Scan):
             with h5py.File(waxs_file, 'r') as fp:
                 q = fp['q'][:]
                 if self.dataSource == 'cake':
+                    if 'phi' in fp:
                     phi = fp['phi'][:nmax]
+                    elif 'azi' in fp:
+                        phi = fp['azi'][:nmax]
+                    else:
+                        raise NoDataException(f'azimuthal bins do not exist in {waxs_file}')
                 dset = fp['I']
                 if self.cake_downsample == 1:
                     data = dset[:nmax]
