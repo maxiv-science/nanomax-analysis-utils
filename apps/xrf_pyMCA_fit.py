@@ -10,7 +10,7 @@ session_path = '/data/visitors/nanomax/proposalID/visit/'
 sample_name = 'sample'
 config_files = 'blub.cfg'
 detector = 'x3mini'          # 'x3mini' or 'xspress3'
-channels = [0]
+channels = [0]               # 0 and/or 1 fir x3mini and 3 fir xspress3
 
 make_pymca_h5        = True
 make_elements_h5     = True
@@ -80,7 +80,7 @@ class xrfBatch():
             self.I0 = fp['entry/measurement/alba2/1'][0:npixels].reshape(*shape, -1)
             #self.xrf = fp['entry/measurement/xspress3/frames'][0:npixels, 3, 0:2600].reshape(*shape, -1) #legacy
 
-            self.xrf = fp[f'entry/measurement/'{self.detector}'/data'][0:npixels, self.channel, 0:2600].reshape(*shape, -1) #legacy
+            self.xrf = fp[f'entry/measurement/{self.detector}/data'][0:npixels, self.channel, 0:2600].reshape(*shape, -1) #legacy
             self.xrf_norm = ((self.xrf*I0_scale_factor)/(self.I0*self.dwell))
             self.xrf_avg = self.xrf_norm.sum(axis=(0,1))/npixels
             self.energy = fp['entry/snapshot/energy'][:]
