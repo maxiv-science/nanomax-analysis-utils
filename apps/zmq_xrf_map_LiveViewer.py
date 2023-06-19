@@ -132,6 +132,7 @@ class XRF_scanliveview():
                         self.calc_elemental_maps()
                         self.update_image_plots()
                         self.update_line_plots()
+                        self.time_of_last_plot = time.time() 
                     except:
                         self.pretty_print_error('could not update maps at the end of the scan')
 
@@ -181,7 +182,7 @@ class XRF_scanliveview():
             self.time_of_last_plot = time.time() 
 
             # ... and save the plots
-            self.save_both_plots()
+            #self.save_both_plots()
             
 
     ############################################################################

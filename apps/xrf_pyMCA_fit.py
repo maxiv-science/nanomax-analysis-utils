@@ -6,11 +6,12 @@
 # 4. Configuration file for the fitting
 # 5. Select the output files you want to generate
 
-session_path = '/data/visitors/nanomax/proposalID/visit/'
-sample_name = 'sample'
-config_files = 'blub.cfg'
-detector = 'x3mini'          # 'x3mini' or 'xspress3'
-channels = [0]               # 0 and/or 1 fir x3mini and 3 fir xspress3
+session_path = '/data/visitors/nanomax/<proposalID>/<visit>/'
+sample_name = '<sample>'
+
+config_file = '<absolute_path_to_fit_config.cfg>'
+detector = 'xspress3'  # 'x3mini' or 'xspress3'
+channels = [3]         # [0], [1] or [0,1] for x3mini; [3] for xspress3
 
 make_pymca_h5        = True
 make_elements_h5     = True
@@ -68,10 +69,20 @@ class xrfBatch():
         print('Reading raw data file: %s' % input_file)
         with h5py.File(input_file, mode='r') as fp:
             self.cmd = fp['entry/description'][0]
-            shape = int(self.cmd.split()[8])+1, int(self.cmd.split()[4])+1
-            self.dwell = float(self.cmd.split()[-2])
             self.dt = fp['entry/measurement/dt'][:]
             nlines = len(self.dt)
+
+            if 'npointflyscan' in str(self.cmd):
+                shape = int(self.cmd.split()[8])+1, int(self.cmd.split()[4])+1
+                self.dwell = float(self.cmd.split()[-2])
+            elif 'fermatscan' in str(self.cmd):
+                shape = nlines, 1
+                self.dwell = float(self.cmd.split()[-1])
+            else:
+                print('[!] scan command not supported yet')
+                print(self.cmd )
+                exit()
+
             if  nlines < shape[0]:
                 print('Lines in file (%d) and lines in scan command (%d) mismatch. Scan was probably interrupted.'%(nlines, shape[0]))
                 shape = nlines, shape[1]
@@ -80,10 +91,10 @@ class xrfBatch():
             self.I0 = fp['entry/measurement/alba2/1'][0:npixels].reshape(*shape, -1)
             #self.xrf = fp['entry/measurement/xspress3/frames'][0:npixels, 3, 0:2600].reshape(*shape, -1) #legacy
 
-            self.xrf = fp[f'entry/measurement/{self.detector}/data'][0:npixels, self.channel, 0:2600].reshape(*shape, -1) #legacy
+            self.xrf = fp[f'entry/measurement/{self.detector}/data'][0:npixels, self.channel, :].reshape(*shape, -1) #legacy
             self.xrf_norm = ((self.xrf*I0_scale_factor)/(self.I0*self.dwell))
             self.xrf_avg = self.xrf_norm.sum(axis=(0,1))/npixels
-            self.energy = fp['entry/snapshot/energy'][:]
+            self.energy = fp['entry/snapshots/pre_scan/energy'][:]
             self.x = fp['entry/measurement/pseudo/x'][0:npixels].reshape(*shape)
             self.y = fp['entry/measurement/pseudo/y'][0:npixels].reshape(*shape)
 
