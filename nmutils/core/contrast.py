@@ -215,7 +215,7 @@ class contrast_scan(Scan):
         if self.I0:
             with h5py.File(self.fileName, 'r') as fp:
                 try:
-                    I0_data = fp['entry/measurement/%s' % self.I0][:]
+                    I0_data = fp['entry/measurement/%s' % self.I0][:].flatten()
                 except KeyError:
                     print('I0 data %s not found'%self.I0)
                     raise NoDataException()
