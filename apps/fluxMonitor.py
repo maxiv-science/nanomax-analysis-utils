@@ -23,7 +23,7 @@ def on_close(evt):
     exit(0)
 
 fig = plt.figure()
-fig.canvas.set_window_title('fluxMonitor')
+fig.canvas.manager.set_window_title('fluxMonitor')
 fig.canvas.mpl_connect('close_event', on_close)
 ax = plt.gca()
 lines = []
