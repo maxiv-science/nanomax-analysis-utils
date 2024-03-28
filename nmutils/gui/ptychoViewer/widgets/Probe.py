@@ -100,10 +100,10 @@ class ProbeManager(object):
         # get the parameters
         nn = self.ui.numberBox.value()
         fw = self.ui.forwardBox.value()
-        bw = -1. * self.ui.backwardBox.value()
+        bw = -1 * self.ui.backwardBox.value()
         # update the range
-        self.ui.focusSlider.setMaximum(fw)
-        self.ui.focusSlider.setMinimum(bw)
+        self.ui.focusSlider.setMaximum(int(fw))
+        self.ui.focusSlider.setMinimum(int(bw))  # has to be integer in silx 2.0.0
 
         print(f'fw {fw}')
         print(f'bw {bw}')
