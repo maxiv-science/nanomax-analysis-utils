@@ -14,7 +14,7 @@ module add Anaconda3    # when at MAX IV cluster or LUNARC
 Create the environment, called `nmutils-24a` here, and install dependecies. You may want to omit Intel MKL `libblas=*=*mkl` on non-x86 (e.g. arm) cpus.
 
 ```
-conda create -n nmutils-2024a -c conda-forge python=3.11 numpy scipy matplotlib h5py hdf5plugin silx qtconsole cython git libblas=*=*mkl
+conda create -n nmutils-24a -c conda-forge python=3.11 numpy scipy matplotlib h5py hdf5plugin silx qtconsole cython git libblas=*=*mkl
 ```
 
 Activate environment. You may need to use `source activate ...` at MAX IV and LUNARC. `conda activate` may have the same effect elesewhere.
