@@ -1,5 +1,46 @@
 ## Installation:
 
+One can get installed *nanomax-analysis-utils* in various ways including *maxiv* conda channel. The software there however may not be up-to-date or available for any Python version or cpu-architecture. Using a combination of *conda* and *git* seems as the most universal solution.
+
+### conda and git
+
+Let's use *conda* to create a virtual environment and let's install *nanomax-analysis-utils* from source repo on GitHub.
+
+Use preinstalled `Anaconda3`, `Miniconda3` or `Mamba` at MAX IV cluster or LUNARC and install or use any snake-like tool providing `conda` elsewhere. 
+```
+module add Anaconda3    # when at MAX IV cluster or LUNARC
+```
+
+Create the environment, called `nmutils-24a` here, and install dependecies. You may want to omit Intel MKL `libblas=*=*mkl` on non-x86 (e.g. arm) cpus.
+
+```
+conda create -n nmutils-2024a -c conda-forge python=3.11 numpy scipy matplotlib h5py hdf5plugin silx qtconsole cython git libblas=*=*mkl
+```
+
+Activate environment. You may need to use `source activate ...` at MAX IV and LUNARC. `conda activate` may have the same effect elesewhere.
+
+```
+source activate nmutils-24a    # note: Use `source activate` at MAX IV
+```
+
+Get source, checkout the release branch and install from the source with pip.
+
+```
+git clone https://github.com/maxiv-science/nanomax-analysis-utils.git
+cd nanomax-analysis-utils
+git checkout v0.4.4
+pip install .
+```
+
+Test importing the module and starting the *scanViewer* gui.
+
+```
+python -c "import nmutils"
+scanViewer
+```
+
+Note: It is know that on Windows this method does not produce a correct *scanViewer* executabale. This needs to be investigated more.
+
 ### From conda
 
 For the easiest installation, including dependencies, use conda. Install Anaconda3, miniconda3, or so (Google knows how). If you're working at the MAX IV compute cluster, Anaconda is already installed and the installation is loaded with:
