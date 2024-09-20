@@ -335,15 +335,28 @@ class contrast_scan(Scan):
             if self.nMaxPositions:
                 nmax = self.nMaxPositions
             with h5py.File(waxs_file, 'r') as fp:
-                q = fp['q'][:]
-                if self.dataSource == 'cake':
-                    if 'phi' in fp:
-                        phi = fp['phi'][:nmax]
-                    elif 'azi' in fp:
-                        phi = fp['azi'][:nmax]
-                    else:
-                        raise NoDataException(f'azimuthal bins do not exist in {waxs_file}')
-                dset = fp['I']
+                # waxs file is from the azint 2023 pipeline which is a bit like a NEXUS file
+                if 'entry' in fp:
+                    print(f"waxs data is in azint pipeline (2023) format")
+                    if self.dataSource == 'cake':
+                        phi = fp['/entry/data2d/azi'][:]
+                        q = fp['/entry/data2d/q'][:]
+                        dset = fp['/entry/data2d/cake'][:nmax]
+                    elif self.dataSource == 'waxs':
+                        q = fp['/entry/data1d/q'][:]
+                        dset = fp['/entry/data1d/I'][:nmax]
+                # load old data structure
+                else:
+                    print(f"waxs data is in plain format")
+                    q = fp['q'][:]
+                    if self.dataSource == 'cake':
+                        if 'phi' in fp:
+                            phi = fp['phi'][:nmax]
+                        elif 'azi' in fp:
+                            phi = fp['azi'][:nmax]
+                        else:
+                            raise NoDataException(f'azimuthal bins do not exist in {waxs_file}')
+                    dset = fp['I']
                 if self.cake_downsample == 1:
                     data = dset[:nmax]
                 else:

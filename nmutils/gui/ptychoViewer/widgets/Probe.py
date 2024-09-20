@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from silx.gui.plot import PlotWidget, PlotWindow
 from silx.gui.plot.ComplexImageView import ComplexImageView
@@ -31,6 +32,11 @@ class ProbeManager(object):
         self.ui.probeHist.chooserMenu.currentIndexChanged.connect(self.updatePlane)
         self.ui.verticalFocusView.setGraphTitle('Vertical focus (M1)')
         self.ui.horizontalFocusView.setGraphTitle('Horizontal focus (M2)')
+        self.define_cm_fire()
+
+    def define_cm_fire(self):
+        color_array = np.load(os.path.dirname(os.path.realpath(__file__))+'/cm_fire_rgb.npy')
+        self.cm_fire = colors.Colormap(name=None, colors=color_array[::-1,:])
 
     def set_data(self, probe, psize, energy):
         self.psize = psize
@@ -129,10 +135,20 @@ class ProbeManager(object):
         # show top and side views
         scale = [(self.zdist[1]-self.zdist[0])*1e6, self.psize*1e6]
         origin = [fw, -self.psize*self.probe2d.shape[0]/2.0*1e6]
-        self.ui.verticalFocusView.addImage(power_vertical, replace=True,
-            xlabel='relative beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
-        self.ui.horizontalFocusView.addImage(power_horizontal, replace=True,
-            xlabel='relative beamline z axis (micrometers)', ylabel='micrometers', scale=scale, origin=origin)
+        self.ui.verticalFocusView.addImage(power_vertical, 
+            replace=True,
+            xlabel='relative beamline z axis (micrometers)', 
+            ylabel='micrometers', 
+            scale=scale, 
+            origin=origin,
+            colormap=self.cm_fire)
+        self.ui.horizontalFocusView.addImage(power_horizontal, 
+            replace=True,
+            xlabel='relative beamline z axis (micrometers)', 
+            ylabel='micrometers', 
+            scale=scale, 
+            origin=origin,
+            colormap=self.cm_fire)
 
         # indicate vertical and horizontal foci
         y = self.ui.verticalFocusView.getYAxis().getLimits()
@@ -169,7 +185,7 @@ class PropagationView(PlotWidget):
     """
     def __init__(self, parent=None):
         super(PropagationView, self).__init__(parent=parent)
-
+        
 class ProbeView(ComplexImageView):
     """
     Complex probe in 2d

@@ -60,6 +60,7 @@ while True:
         values_L2 = [0.5*(values_L2[i-1]+values_L2[i]) for i, v in enumerate(values_L2) if i%2==1]
         times = [0.5*(times[i-1]+times[i]) for i, v in enumerate(times) if i%2==1 ]
 
+    """
     # if enough data, extrapolate to when automatic refill happens
     if len(values_L2)>=1500:
         y = times[:-1500] #mdates.date2num(times[:-100])
@@ -68,6 +69,7 @@ while True:
         f_lin = np.poly1d(params)
         t_refill = mdates.num2date(f_lin(25))
         str_refill = t_refill.strftime("%H:%M:%S")
+    """
 
     # update the plot
     if plot_data_L1 == None:
