@@ -336,7 +336,7 @@ class XRF_scanliveview():
         self.fig_0_line_avg, = self.fig_0_ax.plot(np.arange(self.max_spectrum_length), lw=1, c='b')
         self.fig_0_line_last, = self.fig_0_ax.plot(np.arange(self.max_spectrum_length), lw=1, c='r', alpha=0.5)
         self.fig_0_title = plt.title('scan #'+str(self.current_scan))
-        self.fig_0.canvas.set_window_title('average and most recent spectrum')
+        # self.fig_0.canvas.set_window_title('average and most recent spectrum')
         # also plot the ROIs
         for key in self.ROIs.keys():
             if not key in ('ICR', 'Sum_all'):
@@ -371,7 +371,7 @@ class XRF_scanliveview():
             self.fig_1_ax[key].set_aspect('equal') 
         self.fig_1_suptitle = plt.suptitle('scan #'+str(self.current_scan))
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-        self.fig_1.canvas.set_window_title('elemental maps')
+        # self.fig_1.canvas.set_window_title('elemental maps')
 
         # draw the figures
         plt.draw()
@@ -517,9 +517,9 @@ if __name__ == "__main__":
 
     # start the actual liveViewer
     liveviewer = XRF_scanliveview(fpath_ROI_ini=fpath,
-                                  host_xspress3='172.16.126.70', #b303a-a100380-cab-dia-detxfcu-01
+                                  host_xspress3='172.16.126.139', #b-nanomax-xspress3-0.maxiv.lu.se 
                                   port_xspress3=9999,
-                                  host_contrast='172.16.125.30', #b-nanomax-controlroom-cc-3
+                                  host_contrast='172.16.126.61', #b-nanomax-ec-11,
                                   port_contrast=5556,
                                   channel_xspress3=3,
                                   plot_intervall_s=2, 
