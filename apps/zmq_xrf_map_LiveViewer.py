@@ -515,22 +515,12 @@ if __name__ == "__main__":
     else:
         fpath = './ROIs_test.ini'            
 
-    # start the actual liveViewer
-    liveviewer = XRF_scanliveview(fpath_ROI_ini=fpath,
-                                  host_xspress3='172.16.126.139', #b-nanomax-xspress3-0.maxiv.lu.se 
-                                  port_xspress3=9999,
-                                  host_contrast='172.16.126.61', #b-nanomax-ec-11,
-                                  port_contrast=5556,
-                                  channel_xspress3=3,
-                                  plot_intervall_s=2, 
-                                  plot_min_data_n=5,
-                                  verbosity=5)
-    liveviewer.run()
+
 
     # host_xspress3='172.16.126.139', # b-nanomax-xspress3-0 - diffraction endstation
-    # host_xspress3='172.16.126.51', # b-nanomax-xspress3mini-temp - diffraction endstation Nov 2024
+    # host_xspress3='172.16.126.51',  # b-nanomax-xspress3mini-temp - diffraction endstation Nov 2024
     # host_xspress3='172.16.126.124', # b-nanomax-xspress3mini-0 - imaging endstation
-
+    
     # host_contrast='172.16.126.61',  # b-nanomax-ec-11
     # host_contrast='172.16.125.30',  # b-nanomax-controlroom-cc-3 - diffraction endstation control room
     # host_contrast='172.16.125.31',  # b-nanomax-controlroom-cc-4 - imaging endstation control room
