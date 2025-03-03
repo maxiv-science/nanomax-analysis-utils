@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger1m', 'eiger500k', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'selun_highZ', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'pseudo/xbic'],
+            'type': ['eiger1m', 'eiger500k', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'selunCZT', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'pseudo/xbic'],
             'doc': "type of data",
             },
         'xspress3Channels': {
@@ -101,7 +101,7 @@ class contrast_scan(Scan):
                   'x3mini':1, 
                   'merlin':2, 
                   'pilatus1m':2, 
-                  'selun_highZ':2,
+                  'selunCZT':2,
                   'ni/counter1':0, 
                   'ni/counter2':0, 
                   'ni/counter3':0, 
@@ -237,7 +237,7 @@ class contrast_scan(Scan):
                     print('I0 data %s not found'%self.I0)
                     raise NoDataException()
 
-        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger(old)', 'eiger500k', 'eiger1m', 'eiger4m', 'andor', 'selun_highZ'):
+        if self.dataSource in ('merlin', 'pilatus', 'pilatus1m', 'eiger(old)', 'eiger500k', 'eiger1m', 'eiger4m', 'andor', 'selunCZT'):
             print('loading %s data...' % self.dataSource)
             if self.dataSource == 'eiger(old)':
                 self.dataSource = 'eiger' # legacy thing
