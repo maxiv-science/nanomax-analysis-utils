@@ -25,7 +25,7 @@ class contrast_scan(Scan):
             },
         'dataSource': {
             'value': 'merlin',
-            'type': ['eiger1m', 'eiger500k', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'selunCZT', 'andor','cake', 'xspress3', 'x3mini', 'waxs', 'qepro'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'pseudo/xbic'],
+            'type': ['eiger1m', 'eiger500k', 'eiger4m', 'eiger(old)', 'merlin', 'pilatus', 'pilatus1m', 'andor','cake', 'xspress3', 'x3mini', 'waxs'] + alba_names + ['ni/counter1', 'ni/counter2', 'ni/counter3', 'adlink', 'pseudo/xbic'], # 'selunCZT', 'qepro'
             'doc': "type of data",
             },
         'xspress3Channels': {
@@ -101,7 +101,7 @@ class contrast_scan(Scan):
                   'x3mini':1, 
                   'merlin':2, 
                   'pilatus1m':2, 
-                  'selunCZT':2,
+                  #'selunCZT':2,
                   'ni/counter1':0, 
                   'ni/counter2':0, 
                   'ni/counter3':0, 
@@ -109,7 +109,7 @@ class contrast_scan(Scan):
                   'adlink':0, 
                   'pseudo/xbic':0, 
                   'andor':2, 
-                  'qepro':1,
+                  #'qepro':1,
                   'cake':2}
     albaDims = {name:0 for name in alba_names}
     sourceDims.update(albaDims)
