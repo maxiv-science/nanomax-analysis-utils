@@ -357,12 +357,33 @@ class contrast_scan(Scan):
                 if 'entry' in fp:
                     print(f"waxs data is in azint pipeline (2023) format")
                     if self.dataSource == 'cake':
-                        phi = fp['/entry/data2d/azi'][:]
-                        q = fp['/entry/data2d/q'][:]
                         dset = fp['/entry/data2d/cake'][:nmax]
+                        phi = fp['/entry/data2d/azi'][:]
+
+                        if '/entry/data2d/q' in fp.keys():
+                            x_axis = fp['/entry/data2d/q'][:]
+                            x_label = 'q (1/nm)'
+                        elif '/entry/data2d/2th' in fp.keys():
+                            x_axis = fp['/entry/data2d/2th'][:]
+                            x_label = '2theta (degree)'
+                        else:
+                            print('no x positions found')
+                            # todo create default x-array
+                        q = x_axis
+
                     elif self.dataSource == 'waxs':
-                        q = fp['/entry/data1d/q'][:]
                         dset = fp['/entry/data1d/I'][:nmax]
+                        if '/entry/data1d/q' in fp.keys():
+                            x_axis = fp['/entry/data1d/q'][:]
+                            x_label = 'q (1/nm)'
+                        elif '/entry/data1d/2th' in fp.keys():
+                            x_axis = fp['/entry/data1d/2th'][:]
+                            x_label = '2theta (degree)'
+                        else:
+                            print('no x positions found')
+                            # todo create default x-array
+                        q = x_axis
+                        
                 # load old data structure
                 else:
                     print(f"waxs data is in plain format")
@@ -390,10 +411,10 @@ class contrast_scan(Scan):
                 data = data / I0_data[:, None]
             if self.dataSource == 'waxs':
                 self.dataAxes[name] = [q,]
-                self.dataDimLabels[name] = ['q (1/nm)']
+                self.dataDimLabels[name] = [x_label]
             elif self.dataSource == 'cake':
                 self.dataAxes[name] = [phi, q]
-                self.dataDimLabels[name] = ['phi (rad.)', 'q (1/nm)']
+                self.dataDimLabels[name] = ['phi (rad.)', x_label]
 
         elif self.dataSource in ('qepro'):
             with h5py.File(self.fileName, 'r') as fp:
