@@ -72,8 +72,8 @@ if rank==0:
     os.makedirs(out_dir_rec,     exist_ok=True)
 
     # copy this file into this directory with a tag made from the time and date this script was run
-    os.system('cp ./' + str(__file__) + ' ' + out_dir_scripts + time.strftime("%Y-%m-%d_%H%M") + '_' + str(__file__))
-
+    os.system(f'cp {str(__file__)} {out_dir_scripts}{time.strftime("%Y-%m-%d_%H%M")}_{os.path.basename(__file__)}')
+    
 ############################################################################
 # creating the parameter tree
 ############################################################################
