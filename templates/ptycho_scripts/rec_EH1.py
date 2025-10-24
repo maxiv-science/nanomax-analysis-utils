@@ -179,9 +179,9 @@ p.scans.scan00.illumination.diversity.noise = (0.5, 1.0)  # (rms, mfs, rms_mod, 
 #p.scans.scan00.sample.diversity = None
 
 p.engines = u.Param()
-############################################################################
+################################################################################
 # 1st use the difference map algorithm
-############################################################################
+################################################################################
 
 p.engines.engine00 = u.Param()
 p.engines.engine00.name = 'DM_cupy'
@@ -193,9 +193,9 @@ p.engines.engine00.probe_support = 3                  # non-zero probe area as f
 p.engines.engine00.obj_smooth_std = 10.               # gaussian smoothing (pixel) of the current object prior to update
 p.engines.engine00.clip_object = (0,1)                # clip object amplitude into this interval
 
-############################################################################
+################################################################################
 # 2nd use the maximum likelyhood algorithm
-############################################################################
+################################################################################
 
 # general
 p.engines.engine01 = u.Param()
@@ -205,9 +205,33 @@ p.engines.engine01.numiter_contiguous = 100           # Number of iterations wit
 p.engines.engine01.probe_support = 3                  # non-zero probe area as fraction of the probe frame
 #p.engines.engine01.probe_update_start = 50           # number of iterations before probe update starts
 
-############################################################################
+################################################################################
+# 3rd use the maximum likelyhood algorithmm but with position refinement
+# [!] this is slow. Only use when you suspect the positions to be bad
+################################################################################
+"""
+p.engines.engine02 = u.Param()
+p.engines.engine02.name = 'ML_cupy'
+p.engines.engine02.numiter = 1000                     # number of iterations
+p.engines.engine02.numiter_contiguous = 100           # number of iterations without interruption
+p.engines.engine02.probe_support = 3                  # non-zero probe area as fraction of the probe frame
+#p.engines.engine02.probe_update_start = 50           # number of iterations before probe update starts
+
+p.engines.engine02.position_refinement = u.Param()
+p.engines.engine02.position_refinement.method = 'Annealing'    # Annealing or GridSearch
+p.engines.engine02.position_refinement.start = 1               # number of iterations until position refinement starts
+p.engines.engine02.position_refinement.stop = None             # number of iterations after which positon refinement stops
+p.engines.engine02.position_refinement.interval = 1            # frequency of position refinement
+p.engines.engine02.position_refinement.nshifts = 4*4           # number of random shifts calculated in each position refinement step (has to be multiple of 4)
+p.engines.engine02.position_refinement.amplitude = 1e-06       # distance from original position per random shift [m]. Has to be >= pixel size
+p.engines.engine02.position_refinement.amplitude_decay = True  # after each interation, multiply amplitude by factor (stop - iteration) / (stop - start)
+p.engines.engine02.position_refinement.max_shift = 2e-06       # maximum distance from original position [m]
+p.engines.engine02.position_refinement.metric = 'fourier'      # error metric, can choose between “fourier” and “photon”
+p.engines.engine02.position_refinement.record = True           # record movement of positions
+"""
+################################################################################
 # start the reconstruction
-############################################################################
+################################################################################
 
 if LooseVersion(ptypy.version) < LooseVersion('0.7.0'):
     raise Exception('Use ptypy 0.7.0 or better!')
