@@ -28,7 +28,7 @@ Get source, checkout the release branch and install from the source with pip.
 ```
 git clone https://github.com/maxiv-science/nanomax-analysis-utils.git
 cd nanomax-analysis-utils
-git checkout v0.4.4
+git checkout v0.5.1
 pip install .
 ```
 
