@@ -1,6 +1,6 @@
 import numpy as np
 from .Scan import Scan
-from scipy.misc import face
+from scipy.datasets import face
 import copy
 
 class dummyScan(Scan):

@@ -1,0 +1,12 @@
+[project]
+name = "nanomax-analysis-utils"
+version = "0.5.1"
+requires-python = ">=3.12"
+dependencies = [
+    "nmutils",
+]
+
+[tool.uv.sources]
+nmutils = { path = "nmutils", editable = true }
+
+

@@ -34,7 +34,7 @@ def propagateNearfield(A, psize, distances, energy):
     """
 
     import ptypy
-    from distutils.version import LooseVersion
+    from looseversion import LooseVersion
     if LooseVersion(ptypy.version) < LooseVersion('0.3.0'):
         raise Exception('This script requires ptypy 0.3.0 or newer')
 
