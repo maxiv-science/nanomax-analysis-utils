@@ -1,20 +1,18 @@
-#!/usr/bin/env python
-
 """
 This application loads ptypy reconstruction files and displays them nicely.
 """
 
-from nmutils.gui.ptychoViewer import PtychoViewer
+from .PtychoViewer import PtychoViewer
 from silx.gui import qt
 import sys
+import argparse
 
-if __name__ == '__main__':
+def main():
     # you always need a qt app
     app = qt.QApplication(sys.argv)
     app.setStyle('Fusion')
 
     # Parse input
-    import argparse
     parser = argparse.ArgumentParser(
         description='This application visualizes the output of a ptypy run, by loading a ptyr file.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)

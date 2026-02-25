@@ -10,7 +10,7 @@ import numpy as np
 import ptypy
 from ptypy.core import Ptycho
 from ptypy import utils as u
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 
 ## simplest possible input #############################################
 detector   = 'eiger' # or 'merlin' or 'pilatus'
@@ -40,7 +40,7 @@ p.scans.scan00.coherence.num_probe_modes = 1		# Number of probe modes
 p.scans.scan00.data = u.Param()
 p.scans.scan00.data.I0 = 'alba2/1'
 p.scans.scan00.data.dfile = '%s.ptyd'%(p.run)
-p.scans.scan00.data.save = 'append' 
+p.scans.scan00.data.save = 'append'
 p.scans.scan00.data.name = 'NanomaxContrast'
 p.scans.scan00.data.path = folder
 p.scans.scan00.data.detector = detector
@@ -68,7 +68,7 @@ p.scans.scan00.illumination.aperture = u.Param()
 p.scans.scan00.illumination.aperture.form = 'rect'
 p.scans.scan00.illumination.aperture.size = 100e-9			           # at the focus
 p.scans.scan00.illumination.propagation = u.Param()
-p.scans.scan00.illumination.propagation.parallel = -1.*defocus_um*1e-6 # somehow this has to be negative to the basez axis 
+p.scans.scan00.illumination.propagation.parallel = -1.*defocus_um*1e-6 # somehow this has to be negative to the basez axis
 p.scans.scan00.illumination.diversity = u.Param()
 p.scans.scan00.illumination.diversity.noise = (.5, 1.0)
 p.scans.scan00.illumination.diversity.power = .1

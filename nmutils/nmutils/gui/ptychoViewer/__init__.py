@@ -1,1 +1,0 @@
-from .PtychoViewer import PtychoViewer

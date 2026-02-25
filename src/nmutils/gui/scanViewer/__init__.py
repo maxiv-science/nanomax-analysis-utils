@@ -1,14 +1,8 @@
-#!/usr/bin/env python
-
-"""
-The normal NanoMAX scan viewer.
-"""
-
-from nmutils.gui.scanViewer import ScanViewer
-from silx.gui import qt
+from .ScanViewer import ScanViewer
 import sys
+from silx.gui import qt
 
-if __name__ == '__main__':
+def main():
     # you always need a qt app
     app = qt.QApplication(sys.argv)
     app.setStyle('Fusion')

@@ -1,12 +1,30 @@
 [project]
 name = "nanomax-analysis-utils"
 version = "0.5.1"
+description = "Analysis lib and guis for the NanoMAX beamline"
 requires-python = ">=3.12"
 dependencies = [
-    "nmutils",
+    "argparse>=1.4.0",
+    "cython>=3.2.4",
+    "h5py>=3.15.1",
+    "hdf5plugin>=6.0.0",
+    "looseversion>=1.3.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "pooch>=1.9.0",
+    "ptypy @ git+https://github.com/ptycho/ptypy",
+    "pyqt5>=5.15.11",
+    "pytango>=10.1.3",
+    "qtconsole>=5.7.1",
+    "scikit-image>=0.26.0",
+    "scipy>=1.17.0",
+    "silx>=2.2.2",
 ]
 
-[tool.uv.sources]
-nmutils = { path = "nmutils", editable = true }
+[project.scripts]
+scanViewer = "nmutils.gui.scanViewer:main"
+ptychoViewer = "nmutils.gui.ptychoViewer:main"
 
-
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
