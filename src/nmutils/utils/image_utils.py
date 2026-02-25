@@ -67,6 +67,8 @@ def noisyImage(image, photonsPerPixel=None, photonsAtMax=None, photonsTotal=None
 def biggestBlob(image):
     """ Takes an image and returns a version with only the biggest continuous blob of non-zero elements left. """
     labeledImage, N = scipy.ndimage.label(image)
+    if N == 0:
+        return np.zeros_like(image, dtype=bool)
     # first, work out which is the biggest blob (except the background)
     areas = []
     for i in range(1, N + 1): # N doesn't include the background
