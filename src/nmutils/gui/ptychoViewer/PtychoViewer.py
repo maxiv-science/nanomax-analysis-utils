@@ -3,7 +3,7 @@ This application loads ptypy reconstruction files and displays them nicely.
 """
 
 # make sure silx is not too old (API features have appeared)
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 try:
     import silx
     assert LooseVersion(silx.version) >= LooseVersion('0.11')

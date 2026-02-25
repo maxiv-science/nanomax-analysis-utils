@@ -20,7 +20,7 @@ import nmutils
 # #from PyQt5 import QtCore
 
 # make sure silx is not too old (API features have appeared)
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 try:
     import silx
     assert LooseVersion(silx.version) >= LooseVersion('0.11')

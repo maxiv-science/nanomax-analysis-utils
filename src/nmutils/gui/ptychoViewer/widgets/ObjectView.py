@@ -5,7 +5,7 @@ import numpy as np
 import silx
 from silx.gui.plot.ComplexImageView import ComplexImageView
 from silx.gui import qt
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 from ptypy.utils import rmphaseramp
 
 class ObjectView(ComplexImageView):

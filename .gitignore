@@ -5,4 +5,5 @@ dist
 _cbf.c
 *.o
 *.so
+uv.lock
 
